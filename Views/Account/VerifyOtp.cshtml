@@ -1,0 +1,135 @@
+@model TodoListApp.ViewModels.VerifyOtpViewModel
+
+@{
+    ViewData["Title"] = "Verify OTP";
+}
+
+<div class="auth-container">
+    <div class="auth-card">
+        <header>
+            <h1>Verify OTP</h1>
+            <p class="subtitle">A 6-digit code was sent to <strong>@Model.Email</strong></p>
+        </header>
+
+        <form asp-action="VerifyOtp" method="post" class="auth-form" id="otp-form">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Email" />
+            <input type="hidden" asp-for="Otp" id="hidden-otp" />
+
+            <div class="otp-inputs">
+                <input type="text" class="otp-box" maxlength="1" data-index="0" autocomplete="off" inputmode="numeric" />
+                <input type="text" class="otp-box" maxlength="1" data-index="1" autocomplete="off" inputmode="numeric" />
+                <input type="text" class="otp-box" maxlength="1" data-index="2" autocomplete="off" inputmode="numeric" />
+                <input type="text" class="otp-box" maxlength="1" data-index="3" autocomplete="off" inputmode="numeric" />
+                <input type="text" class="otp-box" maxlength="1" data-index="4" autocomplete="off" inputmode="numeric" />
+                <input type="text" class="otp-box" maxlength="1" data-index="5" autocomplete="off" inputmode="numeric" />
+            </div>
+            <span asp-validation-for="Otp" class="text-danger"></span>
+
+            <button type="submit" class="btn-auth">Verify & Signup</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Didn't receive code? <a asp-action="Signup">Try again</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .otp-inputs {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    .otp-box {
+        width: 3.5rem;
+        height: 4rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        text-align: center;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+    .otp-box:focus {
+        border-color: var(--accent-color);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 15px rgba(244, 114, 182, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .otp-box.filled {
+        border-color: var(--success-color);
+    }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const boxes = document.querySelectorAll('.otp-box');
+            const hiddenInput = document.getElementById('hidden-otp');
+            const form = document.getElementById('otp-form');
+
+            boxes[0].focus();
+
+            boxes.forEach((box, index) => {
+                box.addEventListener('input', (e) => {
+                    if (e.data && e.data.match(/^[0-9]$/)) {
+                        box.classList.add('filled');
+                        if (index < boxes.length - 1) {
+                            boxes[index + 1].focus();
+                        }
+                    } else {
+                        box.value = '';
+                    }
+                    updateHiddenInput();
+                });
+
+                box.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace') {
+                        if (box.value === '' && index > 0) {
+                            boxes[index - 1].focus();
+                            boxes[index - 1].value = '';
+                            boxes[index - 1].classList.remove('filled');
+                        } else {
+                            box.value = '';
+                            box.classList.remove('filled');
+                        }
+                        updateHiddenInput();
+                    }
+                });
+
+                box.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const data = e.clipboardData.getData('text').slice(0, 6);
+                    if (data.match(/^[0-9]{1,6}$/)) {
+                        data.split('').forEach((char, i) => {
+                            if (boxes[i]) {
+                                boxes[i].value = char;
+                                boxes[i].classList.add('filled');
+                            }
+                        });
+                        if (boxes[data.length]) {
+                            boxes[data.length].focus();
+                        } else {
+                            boxes[3].focus();
+                        }
+                        updateHiddenInput();
+                    }
+                });
+            });
+
+            function updateHiddenInput() {
+                let otp = '';
+                boxes.forEach(box => otp += box.value);
+                hiddenInput.value = otp;
+            }
+        });
+    </script>
+}

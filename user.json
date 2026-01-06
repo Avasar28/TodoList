@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "f8e2d6dc-7134-4277-aab8-1d3b124354c9",
+    "Email": "pratiksha@gmail.com",
+    "Password": "$2a$11$MbKF2/HDOhu2P0zqiWFJUub7GlQy10D5giW8rLVcqWaiirX./JoTW",
+    "ResetToken": null,
+    "ResetTokenExpiry": null,
+    "IsEmailVerified": false
+  },
+  {
+    "Id": "5ab38c8a-7a50-4b34-9670-986493f7531a",
+    "Email": "dhvanibutani09@gmail.com",
+    "Password": "$2a$11$bSfBMoYzTNbv0WbDZHXhNu3zXforuz4cLpZ74YnG/YqU.6ieD1t92",
+    "ResetToken": "928cf55b-f693-4639-b510-38d5271f531d",
+    "ResetTokenExpiry": "2026-01-05T13:47:55.3613417Z",
+    "IsEmailVerified": true
+  },
+  {
+    "Id": "3849eb64-ef00-40a1-b7ee-1db082977ef4",
+    "Email": "projtest28@gmail.com",
+    "Password": "$2a$11$x0jMYoIc6yDsY8swCND7uuKqzmNWST9RMUzblwYkeFxJ8Mvjs903S",
+    "ResetToken": null,
+    "ResetTokenExpiry": null,
+    "IsEmailVerified": true
+  }
+]

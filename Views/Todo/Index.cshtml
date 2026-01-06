@@ -1,0 +1,105 @@
+@model IEnumerable<TodoListApp.Models.TodoItem>
+
+@{
+    ViewData["Title"] = "My Tasks";
+}
+
+<div class="todo-container">
+    <header>
+        <h1>My Tasks</h1>
+        <p class="subtitle">Stay organized, stay focused.</p>
+    </header>
+
+    <div class="add-task-section">
+        <form asp-controller="Todo" asp-action="Create" method="post" class="add-form">
+            <div class="add-form-group">
+                <input type="text" name="title" placeholder="What needs to be done?" required autocomplete="off" />
+                <div class="add-form-meta">
+                    <input type="date" name="dueDate" title="Select due date" />
+                    <select name="priority">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn-add">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+        </form>
+    </div>
+
+    <div class="search-section">
+        <form asp-action="Index" method="get" class="search-form">
+            <input type="hidden" name="status" value="@ViewData["CurrentStatus"]" />
+            <div class="search-input-wrapper">
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" placeholder="Search @(ViewData["CurrentStatus"] ?? "tasks")..." autocomplete="off" />
+                @if (!string.IsNullOrEmpty(ViewData["CurrentFilter"]?.ToString()) || !string.IsNullOrEmpty(ViewData["CurrentStatus"]?.ToString()))
+                {
+                    <a asp-action="Index" class="clear-search" title="Clear all filters">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </a>
+                }
+            </div>
+        </form>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ViewData["CurrentStatus"]?.ToString()))
+    {
+        <div class="filter-indicator">
+            <span>Showing: <strong>@ViewData["CurrentStatus"]</strong> tasks</span>
+        </div>
+    }
+
+    <div class="todo-list">
+        @if (!Model.Any())
+        {
+            <div class="empty-state">
+                <p>No tasks yet. Add one above!</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var item in Model)
+            {
+                <div class="todo-item @(item.IsCompleted ? "completed" : "")">
+                    <form asp-controller="Todo" asp-action="Toggle" asp-route-id="@item.Id" method="post" class="toggle-form">
+                        <button type="submit" class="checkbox-btn" title="Toggle Completion">
+                            @if(item.IsCompleted) {
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            }
+                        </button>
+                    </form>
+                    
+                    <div class="todo-content">
+                        <span class="todo-title">@item.Title</span>
+                        <div class="todo-meta">
+                            @if (item.DueDate.HasValue)
+                            {
+                                <span class="due-date" title="Due Date">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                    @item.DueDate.Value.ToString("MMM dd")
+                                </span>
+                            }
+                            <span class="priority-badge @item.Priority.ToLower()">@item.Priority</span>
+                        </div>
+                    </div>
+                    
+                    <div class="action-btn-group">
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="edit-btn" title="Edit Task">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        </a>
+                        
+                        <form asp-controller="Todo" asp-action="Delete" asp-route-id="@item.Id" method="post" class="delete-form" onsubmit="return confirm('Delete this task?');">
+                             @Html.AntiForgeryToken()
+                            <button type="submit" class="delete-btn" title="Delete Task">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
