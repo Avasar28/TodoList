@@ -48,7 +48,7 @@ namespace TodoListApp.Services
             return null;
         }
 
-        public bool RegisterUser(string email, string password, bool isVerified = false)
+        public bool RegisterUser(string email, string password, string fullName, bool isVerified = false)
         {
             var users = ReadUsers();
             if (UserExists(email))
@@ -57,10 +57,26 @@ namespace TodoListApp.Services
             }
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
-            var newUser = new User { Email = email, Password = passwordHash, IsEmailVerified = isVerified };
+            
+            // Auto-increment ID starting from 1
+            int newId = (users.Max(u => (int?)u.Id) ?? 0) + 1;
+            
+            var newUser = new User 
+            { 
+                Id = newId,
+                Email = email, 
+                Password = passwordHash, 
+                Name = fullName,
+                IsEmailVerified = isVerified 
+            };
             users.Add(newUser);
             WriteUsers(users);
             return true;
+        }
+
+        public IEnumerable<User> GetAllUsers()
+        {
+            return ReadUsers();
         }
 
         public bool UserExists(string email)
@@ -103,6 +119,57 @@ namespace TodoListApp.Services
                 return true;
             }
             Console.WriteLine($"[DEBUG] Reset password failed for {email}. Token match? {user?.ResetToken == token}, Expired? {user?.ResetTokenExpiry <= DateTime.UtcNow}");
+            return false;
+        }
+
+        public User? GetUser(int userId)
+        {
+            var users = ReadUsers();
+            return users.FirstOrDefault(u => u.Id == userId);
+        }
+
+        public bool UpdatePreferences(int userId, UserPreferences preferences)
+        {
+            var users = ReadUsers();
+            var user = users.FirstOrDefault(u => u.Id == userId);
+            
+            if (user != null)
+            {
+                user.Preferences = preferences;
+                WriteUsers(users);
+                return true;
+            }
+            return false;
+        }
+
+        public bool UpdateUser(User user)
+        {
+            var users = ReadUsers();
+            var existing = users.FirstOrDefault(u => u.Id == user.Id);
+            
+            if (existing != null)
+            {
+                existing.Name = user.Name;
+                existing.Email = user.Email;
+                // Only update password if strictly necessary, but for now let's keep it simple
+                // existing.Password = user.Password; 
+                WriteUsers(users);
+                return true;
+            }
+            return false;
+        }
+
+        public bool DeleteUser(int userId)
+        {
+            var users = ReadUsers();
+            var user = users.FirstOrDefault(u => u.Id == userId);
+            
+            if (user != null)
+            {
+                users.Remove(user);
+                WriteUsers(users);
+                return true;
+            }
             return false;
         }
     }

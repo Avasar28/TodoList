@@ -1,26 +1,56 @@
 [
   {
-    "Id": "f8e2d6dc-7134-4277-aab8-1d3b124354c9",
-    "Email": "pratiksha@gmail.com",
-    "Password": "$2a$11$MbKF2/HDOhu2P0zqiWFJUub7GlQy10D5giW8rLVcqWaiirX./JoTW",
+    "Id": 1,
+    "Email": "savaliyaavasar@gmail.com",
+    "Password": "$2a$11$2uXqhuVAhtTxv4H7N8pH8O1QtZCBxOHrEd3rU/Yn4pOuiaVJDpUuS",
     "ResetToken": null,
     "ResetTokenExpiry": null,
-    "IsEmailVerified": false
+    "IsEmailVerified": true,
+    "Name": "Avsar Savaliya",
+    "Preferences": {
+      "DefaultCity": null,
+      "DefaultFromCurrency": null,
+      "DefaultToCurrency": null,
+      "DefaultSourceTimeZone": null,
+      "DefaultTargetTimeZone": null,
+      "FavoriteCities": [],
+      "FavoriteCurrencyPairs": []
+    }
   },
   {
-    "Id": "5ab38c8a-7a50-4b34-9670-986493f7531a",
-    "Email": "dhvanibutani09@gmail.com",
-    "Password": "$2a$11$bSfBMoYzTNbv0WbDZHXhNu3zXforuz4cLpZ74YnG/YqU.6ieD1t92",
-    "ResetToken": "928cf55b-f693-4639-b510-38d5271f531d",
-    "ResetTokenExpiry": "2026-01-05T13:47:55.3613417Z",
-    "IsEmailVerified": true
-  },
-  {
-    "Id": "3849eb64-ef00-40a1-b7ee-1db082977ef4",
+    "Id": 2,
     "Email": "projtest28@gmail.com",
-    "Password": "$2a$11$x0jMYoIc6yDsY8swCND7uuKqzmNWST9RMUzblwYkeFxJ8Mvjs903S",
+    "Password": "$2a$11$Jim6R9OeFNjA9C87OFnLeOUHgNCRqxnPzXF1.qYscZ0IAreAp3Exi",
     "ResetToken": null,
     "ResetTokenExpiry": null,
-    "IsEmailVerified": true
+    "IsEmailVerified": true,
+    "Name": "Avsar Savaliya",
+    "Preferences": {
+      "DefaultCity": null,
+      "DefaultFromCurrency": null,
+      "DefaultToCurrency": null,
+      "DefaultSourceTimeZone": null,
+      "DefaultTargetTimeZone": null,
+      "FavoriteCities": [],
+      "FavoriteCurrencyPairs": []
+    }
+  },
+  {
+    "Id": 3,
+    "Email": "a@gmial.com",
+    "Password": "$2a$11$smEln2JZ7s6oR7A0qlY9GOyo6e72gCDgx/G58rc6vxutj8jaVklSy",
+    "ResetToken": null,
+    "ResetTokenExpiry": null,
+    "IsEmailVerified": true,
+    "Name": "a",
+    "Preferences": {
+      "DefaultCity": null,
+      "DefaultFromCurrency": null,
+      "DefaultToCurrency": null,
+      "DefaultSourceTimeZone": null,
+      "DefaultTargetTimeZone": null,
+      "FavoriteCities": [],
+      "FavoriteCurrencyPairs": []
+    }
   }
 ]

@@ -39,7 +39,8 @@ namespace TodoListApp.Controllers
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, user.Email),
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.GivenName, user.Name ?? user.Email) // Use Name or fallback to Email
                 };
 
                 var identity = new ClaimsIdentity(claims, "CookieAuth");
@@ -47,7 +48,7 @@ namespace TodoListApp.Controllers
 
                 await HttpContext.SignInAsync("CookieAuth", principal);
 
-                return RedirectToAction("Index", "Todo");
+                return RedirectToAction("Dashboard", "Todo");
             }
 
             ModelState.AddModelError(string.Empty, "Invalid email or password");
@@ -82,6 +83,7 @@ namespace TodoListApp.Controllers
             // Store EVERYTHING in session (Email, Password, OTP, Expiry)
             HttpContext.Session.SetString("SignupEmail", model.Email);
             HttpContext.Session.SetString("SignupPassword", model.Password);
+            HttpContext.Session.SetString("SignupFullName", model.FullName);
             HttpContext.Session.SetString("SignupOtp", otp);
             HttpContext.Session.SetString("SignupOtpExpiry", expiry.ToString("O")); // ISO 8601
 
@@ -105,6 +107,7 @@ namespace TodoListApp.Controllers
         {
             var email = HttpContext.Session.GetString("SignupEmail");
             var password = HttpContext.Session.GetString("SignupPassword");
+            var fullName = HttpContext.Session.GetString("SignupFullName") ?? "Unknown";
             var sessionOtp = HttpContext.Session.GetString("SignupOtp");
             var sessionExpiryStr = HttpContext.Session.GetString("SignupOtpExpiry");
 
@@ -118,11 +121,12 @@ namespace TodoListApp.Controllers
             if (model.Otp == sessionOtp && DateTime.UtcNow <= sessionExpiry)
             {
                 // OTP verified! Now actually create the user.
-                if (_userService.RegisterUser(email, password, isVerified: true))
+                if (_userService.RegisterUser(email, password, fullName, isVerified: true))
                 {
                     // Clear session and redirect to login
                     HttpContext.Session.Remove("SignupEmail");
                     HttpContext.Session.Remove("SignupPassword");
+                    HttpContext.Session.Remove("SignupFullName");
                     HttpContext.Session.Remove("SignupOtp");
                     HttpContext.Session.Remove("SignupOtpExpiry");
 

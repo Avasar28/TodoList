@@ -1,156 +1,265 @@
 @model TodoListApp.ViewModels.DashboardViewModel
 
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Real-time Dashboard";
 }
 
-<div class="dashboard-container">
-    <header class="dashboard-header">
-        <h1>Dashboard</h1>
-        <p class="subtitle">Overview of your activity</p>
-    </header>
-
-    <div class="stats-grid">
-        <a asp-action="Index" asp-route-status="" class="stat-link">
-            <div class="stat-card total">
-                <div class="stat-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                </div>
-                <div class="stat-info">
-                    <span class="stat-label">Total Tasks</span>
-                    <span class="stat-value">@Model.TotalTasks</span>
-                </div>
-            </div>
-        </a>
-
-        <a asp-action="Index" asp-route-status="Completed" class="stat-link">
-            <div class="stat-card completed">
-                <div class="stat-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                </div>
-                <div class="stat-info">
-                    <span class="stat-label">Completed</span>
-                    <span class="stat-value">@Model.CompletedTasks</span>
-                </div>
-            </div>
-        </a>
-
-        <a asp-action="Index" asp-route-status="Pending" class="stat-link">
-            <div class="stat-card pending">
-                <div class="stat-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                </div>
-                <div class="stat-info">
-                    <span class="stat-label">Pending</span>
-                    <span class="stat-value">@Model.PendingTasks</span>
-                </div>
-            </div>
-        </a>
-
-        <a asp-action="Index" asp-route-status="Overdue" class="stat-link">
-            <div class="stat-card overdue">
-                <div class="stat-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                </div>
-                <div class="stat-info">
-                    <span class="stat-label">Overdue</span>
-                    <span class="stat-value">@Model.OverdueTasks</span>
-                </div>
-            </div>
-        </a>
+<div class="dashboard-container centered-view">
+    <div class="dashboard-header text-center">
+        <h1>Welcome, @Model.UserName</h1>
+        <p class="subtitle">Your personalized dashboard.</p>
+        <button id="saveDefaultsBtn" class="btn-secondary-glass" style="margin-top: 1rem;">
+            <span>💾 Save Current View as Default</span>
+        </button>
     </div>
 
-    <div class="dashboard-actions">
-        <a asp-action="Index" class="btn-primary">View All Tasks</a>
+    <div class="realtime-grid featured-grid">
+        <!-- Weather Widget -->
+        <div class="insight-card featured weather">
+            <div class="insight-icon">@Model.Weather.Icon</div>
+            <div class="insight-info">
+                <form method="get" asp-action="Dashboard" class="widget-form">
+                    <input type="text" name="city" value="@Model.SelectedCity" class="widget-input" placeholder="Enter City" onchange="this.form.submit()" />
+                    <input type="hidden" name="fromCurrency" value="@Model.FromCurrency" />
+                    <input type="hidden" name="toCurrency" value="@Model.ToCurrency" />
+                    <input type="hidden" name="sourceTime" value="@Model.SourceTimeZone" />
+                    <input type="hidden" name="targetTime" value="@Model.TargetTimeZone" />
+                </form>
+                <div class="weather-display">
+                    <span class="insight-value">@Model.Weather.Temperature°C</span>
+                    <span class="insight-meta">@Model.Weather.Description</span>
+                </div>
+                 @if (Model.Weather.Forecasts.Any())
+                {
+                    <div class="weather-forecast">
+                        @foreach (var day in Model.Weather.Forecasts)
+                        {
+                            <div class="forecast-day">
+                                <span class="day-name">@day.Date</span>
+                                <span class="day-icon">@day.Icon</span>
+                                <span class="day-temp">@Math.Round(day.MaxTemp)° / @Math.Round(day.MinTemp)°</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Currency Widget -->
+        <div class="insight-card featured currency">
+            <div class="insight-icon">💱</div>
+            <div class="insight-info">
+                 <form method="get" asp-action="Dashboard" class="widget-form">
+                    <div class="currency-selectors">
+                        <select name="fromCurrency" asp-for="FromCurrency" asp-items="@(new SelectList(Model.AvailableCurrencies))" class="widget-select" onchange="this.form.submit()"></select>
+                        <span class="arrow">➜</span>
+                        <select name="toCurrency" asp-for="ToCurrency" asp-items="@(new SelectList(Model.AvailableCurrencies))" class="widget-select" onchange="this.form.submit()"></select>
+                    </div>
+                    <input type="hidden" name="city" value="@Model.SelectedCity" />
+                    <input type="hidden" name="sourceTime" value="@Model.SourceTimeZone" />
+                    <input type="hidden" name="targetTime" value="@Model.TargetTimeZone" />
+                </form>
+                <div class="currency-display">
+                    <span class="insight-value">@Model.Currency.Rate</span>
+                    <span class="insight-meta">1 @Model.Currency.From = @Model.Currency.Rate @Model.Currency.To</span>
+                </div>
+                 <div class="chart-container">
+                    <canvas id="currencyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- World Clock Widget (Replaces simple Time widget) -->
+        <div class="insight-card featured time">
+            <div class="insight-icon">🌍</div>
+            <div class="insight-info" style="width: 100%;">
+                 <div class="world-clock-grid">
+                     <div class="clock-item">
+                         <span class="clock-city">New York</span>
+                         <span class="clock-time" data-tz="America/New_York">--:--</span>
+                     </div>
+                     <div class="clock-item">
+                         <span class="clock-city">London</span>
+                         <span class="clock-time" data-tz="Europe/London">--:--</span>
+                     </div>
+                     <div class="clock-item">
+                         <span class="clock-city">Dubai</span>
+                         <span class="clock-time" data-tz="Asia/Dubai">--:--</span>
+                     </div>
+                      <div class="clock-item">
+                         <span class="clock-city">Mumbai</span>
+                         <span class="clock-time" data-tz="Asia/Kolkata">--:--</span>
+                     </div>
+                     <div class="clock-item">
+                         <span class="clock-city">Tokyo</span>
+                         <span class="clock-time" data-tz="Asia/Tokyo">--:--</span>
+                     </div>
+                 </div>
+                 
+                 <!-- Original Time Converter Button/Link if needed -->
+                 <div style="margin-top: 1rem; font-size: 0.8rem; text-align: center;">
+                      <form method="get" asp-action="Dashboard" class="widget-form time-form">
+                        <div class="time-selectors">
+                            <label>From</label>
+                            <select name="sourceTime" asp-for="SourceTimeZone" asp-items="@(new SelectList(Model.AvailableTimeZones))" class="widget-select full-width" onchange="this.form.submit()"></select>
+                            <label>To</label>
+                            <select name="targetTime" asp-for="TargetTimeZone" asp-items="@(new SelectList(Model.AvailableTimeZones))" class="widget-select full-width" onchange="this.form.submit()"></select>
+                        </div>
+                         <div class="time-display" style="margin-top: 5px;">
+                            <span class="insight-value" id="converterTargetTime" data-offset="@Model.TimeConversion.TotalOffsetMinutes">@Model.TimeConversion.TargetTime</span>
+                        </div>
+                        <input type="hidden" name="city" value="@Model.SelectedCity" />
+                        <input type="hidden" name="fromCurrency" value="@Model.FromCurrency" />
+                        <input type="hidden" name="toCurrency" value="@Model.ToCurrency" />
+                    </form>
+                 </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<style>
-    .dashboard-container {
-        padding: 2rem;
-        background: rgba(30, 41, 59, 0.4);
-        backdrop-filter: blur(20px);
-        border-radius: 24px;
-        border: 1px solid var(--glass-border);
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    }
+@section Scripts {
+    <script>
+        document.getElementById('saveDefaultsBtn').addEventListener('click', async () => {
+            const preferences = {
+                defaultCity: document.querySelector('input[name="city"]').value,
+                defaultFromCurrency: document.querySelector('select[name="fromCurrency"]').value,
+                defaultToCurrency: document.querySelector('select[name="toCurrency"]').value,
+                defaultSourceTimeZone: document.querySelector('select[name="sourceTime"]').value,
+                defaultTargetTimeZone: document.querySelector('select[name="targetTime"]').value
+            };
 
-    .dashboard-header {
-        margin-bottom: 3rem;
-        text-align: center;
-    }
+            try {
+                const response = await fetch('/Todo/UpdatePreferences', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(preferences)
+                });
 
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 3rem;
-    }
+                if (response.ok) {
+                    alert('Preferences saved successfully!');
+                } else {
+                    alert('Failed to save preferences.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred.');
+            }
+        });
+    </script>
+}
 
-    .stat-card {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid var(--glass-border);
-        border-radius: 20px;
-        padding: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        transition: transform 0.3s ease, background 0.3s ease;
-    }
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // --- 1. World Clock ---
+        function updateWorldClocks() {
+            const clocks = document.querySelectorAll('.clock-time');
+            const now = new Date();
+            clocks.forEach(clock => {
+                const tz = clock.getAttribute('data-tz');
+                try {
+                    const timeString = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
+                    clock.textContent = timeString;
+                } catch (e) {
+                    console.error("Invalid Timezone", tz);
+                }
+            });
+        }
+        setInterval(updateWorldClocks, 1000);
+        updateWorldClocks(); // Init
 
-    .stat-card:hover {
-        transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.06);
-    }
+        // --- 2. Currency Chart ---
+        const ctx = document.getElementById('currencyChart').getContext('2d');
+        let currencyChart;
 
-    .stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+        async function loadCurrencyHistory() {
+            const from = '@Model.FromCurrency';
+            const to = '@Model.ToCurrency';
+            
+            try {
+                const res = await fetch(`/Todo/GetCurrencyHistoryJson?from=${from}&to=${to}`);
+                const data = await res.json();
+                
+                if(data.labels && data.values) {
+                    if (currencyChart) currencyChart.destroy();
+                    
+                    currencyChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: `${from} to ${to}`,
+                                data: data.values,
+                                borderColor: '#818cf8',
+                                backgroundColor: 'rgba(129, 140, 248, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                pointRadius: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } }, // Hide legend to save space
+                            scales: {
+                                x: { display: false }, // Hide x-axis labels for clean look
+                                y: { 
+                                    ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } },
+                                    grid: { color: 'rgba(255,255,255,0.05)' }
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error("Failed to load chart", e);
+            }
+        }
+        loadCurrencyHistory();
 
-    .total .stat-icon { background: rgba(99, 102, 241, 0.1); color: #818cf8; }
-    .completed .stat-icon { background: rgba(52, 211, 153, 0.1); color: #34d399; }
-    .pending .stat-icon { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
-    .overdue .stat-icon { background: rgba(248, 113, 113, 0.1); color: #f87171; }
+        // --- 3. Auto-Refresh (Polling) ---
+        // Refresh Weather every 10 mins (600,000 ms)
+        setInterval(async () => {
+             const city = '@Model.SelectedCity';
+             try {
+                const res = await fetch(`/Todo/GetWeatherJson?city=${city}`);
+                const data = await res.json();
+                // Update DOM elements if IDs were assigned (simplified for now to just log or reload part)
+                // ideally, we'd update spans. implementing generic reload for simplicity in this demo:
+                console.log("Weather updated", data); 
+             } catch (e) {}
+        }, 600000);
 
-    .stat-info {
-        display: flex;
-        flex-direction: column;
-    }
+        // Refresh Currency every 5 mins (300,000 ms)
+        setInterval(async () => {
+             // Re-fetch rate logic would go here
+        }, 300000);
 
-    .stat-label {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        font-weight: 500;
-    }
+        // --- 4. Ticking Converter Clock ---
+        function startConverterClock() {
+            const display = document.getElementById('converterTargetTime');
+            if(!display) return;
+            
+            const offsetMinutes = parseFloat(display.getAttribute('data-offset'));
+            if(isNaN(offsetMinutes)) return;
 
-    .stat-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--text-primary);
-    }
-
-    .dashboard-actions {
-        display: flex;
-        justify-content: center;
-    }
-
-    .btn-primary {
-        background: var(--accent-gradient);
-        color: white;
-        padding: 1rem 2rem;
-        border-radius: 12px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: transform 0.2s ease;
-        box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
-    }
-
-    .btn-primary:hover {
-        transform: scale(1.05);
-    }
-</style>
+            function update() {
+                // Current UTC time in ms
+                const now = new Date();
+                const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+                
+                // Target time
+                const targetTime = new Date(utc + (offsetMinutes * 60000));
+                
+                // Format HH:MM AM/PM
+                display.textContent = targetTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            setInterval(update, 1000); // Update every second
+            update(); // Initial call
+        }
+        startConverterClock();
+    </script>

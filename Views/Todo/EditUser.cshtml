@@ -1,0 +1,35 @@
+@model TodoListApp.Models.User
+
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="dashboard-container fade-in">
+    <div class="dashboard-header">
+        <h1>Edit User</h1>
+        <p class="subtitle">Update user details</p>
+    </div>
+
+    <div class="auth-card" style="margin-top: 2rem;">
+        <form asp-action="EditUser" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Password" /> <!-- Preserve password -->
+
+            <div class="form-group">
+                <label asp-for="Name">Full Name</label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Email">Email</label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+            <a asp-action="UserList" class="btn btn-secondary btn-block" style="margin-top: 1rem;">Back to List</a>
+        </form>
+    </div>
+</div>

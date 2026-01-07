@@ -11,11 +11,12 @@
     {
         <div class="nav-bar">
             <div class="nav-links">
-                <a asp-controller="Todo" asp-action="Dashboard" class="nav-link">Dashboard</a>
-                <a asp-controller="Todo" asp-action="Index" class="nav-link">My Tasks</a>
+                <a asp-controller="Todo" asp-action="Dashboard" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">Dashboard</a>
+                <a asp-controller="Todo" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">My Tasks</a>
+                <a asp-controller="Todo" asp-action="UserList" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "UserList" ? "active" : "")">User List</a>
             </div>
             <div class="user-info">
-                <span>Hello, <span class="username">@(User.Identity.Name?.Split('@')[0])</span></span>
+                <span>Hello, <span class="username">@(User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? User.Identity.Name)</span></span>
                 <a href="/Account/Logout" class="logout-link">Logout</a>
             </div>
         </div>
@@ -32,62 +33,3 @@
 </body>
 </html>
 
-<style>
-    .nav-bar {
-        position: fixed;
-        top: 1rem;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 2rem;
-        align-items: center;
-        background: rgba(15, 23, 42, 0.6);
-        padding: 0.75rem 2rem;
-        border-radius: 50px;
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(255,255,255,0.1);
-        z-index: 1000;
-        width: fit-content;
-    }
-
-    .nav-links {
-        display: flex;
-        gap: 1.5rem;
-        border-right: 1px solid rgba(255,255,255,0.1);
-        padding-right: 1.5rem;
-    }
-
-    .nav-link {
-        color: var(--text-secondary);
-        text-decoration: none;
-        font-size: 0.95rem;
-        font-weight: 500;
-        transition: color 0.2s;
-    }
-
-    .nav-link:hover {
-        color: var(--text-primary);
-    }
-
-    .user-info {
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-    }
-
-    .username {
-        font-weight: 600;
-        color: var(--accent-color);
-    }
-
-    .logout-link {
-        color: var(--text-secondary);
-        text-decoration: none;
-        font-size: 0.9rem;
-        transition: color 0.2s;
-    }
-
-    .logout-link:hover {
-        color: var(--danger-color);
-    }
-</style>

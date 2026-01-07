@@ -5,7 +5,7 @@ namespace TodoListApp.Models
 {
     public class User
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public int Id { get; set; }
 
         [Required]
         [EmailAddress]
@@ -18,5 +18,20 @@ namespace TodoListApp.Models
         public DateTime? ResetTokenExpiry { get; set; }
 
         public bool IsEmailVerified { get; set; } = false;
+
+        public string? Name { get; set; }
+        public UserPreferences Preferences { get; set; } = new UserPreferences();
+    }
+
+    public class UserPreferences
+    {
+        public string? DefaultCity { get; set; }
+        public string? DefaultFromCurrency { get; set; }
+        public string? DefaultToCurrency { get; set; }
+        public string? DefaultSourceTimeZone { get; set; }
+        public string? DefaultTargetTimeZone { get; set; }
+        
+        public List<string> FavoriteCities { get; set; } = new List<string>();
+        public List<string> FavoriteCurrencyPairs { get; set; } = new List<string>(); // Format: "USD-EUR"
     }
 }
