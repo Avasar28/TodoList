@@ -21,7 +21,7 @@ namespace TodoListApp.Controllers
             _userService = userService;
         }
 
-        public async Task<IActionResult> Dashboard(string? city, string? fromCurrency, string? toCurrency, string? sourceTime, string? targetTime)
+        public IActionResult Dashboard(string? city, string? fromCurrency, string? toCurrency, string? sourceTime, string? targetTime)
         {
             var userId = GetUserId();
             var user = _userService.GetUser(userId);
@@ -30,69 +30,38 @@ namespace TodoListApp.Controllers
             if (user != null)
             {
                 city ??= user.Preferences.DefaultCity;
-                fromCurrency ??= user.Preferences.DefaultFromCurrency ?? "USD";
-                toCurrency ??= user.Preferences.DefaultToCurrency ?? "EUR";
-                sourceTime ??= user.Preferences.DefaultSourceTimeZone ?? "UTC";
+                fromCurrency ??= user.Preferences.DefaultFromCurrency;
+                toCurrency ??= user.Preferences.DefaultToCurrency;
+                sourceTime ??= user.Preferences.DefaultSourceTimeZone;
                 targetTime ??= user.Preferences.DefaultTargetTimeZone;
             }
 
-            // Auto-Detect if still null (User didn't set preference OR not logged in)
-            if (string.IsNullOrEmpty(city) || string.IsNullOrEmpty(targetTime))
-            {
-                var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
-                // Forwarded header support for proxies (e.g. if behind Nginx/IIS)
-                if (Request.Headers.ContainsKey("X-Forwarded-For"))
-                    ip = Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? "";
-
-                var location = await _externalApiService.GetLocationFromIpAsync(ip);
-                city ??= location.City;
-                targetTime ??= location.TimeZoneId;
-            }
-
-            // Fallbacks
+            // Fallbacks (Immediate)
             city ??= "London";
             fromCurrency ??= "USD";
             toCurrency ??= "EUR";
             sourceTime ??= "UTC";
             targetTime ??= "GMT Standard Time";
 
-            // Validate TimeZone Ids to prevent crash if default doesn't exist on OS
-            if (sourceTime == "GMT Standard Time" && TimeZoneInfo.FindSystemTimeZoneById("UTC") != null) targetTime = "UTC"; 
-            
-            var weatherTask = _externalApiService.GetWeatherAsync(city);
-            var currencyTask = _externalApiService.GetCurrencyRateAsync(fromCurrency, toCurrency);
-            var timeTask = _externalApiService.GetTimeConversionAsync(sourceTime, targetTime);
-
-            await Task.WhenAll(weatherTask, currencyTask, timeTask);
-
             var model = new ViewModels.DashboardViewModel
             {
                 UserName = user?.Name ?? user?.Email.Split('@')[0] ?? "User",
                 Preferences = user?.Preferences ?? new UserPreferences(),
-                Weather = await weatherTask,
-                Currency = await currencyTask,
-                TimeConversion = await timeTask,
+                // Keep default empty objects for Weather, Currency, TimeConversion to avoid nulls in View
                 SelectedCity = city,
                 FromCurrency = fromCurrency,
                 ToCurrency = toCurrency,
                 SourceTimeZone = sourceTime,
                 TargetTimeZone = targetTime,
-                AvailableTimeZones = TimeZoneInfo.GetSystemTimeZones().Select(z => z.Id).OrderBy(z => z).ToList()
+                AvailableTimeZones = TimeZoneInfo.GetSystemTimeZones()
+                    .Select(z => new ViewModels.TimeZoneOption { Id = z.Id, Name = z.DisplayName })
+                    .OrderBy(z => z.Name)
+                    .ToList()
             };
 
             return View(model);
         }
 
-        [HttpPost]
-        public IActionResult UpdatePreferences([FromBody] UserPreferences preferences)
-        {
-            var userId = GetUserId();
-            if (_userService.UpdatePreferences(userId, preferences))
-            {
-                return Ok();
-            }
-            return BadRequest();
-        }
 
         // --- JSON API Endpoints for AJAX ---
 
@@ -100,6 +69,13 @@ namespace TodoListApp.Controllers
         public async Task<IActionResult> GetWeatherJson(string city)
         {
             var data = await _externalApiService.GetWeatherAsync(city);
+            return Json(data);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetWeatherByCoordsJson(double lat, double lon)
+        {
+            var data = await _externalApiService.GetWeatherByCoordsAsync(lat, lon);
             return Json(data);
         }
 
@@ -114,6 +90,24 @@ namespace TodoListApp.Controllers
         public async Task<IActionResult> GetCurrencyHistoryJson(string from, string to)
         {
             var data = await _externalApiService.GetCurrencyHistoryAsync(from, to);
+            return Json(data);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTimeJson(string source, string target, string? time = null)
+        {
+            var data = await _externalApiService.GetTimeConversionAsync(source, target, time);
+            return Json(data);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetLocationJson()
+        {
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
+            if (Request.Headers.ContainsKey("X-Forwarded-For"))
+                ip = Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? "";
+
+            var data = await _externalApiService.GetLocationFromIpAsync(ip);
             return Json(data);
         }
 
@@ -163,26 +157,40 @@ namespace TodoListApp.Controllers
         [HttpGet]
         public IActionResult CreateUser()
         {
-            return View();
+            return View(new ViewModels.AdminCreateUserViewModel());
         }
 
         [HttpPost]
-        public IActionResult CreateUser(TodoListApp.Models.User user)
+        public async Task<IActionResult> CreateUser(ViewModels.AdminCreateUserViewModel model, [FromServices] IEmailService emailService)
         {
-            // Simple validation
-            if (string.IsNullOrWhiteSpace(user.Email) || string.IsNullOrWhiteSpace(user.Password))
+            if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Email and Password are required");
-                return View(user);
+                return View(model);
             }
 
-            if (_userService.RegisterUser(user.Email, user.Password, user.Name ?? "", isVerified: true))
+            // Check if user already exists
+            if (_userService.UserExists(model.Email)) 
             {
-                return RedirectToAction(nameof(UserList));
+                ModelState.AddModelError(string.Empty, "Email already exists");
+                return View(model);
             }
+
+            // Generate 6-digit OTP
+            var otp = Helpers.OtpHelper.Generate6DigitOtp();
+            var expiry = DateTime.UtcNow.AddMinutes(10);
             
-            ModelState.AddModelError("", "User creation failed (email might be taken)");
-            return View(user);
+            // Store EVERYTHING in session (Email, Password, OTP, Expiry)
+            // Using same keys as AccountController.Signup so VerifyOtp works
+            HttpContext.Session.SetString("SignupEmail", model.Email);
+            HttpContext.Session.SetString("SignupPassword", model.Password);
+            HttpContext.Session.SetString("SignupFullName", model.Name);
+            HttpContext.Session.SetString("SignupOtp", otp);
+            HttpContext.Session.SetString("SignupOtpExpiry", expiry.ToString("O")); // ISO 8601
+
+            // Send OTP email
+            await emailService.SendEmailAsync(model.Email, "Verify Your Email", Helpers.OtpHelper.GetOtpEmailBody(otp));
+
+            return RedirectToAction("VerifyOtp", "Account");
         }
 
         [HttpGet]

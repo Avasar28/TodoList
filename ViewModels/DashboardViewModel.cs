@@ -4,6 +4,12 @@ using TodoListApp.Services;
 
 namespace TodoListApp.ViewModels
 {
+    public class TimeZoneOption
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+    }
+
     public class DashboardViewModel
     {
         public string UserName { get; set; } = string.Empty;
@@ -22,6 +28,6 @@ namespace TodoListApp.ViewModels
         public string TargetTimeZone { get; set; } = "GMT Standard Time";
 
         public List<string> AvailableCurrencies { get; set; } = new List<string> { "USD", "EUR", "GBP", "JPY", "INR", "AUD", "CAD", "CHF" };
-        public List<string> AvailableTimeZones { get; set; } = new List<string>();
+        public List<TimeZoneOption> AvailableTimeZones { get; set; } = new List<TimeZoneOption>();
     }
 }

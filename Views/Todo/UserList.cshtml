@@ -20,6 +20,7 @@
                     <th style="text-align: left; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">User ID</th>
                     <th style="text-align: left; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">Full Name</th>
                     <th style="text-align: left; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">Email</th>
+                    <th style="text-align: left; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">Password Hash</th>
                     <th style="text-align: right; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">Actions</th>
                 </tr>
             </thead>
@@ -30,6 +31,7 @@
                         <td style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">@user.Id</td>
                         <td style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">@(user.Name ?? "N/A")</td>
                         <td style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">@user.Email</td>
+                        <td style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: monospace; font-size: 0.8rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@user.Password">@user.Password</td>
                         <td style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: right;">
                             <a asp-action="EditUser" asp-route-id="@user.Id" class="btn btn-sm btn-secondary" style="margin-right: 5px;">Edit</a>
                             <form asp-action="DeleteUser" asp-route-id="@user.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure?');">

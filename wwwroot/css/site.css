@@ -772,32 +772,536 @@ h1 {
   margin-top: 1.5rem;
 }
 
-/* When the card is wide enough, specific internal adjustments */
-@media (min-width: 1200px) {
-  /* Example: If you wanted side-by-side for very wide cards, 
-       but column usually works best for these widgets. 
-       Let's keep them centered but allowing full width usage. */
+/* Summary Widgets */
+.summary-widget {
+  cursor: pointer;
+  flex-direction: column;
+  padding: 0 !important;
+  transition: var(--transition);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+  display: flex;
 }
 
-@media (max-width: 1024px) {
-  .realtime-grid.featured-grid {
-    gap: 1.5rem;
-    grid-template-columns: 1fr;
-    /* Stack on smaller screens/tablets if they can't fit 450px side by side comfortably */
+.summary-widget:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+}
+
+.widget-preview {
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+.widget-action {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--accent-color);
+  font-weight: 500;
+  text-align: center;
+  border-top: 1px solid var(--glass-border);
+  transition: background 0.2s;
+}
+
+.summary-widget:hover .widget-action {
+  background: rgba(129, 140, 248, 0.1);
+}
+
+.insight-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+/* Detail Panels */
+.details-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 2000;
+}
+
+.details-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.details-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -45%) scale(0.95);
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  background: #1e293b;
+  border: 1px solid var(--glass-border);
+  border-radius: 28px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+  z-index: 2001;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.details-panel.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.panel-header {
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+}
+
+.close-panel {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.close-panel:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.panel-content {
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.panel-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 0.5rem;
+  margin: 2rem 0 1rem 0;
+}
+
+/* Detail Form */
+.detail-form .form-group label {
+  font-size: 0.9rem;
+}
+
+.input-with-button {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.input-with-button .form-control {
+  flex: 1;
+}
+
+.btn-primary-sm {
+  background: var(--accent-gradient);
+  border: none;
+  color: white;
+  padding: 0 1.25rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.btn-secondary-sm {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: white;
+  padding: 0 0.75rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-secondary-sm:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-color);
+}
+
+.btn-secondary-sm.loading {
+  animation: spin 1s linear infinite;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
   }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.btn-primary-sm:hover {
+  transform: scale(1.05);
+}
+
+/* Enhanced Weather Panel */
+.weather-expanded {
+  padding: 1.5rem !important;
+}
+
+.location-header {
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.location-header h3 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: white;
+}
+
+.location-header p {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.weather-grid-detailed {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.weather-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.metric-card {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-card .m-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.metric-card .m-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+}
+
+.metric-card .m-sub {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.info-card-glass {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1.25rem;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+}
+
+.panel-subtitle-small {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.aqi-display,
+.uv-display {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.aqi-val,
+.uv-val {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.aqi-level,
+.uv-risk {
+  font-size: 0.9rem;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+}
+
+.astro-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.astro-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.astro-item span {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.astro-item strong {
+  font-size: 1rem;
+  color: white;
+}
+
+.glass-hr {
+  border: 0;
+  border-top: 1px solid var(--glass-border);
+  margin: 1rem 0;
+}
+
+.moon-phase-details {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.moon-icon-huge {
+  font-size: 3rem;
+}
+
+.moon-text span {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.moon-text strong {
+  color: white;
+  font-size: 0.9rem;
+}
+
+.weather-forecast-list {
+  grid-template-columns: repeat(5, 1fr) !important;
+}
+
+.day-temps {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.day-temps .max {
+  color: #f87171;
+}
+
+.day-temps .min {
+  color: #818cf8;
+}
+
+.day-desc {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  display: block;
+  margin-top: 0.25rem;
 }
 
 @media (max-width: 768px) {
-  .realtime-grid.featured-grid {
+  .weather-grid-detailed {
     grid-template-columns: 1fr;
   }
 }
 
-.insight-card.featured:hover {
-  transform: translateY(-5px);
+.current-weather-hero {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 2rem;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+}
+
+.hero-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.hero-temp {
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+.hero-desc {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.weather-forecast-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+}
+
+.forecast-item {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1rem;
+  border-radius: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.forecast-item .day-name {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.forecast-item .day-icon {
+  font-size: 1.5rem;
+}
+
+/* Currency Content */
+.currency-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.arrow-center {
+  padding-bottom: 1rem;
+  color: var(--text-secondary);
+}
+
+.rate-value {
+  display: block;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 2rem 0;
+  color: var(--accent-color);
+}
+
+.chart-container-large {
+  height: 250px;
+  width: 100%;
+}
+
+/* Time Content */
+.time-result-box {
+  background: rgba(129, 140, 248, 0.1);
+  padding: 2.5rem 1rem;
+  border-radius: 20px;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.converted-time .time-value {
+  display: block;
+  font-size: 3.5rem;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.converted-time .time-label {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.world-clock-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.clock-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+}
+
+.clock-row .city {
+  color: var(--text-secondary);
+}
+
+.clock-row .time {
+  font-weight: 500;
+}
+
+.btn-secondary-glass {
   background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 0 20px var(--accent-glow);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 0.6rem 1.25rem;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-secondary-glass:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.flex-1 {
+  flex: 1;
 }
 
 .insight-icon {
@@ -1046,4 +1550,307 @@ h1 {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-primary);
+}
+/* Enhanced Currency Converter */
+.currency-converter-card {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1.5rem;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  margin-bottom: 2rem;
+}
+
+.currency-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-swap {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.btn-swap:hover {
+  background: var(--accent-color);
+  transform: rotate(180deg);
+}
+
+.result-display {
+  margin-top: 2rem;
+  text-align: center;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+}
+
+.conversion-val {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  line-height: 1;
+}
+
+.rate-info {
+  margin-top: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.currency-stats {
+  margin-top: 2rem;
+}
+
+.result-header {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.sync-time {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+#fromCurrencySelect, #toCurrencySelect {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* Loading Shimmer Effect */
+.loading-shimmer {
+  background: linear-gradient(90deg, 
+    rgba(255,255,255,0.03) 25%, 
+    rgba(255,255,255,0.08) 50%, 
+    rgba(255,255,255,0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  display: inline-block;
+  min-width: 50px;
+  min-height: 1em;
+  vertical-align: middle;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.insight-card.loading .insight-value,
+.insight-card.loading .insight-meta,
+.insight-card.loading .insight-icon {
+  visibility: hidden;
+}
+
+.insight-card.loading {
+  position: relative;
+}
+
+.insight-card.loading::after {
+  content: "";
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  right: 1rem;
+  bottom: 4rem;
+  background: linear-gradient(90deg, 
+    rgba(255,255,255,0.03) 25%, 
+    rgba(255,255,255,0.08) 50%, 
+    rgba(255,255,255,0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 12px;
+}
+
+/* Time Hub Enhancements */
+.searchable-select-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tz-filter {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  font-size: 0.8rem !important;
+  padding: 0.4rem 0.8rem !important;
+}
+
+.tz-filter:focus {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: var(--accent-primary) !important;
+  outline: none;
+}
+
+input[type="time"].form-control {
+  font-size: 1.2rem;
+  font-weight: 500;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+/* Local Clock UI */
+.local-clock-container {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.live-clock {
+  font-size: 3.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  line-height: 1;
+}
+
+.live-date {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.tz-badge {
+  margin-top: 0.5rem;
+  background: rgba(var(--accent-primary-rgb), 0.15);
+  color: var(--accent-primary);
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
+  backdrop-filter: blur(5px);
+}
+
+.pulse {
+  animation: badgePulse 2s infinite;
+}
+
+@keyframes badgePulse {
+  0% { box-shadow: 0 0 0 0 rgba(var(--accent-primary-rgb), 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(var(--accent-primary-rgb), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--accent-primary-rgb), 0); }
+}
+
+/* Day Change Badge */
+.conversion-result-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.day-change-badge {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.day-change-badge.next-day {
+  background: rgba(46, 213, 115, 0.2);
+  color: #2ed573;
+  border: 1px solid rgba(46, 213, 115, 0.3);
+}
+
+.day-change-badge.prev-day {
+  background: rgba(255, 71, 87, 0.2);
+  color: #ff4757;
+  border: 1px solid rgba(255, 71, 87, 0.3);
+}
+
+/* Header Controls & Toggle */
+.header-controls {
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.format-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.4rem 1rem;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toggle-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 1px;
+}
+
+/* Switch Styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 34px;
+  height: 20px;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(255, 255, 255, 0.2);
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider { background-color: var(--accent-primary); }
+input:checked + .slider:before { transform: translateX(14px); }
+.slider.round { border-radius: 34px; }
+.slider.round:before { border-radius: 50%; }
+
+/* Time Abbreviation Badge */
+.tz-abbr-badge {
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }

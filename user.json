@@ -1,8 +1,8 @@
 [
   {
     "Id": 1,
-    "Email": "savaliyaavasar@gmail.com",
-    "Password": "$2a$11$2uXqhuVAhtTxv4H7N8pH8O1QtZCBxOHrEd3rU/Yn4pOuiaVJDpUuS",
+    "Email": "projtest28@gmail.com",
+    "Password": "$2a$11$I4OCQFxj/7VwlXQsN1BPo.kxvZVQySDSPzHa/lsVHI4WtUZaRS.IC",
     "ResetToken": null,
     "ResetTokenExpiry": null,
     "IsEmailVerified": true,
@@ -19,30 +19,12 @@
   },
   {
     "Id": 2,
-    "Email": "projtest28@gmail.com",
-    "Password": "$2a$11$Jim6R9OeFNjA9C87OFnLeOUHgNCRqxnPzXF1.qYscZ0IAreAp3Exi",
+    "Email": "savaliyaavasar@gmail.com",
+    "Password": "$2a$11$MYLjPY69hH2/8XU9mwgxJePYlz/XMdL3xa6dQBwTXK8IMrxG9QQk.",
     "ResetToken": null,
     "ResetTokenExpiry": null,
     "IsEmailVerified": true,
     "Name": "Avsar Savaliya",
-    "Preferences": {
-      "DefaultCity": null,
-      "DefaultFromCurrency": null,
-      "DefaultToCurrency": null,
-      "DefaultSourceTimeZone": null,
-      "DefaultTargetTimeZone": null,
-      "FavoriteCities": [],
-      "FavoriteCurrencyPairs": []
-    }
-  },
-  {
-    "Id": 3,
-    "Email": "a@gmial.com",
-    "Password": "$2a$11$smEln2JZ7s6oR7A0qlY9GOyo6e72gCDgx/G58rc6vxutj8jaVklSy",
-    "ResetToken": null,
-    "ResetTokenExpiry": null,
-    "IsEmailVerified": true,
-    "Name": "a",
     "Preferences": {
       "DefaultCity": null,
       "DefaultFromCurrency": null,
