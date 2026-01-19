@@ -8,6 +8,8 @@ namespace TodoListApp.ViewModels
     {
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
+        public string Offset { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty; // Includes cities/countries search terms
     }
 
     public class DashboardViewModel
@@ -21,13 +23,20 @@ namespace TodoListApp.ViewModels
         public TimeData TimeConversion { get; set; } = new TimeData();
 
         // Interactive Inputs
-        public string SelectedCity { get; set; } = "London";
+        public string SelectedCity { get; set; } = "";
         public string FromCurrency { get; set; } = "USD";
         public string ToCurrency { get; set; } = "EUR";
         public string SourceTimeZone { get; set; } = "UTC";
         public string TargetTimeZone { get; set; } = "GMT Standard Time";
 
-        public List<string> AvailableCurrencies { get; set; } = new List<string> { "USD", "EUR", "GBP", "JPY", "INR", "AUD", "CAD", "CHF" };
+        public static List<string> StaticAvailableCurrencies { get; set; } = new List<string> { 
+            "USD", "EUR", "GBP", "JPY", "INR", "AUD", "CAD", "CHF", "CNY", "HKD", 
+            "NZD", "BRL", "RUB", "KRW", "MXN", "SGD", "THB", "TRY", "ZAR", "ILS", 
+            "PHP", "MYR", "IDR", "CZK", "HUF", "PLN", "RON", "SEK", "ISK", "NOK", 
+            "HRK", "BGN", "DKK", "AED", "SAR" 
+        };
+
+        public List<string> AvailableCurrencies => StaticAvailableCurrencies;
         public List<TimeZoneOption> AvailableTimeZones { get; set; } = new List<TimeZoneOption>();
     }
 }

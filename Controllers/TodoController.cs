@@ -21,12 +21,12 @@ namespace TodoListApp.Controllers
             _userService = userService;
         }
 
-        public IActionResult Dashboard(string? city, string? fromCurrency, string? toCurrency, string? sourceTime, string? targetTime)
+        public async Task<IActionResult> Dashboard(string? city, string? fromCurrency, string? toCurrency, string? sourceTime, string? targetTime)
         {
             var userId = GetUserId();
             var user = _userService.GetUser(userId);
             
-            // Apply Defaults if params are missing
+            // Apply User Preferences if params are missing
             if (user != null)
             {
                 city ??= user.Preferences.DefaultCity;
@@ -36,28 +36,56 @@ namespace TodoListApp.Controllers
                 targetTime ??= user.Preferences.DefaultTargetTimeZone;
             }
 
-            // Fallbacks (Immediate)
-            city ??= "London";
-            fromCurrency ??= "USD";
+            // If still missing (new user or no prefs), try IP-based detection
+            if (string.IsNullOrEmpty(city) || string.IsNullOrEmpty(fromCurrency) || string.IsNullOrEmpty(sourceTime))
+            {
+                var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
+                if (Request.Headers.ContainsKey("X-Forwarded-For"))
+                    ip = Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? "";
+
+                var detectedLocation = await _externalApiService.GetLocationFromIpAsync(ip);
+                
+                city ??= detectedLocation.City;
+                fromCurrency ??= detectedLocation.Currency;
+                sourceTime ??= detectedLocation.TimeZoneId;
+            }
+
+            // Final Fallbacks (if detection failed or returned blanks)
+            city = string.IsNullOrEmpty(city) ? "" : city;
+            fromCurrency = string.IsNullOrEmpty(fromCurrency) ? "USD" : fromCurrency;
             toCurrency ??= "EUR";
-            sourceTime ??= "UTC";
+            sourceTime = string.IsNullOrEmpty(sourceTime) ? "UTC" : sourceTime;
             targetTime ??= "GMT Standard Time";
 
             var model = new ViewModels.DashboardViewModel
             {
                 UserName = user?.Name ?? user?.Email.Split('@')[0] ?? "User",
                 Preferences = user?.Preferences ?? new UserPreferences(),
-                // Keep default empty objects for Weather, Currency, TimeConversion to avoid nulls in View
                 SelectedCity = city,
                 FromCurrency = fromCurrency,
                 ToCurrency = toCurrency,
                 SourceTimeZone = sourceTime,
                 TargetTimeZone = targetTime,
                 AvailableTimeZones = TimeZoneInfo.GetSystemTimeZones()
-                    .Select(z => new ViewModels.TimeZoneOption { Id = z.Id, Name = z.DisplayName })
+                    .Select(z => {
+                        var offset = z.BaseUtcOffset;
+                        var offsetDisplay = $"UTC{(offset.Ticks >= 0 ? "+" : "-")}{Math.Abs(offset.Hours):D2}:{Math.Abs(offset.Minutes):D2}";
+                        return new ViewModels.TimeZoneOption { 
+                            Id = z.Id, 
+                            Name = z.DisplayName,
+                            Offset = offsetDisplay,
+                            FullName = $"{z.DisplayName} {z.Id}".ToLower()
+                        };
+                    })
                     .OrderBy(z => z.Name)
                     .ToList()
             };
+
+            // Don't fetch data server-side - let client handle it for faster initial render
+            // This prevents the dashboard from hanging if external APIs are slow
+            model.Weather = new Services.WeatherData();
+            model.Currency = new Services.CurrencyConversionData { From = fromCurrency, To = toCurrency, Rate = 0 };
+            model.TimeConversion = new Services.TimeData();
 
             return View(model);
         }
@@ -87,9 +115,16 @@ namespace TodoListApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetCurrencyHistoryJson(string from, string to)
+        public async Task<IActionResult> ResolveCurrencyByLocation(string location)
         {
-            var data = await _externalApiService.GetCurrencyHistoryAsync(from, to);
+            var currencyCode = await _externalApiService.GetCurrencyFromLocationAsync(location);
+            return Json(new { currencyCode });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCurrencyHistoryJson(string from, string to, int days = 7)
+        {
+            var data = await _externalApiService.GetCurrencyHistoryAsync(from, to, days);
             return Json(data);
         }
 

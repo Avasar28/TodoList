@@ -28,11 +28,11 @@
         <!-- Weather Widget -->
         <div class="insight-card summary-widget weather loading" onclick="openDetails('weather')">
             <div class="widget-preview">
-                <div class="insight-icon" id="summaryWeatherIcon">🌡️</div>
+                <div class="insight-icon" id="summaryWeatherIcon">@(string.IsNullOrEmpty(Model.Weather.Icon) ? "🌡️" : Model.Weather.Icon)</div>
                 <div class="insight-info">
                     <span class="insight-label">Local Weather</span>
-                    <span class="insight-value" id="summaryWeatherTemp">--°C</span>
-                    <span class="insight-meta" id="summaryWeatherMeta">@Model.SelectedCity • Loading...</span>
+                    <span class="insight-value" id="summaryWeatherTemp">@(Model.Weather.Temperature > 0 ? Model.Weather.Temperature + "°C" : "--°C")</span>
+                    <span class="insight-meta" id="summaryWeatherMeta">@(string.IsNullOrEmpty(Model.Weather.City) ? Model.SelectedCity + " • Loading..." : Model.Weather.City + " • " + Model.Weather.Description)</span>
                 </div>
             </div>
             <div class="widget-action">
@@ -46,8 +46,8 @@
                 <div class="insight-icon">💱</div>
                 <div class="insight-info">
                     <span class="insight-label">Currency Exchange</span>
-                    <span class="insight-value" id="summaryCurrencyRate">--.----</span>
-                    <span class="insight-meta" id="summaryCurrencyMeta">1 @Model.FromCurrency = -- @Model.ToCurrency</span>
+                    <span class="insight-value" id="summaryCurrencyRate">@(Model.Currency.Rate > 0 ? Model.Currency.Rate.ToString("F4") : "--.----")</span>
+                    <span class="insight-meta" id="summaryCurrencyMeta">1 @Model.FromCurrency = @(Model.Currency.Rate > 0 ? Model.Currency.Rate.ToString("F4") : "--") @Model.ToCurrency</span>
                 </div>
             </div>
             <div class="widget-action">
@@ -61,7 +61,7 @@
                 <div class="insight-icon">🌍</div>
                 <div class="insight-info">
                     <span class="insight-label">Time Converter</span>
-                    <span class="insight-value" id="summaryTargetTime">--:--</span>
+                    <span class="insight-value" id="summaryTargetTime" data-offset="@Model.TimeConversion.TotalOffsetMinutes">@(string.IsNullOrEmpty(Model.TimeConversion.TargetTime) ? "--:--" : Model.TimeConversion.TargetTime)</span>
                     <span class="insight-meta" id="summaryTimeMeta">@Model.TargetTimeZone</span>
                 </div>
             </div>
@@ -222,33 +222,68 @@
                     <input type="number" id="convertAmount" value="1" class="form-control" step="any" />
                 </div>
                 
-                <div class="currency-row">
-                    <div class="form-group flex-1">
-                        <label>From</label>
-                        <select id="fromCurrencySelect" name="fromCurrency" class="form-control">
-                            @foreach(var curr in Model.AvailableCurrencies) {
-                                <option value="@curr" selected="@(curr == Model.FromCurrency)">
-                                    @TodoListApp.Services.ExternalApiService.GetCurrencyFlag(curr) @curr
-                                </option>
-                            }
-                        </select>
+                <div class="currency-horizontal-row">
+                    <div class="currency-btn-item">
+                        <span class="btn-mini-label">From</span>
+                        <div class="custom-currency-select" id="fromCurrencyWrapper">
+                            <div class="select-header" onclick="focusInput('fromSearch')">
+                                <span class="select-icon">💰</span>
+                                <input type="text" class="btn-search-input" id="fromSearch" placeholder="Search..." data-target="fromCurrencySelect" autocomplete="off" />
+                            </div>
+                            <div class="custom-options" id="fromOptions">
+                                @foreach(var curr in Model.AvailableCurrencies) {
+                                    var info = TodoListApp.Services.ExternalApiService.GetCurrencyInfo(curr);
+                                    <div class="option-item" data-value="@curr" data-text="@info.Flag @curr - @info.Country" data-country="@info.Country">
+                                        <span class="opt-flag">@info.Flag</span>
+                                        <span class="opt-code">@curr</span>
+                                        <span class="opt-country">@info.Country</span>
+                                    </div>
+                                }
+                            </div>
+                            <select id="fromCurrencySelect" name="fromCurrency" style="display: none;">
+                                @foreach(var curr in Model.AvailableCurrencies) {
+                                    <option value="@curr" selected="@(curr == Model.FromCurrency)">@curr</option>
+                                }
+                            </select>
+                        </div>
                     </div>
-                    <button type="button" class="btn-swap" id="swapCurrencies" title="Swap currencies">⇄</button>
-                    <div class="form-group flex-1">
-                        <label>To</label>
-                        <select id="toCurrencySelect" name="toCurrency" class="form-control">
-                            @foreach(var curr in Model.AvailableCurrencies) {
-                                <option value="@curr" selected="@(curr == Model.ToCurrency)">
-                                    @TodoListApp.Services.ExternalApiService.GetCurrencyFlag(curr) @curr
-                                </option>
-                            }
-                        </select>
+                    
+                    <button type="button" class="central-swap-circle" id="swapCurrencies" title="Swap currencies">⇄</button>
+                    
+                    <div class="currency-btn-item">
+                        <span class="btn-mini-label">To</span>
+                        <div class="custom-currency-select" id="toCurrencyWrapper">
+                            <div class="select-header" onclick="focusInput('toSearch')">
+                                <span class="select-icon">🎯</span>
+                                <input type="text" class="btn-search-input" id="toSearch" placeholder="Search..." data-target="toCurrencySelect" autocomplete="off" />
+                            </div>
+                            <div class="custom-options" id="toOptions">
+                                @foreach(var curr in Model.AvailableCurrencies) {
+                                    var info = TodoListApp.Services.ExternalApiService.GetCurrencyInfo(curr);
+                                    <div class="option-item" data-value="@curr" data-text="@info.Flag @curr - @info.Country" data-country="@info.Country">
+                                        <span class="opt-flag">@info.Flag</span>
+                                        <span class="opt-code">@curr</span>
+                                        <span class="opt-country">@info.Country</span>
+                                    </div>
+                                }
+                            </div>
+                            <select id="toCurrencySelect" name="toCurrency" style="display: none;">
+                                @foreach(var curr in Model.AvailableCurrencies) {
+                                    <option value="@curr" selected="@(curr == Model.ToCurrency)">@curr</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                 </div>
 
                 <div class="result-display">
                     <div class="result-header">Converted Amount</div>
-                    <div id="conversionResult" class="conversion-val">@Model.Currency.Rate</div>
+                    <div class="conversion-result-row">
+                        <div id="conversionResult" class="conversion-val">@Model.Currency.Rate</div>
+                        <div id="rateMovement" class="movement-badge @(Model.Currency.IsUp == null ? "d-none" : (Model.Currency.IsUp == true ? "up" : "down"))">
+                            @(Model.Currency.IsUp == true ? "↑" : "↓")
+                        </div>
+                    </div>
                     <div id="baseRateInfo" class="rate-info">1 @Model.Currency.From = @Model.Currency.Rate @Model.Currency.To</div>
                     <div id="currencyTimestamp" class="sync-time">Last Synced: @Model.Currency.LastUpdated</div>
                 </div>
@@ -257,7 +292,7 @@
 
         <div class="currency-stats">
             <div class="chart-box">
-                <h3 class="panel-subtitle">Market History (Last 30 Days)</h3>
+                <h3 class="panel-subtitle">Market History (Last 7 Days)</h3>
                 <div class="chart-container-large">
                     <canvas id="currencyChartFull"></canvas>
                 </div>
@@ -274,30 +309,69 @@
     </div>
     <div class="panel-content">
         <form id="timeForm" class="detail-form">
-            <div class="currency-converter-card"> <!-- Reusing styling for consistency -->
+            <div class="header-controls">
+                <div class="format-toggle">
+                    <span class="toggle-label">12H</span>
+                    <label class="switch">
+                        <input type="checkbox" id="timeFormatToggle" onchange="refreshTimeData(); refreshLocalClock();">
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="toggle-label">24H</span>
+                </div>
+            </div>
+
+            <div class="currency-converter-card">
                 <div class="form-group">
                     <label>Time to Convert</label>
                     <input type="time" id="convertTimeInput" class="form-control" />
                     <small class="text-muted">Defaults to current time if left empty</small>
                 </div>
                 
-                <div class="currency-row">
-                    <div class="form-group flex-1">
-                        <label>Source Zone</label>
-                        <div class="searchable-select-container">
-                            <input type="text" class="form-control-sm tz-filter" placeholder="Filter timezone..." data-target="sourceTimeSelect" />
-                            <select id="sourceTimeSelect" name="sourceTime" class="form-control">
-                                <!-- Populated by JS -->
+                <div class="currency-horizontal-row">
+                    <div class="currency-btn-item">
+                        <span class="btn-mini-label">Source Zone</span>
+                        <div class="custom-currency-select" id="sourceTimeWrapper">
+                            <div class="select-header" onclick="focusInput('sourceTimeSearch')">
+                                <span class="select-icon">📍</span>
+                                <input type="text" class="btn-search-input" id="sourceTimeSearch" placeholder="Search city/country..." autocomplete="off" />
+                            </div>
+                            <div class="custom-options" id="sourceTimeOptions">
+                                @foreach(var tz in Model.AvailableTimeZones) {
+                                    <div class="option-item" data-value="@tz.Id" data-text="@tz.Name" data-full="@tz.FullName">
+                                        <span class="opt-code">@tz.Offset</span>
+                                        <span class="opt-country">@tz.Name</span>
+                                    </div>
+                                }
+                            </div>
+                            <select id="sourceTimeSelect" name="sourceTime" style="display: none;">
+                                @foreach(var tz in Model.AvailableTimeZones) {
+                                    <option value="@tz.Id" selected="@(tz.Id == Model.SourceTimeZone)">@tz.Name</option>
+                                }
                             </select>
                         </div>
                     </div>
-                    <button type="button" class="btn-swap" id="swapTimeZones" title="Swap timezones">⇄</button>
-                    <div class="form-group flex-1">
-                        <label>Target Zone</label>
-                        <div class="searchable-select-container">
-                            <input type="text" class="form-control-sm tz-filter" placeholder="Filter timezone..." data-target="targetTimeSelect" />
-                            <select id="targetTimeSelect" name="targetTime" class="form-control">
-                                <!-- Populated by JS -->
+
+                    <button type="button" class="central-swap-circle" id="swapTimeZones" title="Swap timezones">⇄</button>
+
+                    <div class="currency-btn-item">
+                        <span class="btn-mini-label">Target Zone</span>
+                        <div class="custom-currency-select" id="targetTimeWrapper">
+                            <div class="select-header" onclick="focusInput('targetTimeSearch')">
+                                <span class="select-icon">🌏</span>
+                                <input type="text" class="btn-search-input" id="targetTimeSearch" placeholder="Search city/country..." autocomplete="off" />
+                            </div>
+                            <div class="custom-options" id="targetTimeOptions">
+                                @foreach(var tz in Model.AvailableTimeZones) {
+                                    <div class="option-item" data-value="@tz.Id" data-text="@tz.Name" data-full="@tz.FullName">
+                                        <span class="opt-code">@tz.Offset</span>
+                                        <span class="opt-country">@tz.Name</span>
+                                    </div>
+                                }
+                            </div>
+                            <select id="targetTimeSelect" name="targetTime" style="display: none;">
+                                @foreach(var tz in Model.AvailableTimeZones) {
+                                    <option value="@tz.Id" selected="@(tz.Id == Model.TargetTimeZone)">@tz.Name</option>
+                                }
                             </select>
                         </div>
                     </div>
@@ -395,7 +469,8 @@
             const to = toSelect?.value || '@Model.ToCurrency';
             
             try {
-                const res = await fetch(`/Todo/GetCurrencyHistoryJson?from=${from}&to=${to}`);
+                // Specifically request 7 days of history
+                const res = await fetch(`/Todo/GetCurrencyHistoryJson?from=${from}&to=${to}&days=7`);
                 const data = await res.json();
                 
                 if(data.labels && data.values) {
@@ -406,21 +481,22 @@
                         data: {
                             labels: data.labels,
                             datasets: [{
-                                label: `${from} to ${to} (30D)`,
+                                label: `${from} to ${to} (7D Trend)`,
                                 data: data.values,
                                 borderColor: '#818cf8',
                                 backgroundColor: 'rgba(129, 140, 248, 0.1)',
                                 tension: 0.4,
                                 fill: true,
                                 pointBackgroundColor: '#818cf8',
-                                pointRadius: 3
+                                pointRadius: 4,
+                                pointHoverRadius: 6
                             }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
                             plugins: { 
-                                legend: { display: false },
+                                legend: { display: true, labels: { color: 'rgba(255,255,255,0.7)', font: { size: 12 } } },
                                 tooltip: {
                                     backgroundColor: 'rgba(15, 23, 42, 0.9)',
                                     titleColor: '#fff',
@@ -540,10 +616,19 @@
 
         function updateWeatherUI(data) {
             // 1. Update Layout/Header
-            const locText = data.district ? `${data.city}, ${data.district}` : data.city;
-            document.getElementById('weatherLocation').textContent = locText;
+            let title = data.city || "My Location";
+            if (data.localArea && data.localArea !== data.city) {
+                title = `${data.localArea}, ${data.city}`;
+            }
+            document.getElementById('weatherLocation').textContent = title;
+
+            const subLocParts = [];
+            if (data.district && data.district !== data.city && data.district !== data.localArea) subLocParts.push(data.district);
+            if (data.state) subLocParts.push(data.state);
+            if (data.country) subLocParts.push(data.country);
+            
             const subLoc = document.getElementById('weatherSubLocation');
-            if (subLoc) subLoc.textContent = (data.state ? data.state + ', ' : '') + data.country;
+            if (subLoc) subLoc.textContent = subLocParts.join(', ');
             document.getElementById('weatherCoords').textContent = `Lat: ${data.latitude.toFixed(4)} | Lon: ${data.longitude.toFixed(4)}`;
 
             // 2. Update Summary Widget
@@ -551,7 +636,7 @@
             if (weatherSummary) {
                 weatherSummary.querySelector('.insight-icon').textContent = data.icon;
                 weatherSummary.querySelector('.insight-value').textContent = data.temperature + '°C';
-                weatherSummary.querySelector('.insight-meta').textContent = data.city + ' • ' + data.description;
+                weatherSummary.querySelector('.insight-meta').textContent = title + ' • ' + data.description;
             }
 
             // 3. Update Detail Panel Hero
@@ -602,24 +687,7 @@
             if (cityInput) cityInput.value = data.city;
         }
 
-        // Auto-Geolocate on first visit if no specific city is set (and not the default "London")
-        @if (Model.SelectedCity == "London") {
-            <text>
-            window.addEventListener('load', () => {
-                // We ask permission automatically if it's still London
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(async (pos) => {
-                        const { latitude, longitude } = pos.coords;
-                        const res = await fetch(`/Todo/GetWeatherByCoordsJson?lat=${latitude}&lon=${longitude}`);
-                        const data = await res.json();
-                        updateWeatherUI(data);
-                    }, () => {
-                        console.log("Auto-geolocation declined.");
-                    });
-                }
-            });
-            </text>
-        }
+        // Auto-Geolocate logic moved to initDashboard to avoid redundancy
 
         // --- 6. Currency Converter AJAX ---
         const currencyForm = document.getElementById('currencyForm');
@@ -631,16 +699,23 @@
         let currentRate = @Model.Currency.Rate;
 
         async function refreshCurrencyData() {
+            console.log(">>> refreshCurrencyData() called");
             const from = fromSelect.value;
             const to = toSelect.value;
+            console.log("Currency pair:", from, "to", to);
+            const card = document.querySelector('.insight-card.currency');
             try {
                 const res = await fetch(`/Todo/GetCurrencyJson?from=${from}&to=${to}`);
+                console.log("Currency API response status:", res.status);
                 const data = await res.json();
+                console.log("Currency data received:", data);
                 currentRate = data.rate;
                 updateCurrencyUI(data);
                 loadCurrencyHistory(); // Refresh chart too
+                console.log("<<< refreshCurrencyData() complete");
             } catch (e) {
-                console.error("Currency fetch failed", e);
+                console.error("Currency fetch failed:", e);
+                if (card) card.classList.remove('loading');
             }
         }
 
@@ -649,13 +724,31 @@
             const summaryWidget = document.querySelector('.insight-card.currency');
             if (summaryWidget) {
                 summaryWidget.classList.remove('loading');
-                document.getElementById('summaryCurrencyRate').textContent = data.rate;
-                document.getElementById('summaryCurrencyMeta').textContent = `1 ${data.from} = ${data.rate} ${data.to}`;
+                const rateEl = document.getElementById('summaryCurrencyRate');
+                if (rateEl) rateEl.textContent = data.rate;
+                const metaEl = document.getElementById('summaryTimeMeta'); // reused meta if exists or others
+                const subMetaEl = document.getElementById('summaryCurrencyMeta');
+                if (subMetaEl) subMetaEl.textContent = `1 ${data.from} = ${data.rate} ${data.to}`;
             }
             
             // Update Panel Result
             document.getElementById('baseRateInfo').textContent = `1 ${data.from} = ${data.rate} ${data.to}`;
             document.getElementById('currencyTimestamp').textContent = `Last Synced: ${data.lastUpdated}`;
+            
+            const movementBadge = document.getElementById('rateMovement');
+            if (movementBadge) {
+                movementBadge.classList.remove('d-none', 'up', 'down');
+                if (data.isUp === true) {
+                    movementBadge.textContent = '↑';
+                    movementBadge.classList.add('up');
+                } else if (data.isUp === false) {
+                    movementBadge.textContent = '↓';
+                    movementBadge.classList.add('down');
+                } else {
+                    movementBadge.classList.add('d-none');
+                }
+            }
+
             calculateResult();
         }
 
@@ -670,35 +763,203 @@
         if (fromSelect) fromSelect.addEventListener('change', refreshCurrencyData);
         if (toSelect) toSelect.addEventListener('change', refreshCurrencyData);
         if (amountInput) amountInput.addEventListener('input', calculateResult);
-        
-        if (swapBtn) {
-            swapBtn.addEventListener('click', () => {
-                const temp = fromSelect.value;
-                fromSelect.value = toSelect.value;
-                toSelect.value = temp;
-                refreshCurrencyData();
+        // Helper to focus input
+        window.focusInput = function(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.focus();
+                const wrapper = el.closest('.custom-currency-select');
+                if (wrapper) wrapper.classList.add('active');
+            }
+        };
+
+        // Custom Dropdown & Search Logic (shared by Currency & Time)
+        document.querySelectorAll('.custom-currency-select').forEach(wrapper => {
+            const input = wrapper.querySelector('.btn-search-input');
+            const options = wrapper.querySelector('.custom-options');
+            const select = wrapper.querySelector('select');
+            const isTime = wrapper.id.includes('Time');
+            
+            // Set initial value
+            if (select && input) {
+                const opt = select.options[select.selectedIndex];
+                if (opt) input.value = opt.text.trim();
+            }
+
+            input.addEventListener('focus', () => {
+                wrapper.classList.add('active');
+                input.select();
             });
-        }
+
+            // Close on click outside
+            document.addEventListener('click', (e) => {
+                if (!wrapper.contains(e.target)) {
+                    wrapper.classList.remove('active');
+                }
+            });
+
+            // Filtering
+            input.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase().trim();
+                const items = options.querySelectorAll('.option-item');
+                items.forEach(item => {
+                    const text = item.getAttribute('data-text').toLowerCase();
+                    const fullName = item.getAttribute('data-full')?.toLowerCase() || "";
+                    const match = text.includes(term) || fullName.includes(term);
+                    item.style.display = match ? 'flex' : 'none';
+                });
+            });
+
+            // Selection
+            options.querySelectorAll('.option-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const val = item.getAttribute('data-value');
+                    select.value = val;
+                    input.value = item.getAttribute('data-text').trim();
+                    wrapper.classList.remove('active');
+                    
+                    if (isTime) {
+                        refreshTimeData();
+                    } else {
+                        refreshCurrencyData();
+                    }
+                });
+            });
+
+            // Enter Key - Resolution (Only for Currency)
+            if (!isTime) {
+                input.addEventListener('keydown', async (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const term = input.value.trim();
+                        
+                        // 1. Direct match check
+                        const items = Array.from(options.querySelectorAll('.option-item'));
+                        const directMatch = items.find(it => 
+                            it.getAttribute('data-value').toLowerCase() === term.toLowerCase() ||
+                            it.getAttribute('data-country')?.toLowerCase() === term.toLowerCase()
+                        );
+
+                        if (directMatch) {
+                            const val = directMatch.getAttribute('data-value');
+                            select.value = val;
+                            input.value = directMatch.getAttribute('data-text').trim();
+                            refreshCurrencyData();
+                        } else {
+                            // 2. Resolve via Geocoding
+                            input.classList.add('resolving');
+                            try {
+                                const res = await fetch(`/Todo/ResolveCurrencyByLocation?location=${encodeURIComponent(term)}`);
+                                const data = await res.json();
+                                if (data.currencyCode) {
+                                    select.value = data.currencyCode;
+                                    const newMatch = items.find(it => it.getAttribute('data-value') === data.currencyCode);
+                                    if (newMatch) input.value = newMatch.getAttribute('data-text').trim();
+                                    refreshCurrencyData();
+                                } else {
+                                    alert("Could not resolve location: " + term);
+                                }
+                            } catch (err) {
+                                console.error("Resolution failed", err);
+                            } finally {
+                                input.classList.remove('resolving');
+                            }
+                        }
+                        input.blur();
+                        wrapper.classList.remove('active');
+                    }
+                });
+            } else {
+                // Time-specific Enter check
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const term = input.value.toLowerCase().trim();
+                        const items = Array.from(options.querySelectorAll('.option-item'));
+                        const match = items.find(it => 
+                            it.getAttribute('data-text').toLowerCase().includes(term) ||
+                            it.getAttribute('data-full')?.toLowerCase().includes(term)
+                        );
+                        if (match) match.click();
+                        input.blur();
+                    }
+                });
+            }
+        });
+
+        // Updated Swap Logic for Unified Buttons
+        const updateInputText = (input, val) => {
+            const wrapper = input.closest('.custom-currency-select');
+            const item = wrapper.querySelector(`.option-item[data-value="${val}"]`);
+            if (item) input.value = item.getAttribute('data-text').trim();
+        };
+
+        document.getElementById('swapCurrencies')?.addEventListener('click', () => {
+            const fromSelect = document.getElementById('fromCurrencySelect');
+            const toSelect = document.getElementById('toCurrencySelect');
+            const fromInput = document.getElementById('fromSearch');
+            const toInput = document.getElementById('toSearch');
+
+            if (!fromSelect || !toSelect) return;
+
+            const tempVal = fromSelect.value;
+            fromSelect.value = toSelect.value;
+            toSelect.value = tempVal;
+
+            if (fromInput) updateInputText(fromInput, fromSelect.value);
+            if (toInput) updateInputText(toInput, toSelect.value);
+
+            refreshCurrencyData();
+        });
+
+        document.getElementById('swapTimeZones')?.addEventListener('click', () => {
+            const srcSel = document.getElementById('sourceTimeSelect');
+            const targetSel = document.getElementById('targetTimeSelect');
+            const srcInput = document.getElementById('sourceTimeSearch');
+            const targetInput = document.getElementById('targetTimeSearch');
+
+            if (!srcSel || !targetSel) return;
+
+            const temp = srcSel.value;
+            srcSel.value = targetSel.value;
+            targetSel.value = temp;
+
+            if (srcInput) updateInputText(srcInput, srcSel.value);
+            if (targetInput) updateInputText(targetInput, targetSel.value);
+
+            refreshTimeData();
+        });
 
         // --- 7. Time Converter AJAX ---
         const timeForm = document.getElementById('timeForm');
         const sourceSelect = document.getElementById('sourceTimeSelect');
         const targetSelect = document.getElementById('targetTimeSelect');
         const timeInput = document.getElementById('convertTimeInput');
-        const swapTimeBtn = document.getElementById('swapTimeZones');
+
+        if (timeInput) timeInput.addEventListener('input', refreshTimeData);
 
         async function refreshTimeData() {
-            if (!sourceSelect || !targetSelect) return;
+            console.log(">>> refreshTimeData() called");
+            if (!sourceSelect || !targetSelect) {
+                console.warn("Time selects not found!");
+                return;
+            }
             const source = sourceSelect.value;
             const target = targetSelect.value;
             const time = timeInput ? timeInput.value : '';
+            console.log("Time zones:", source, "to", target, "time:", time);
+            const card = document.querySelector('.insight-card.time');
 
             try {
                 const res = await fetch(`/Todo/GetTimeJson?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}&time=${encodeURIComponent(time)}`);
+                console.log("Time API response status:", res.status);
                 const data = await res.json();
+                console.log("Time data received:", data);
                 updateTimeUI(data);
+                console.log("<<< refreshTimeData() complete");
             } catch (e) {
-                console.error("Time fetch failed", e);
+                console.error("Time fetch failed:", e);
+                if (card) card.classList.remove('loading');
             }
         }
 
@@ -765,182 +1026,128 @@
             });
         }
 
-        // --- 8. Timezone Population & Smart Filtering ---
-        const ianaZones = Intl.supportedValuesOf('timeZone');
-        const countryMapping = {
-            'IN': ['IST', 'India', 'India Standard Time', 'New Delhi', 'Kolkata', 'Mumbai', 'Chennai'],
-            'US': ['USA', 'United States', 'New York', 'Chicago', 'Denver', 'Los Angeles', 'Phoenix', 'Anchorage', 'Honolulu'],
-            'GB': ['UK', 'United Kingdom', 'London', 'GMT', 'BST'],
-            'AU': ['Australia', 'Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide', 'Darwin'],
-            'JP': ['Japan', 'Tokyo', 'JST'],
-            'DE': ['Germany', 'Berlin', 'Munich', 'Frankfurt'],
-            'FR': ['France', 'Paris', 'Lyon', 'Marseille'],
-            'CA': ['Canada', 'Toronto', 'Vancouver', 'Montreal', 'Ottawa', 'Calgary'],
-            'CN': ['China', 'Beijing', 'Shanghai', 'Hong Kong'],
-            'SG': ['Singapore'],
-            'AE': ['Dubai', 'Abu Dhabi', 'UAE'],
-            // Add more as needed, but Intl already covers many cities
-        };
-
-        function populateTimeZones() {
-            if (!sourceSelect || !targetSelect) return;
-            
-            const currentSource = '@Model.SourceTimeZone' || Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const currentTarget = '@Model.TargetTimeZone' || 'UTC';
-
-            const optionsHtml = ianaZones.map(tz => {
-                const parts = tz.split('/');
-                const city = parts.length > 1 ? parts[parts.length - 1].replace(/_/g, ' ') : tz;
-                const region = parts.length > 1 ? parts[0] : '';
-                const name = region ? `${city} (${region})` : city;
-                return `<option value="${tz}">${name}</option>`;
-            }).join('');
-
-            sourceSelect.innerHTML = optionsHtml;
-            targetSelect.innerHTML = optionsHtml;
-
-            sourceSelect.value = currentSource;
-            targetSelect.value = currentTarget;
-        }
-
-        document.querySelectorAll('.tz-filter').forEach(filter => {
-            filter.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase().trim();
-                const targetId = e.target.getAttribute('data-target');
-                const select = document.getElementById(targetId);
-                if (!select) return;
-
-                if (!term) {
-                    Array.from(select.options).forEach(opt => opt.style.display = '');
-                    return;
-                }
-
-                Array.from(select.options).forEach(opt => {
-                    const tzValue = opt.value.toLowerCase();
-                    const tzText = opt.text.toLowerCase();
-                    
-                    // Simple text match
-                    let match = tzValue.includes(term) || tzText.includes(term);
-                    
-                    // Advanced country/alias match
-                    if (!match) {
-                        for (const [code, aliases] of Object.entries(countryMapping)) {
-                            if (aliases.some(a => a.toLowerCase().includes(term))) {
-                                // If the term matches a country alias, check if this TZ is in that country
-                                // This is a heuristic: IANA names often contain region/city
-                                if (tzValue.includes(code.toLowerCase()) || aliases.some(a => tzValue.includes(a.toLowerCase().replace(/ /g, '_')))) {
-                                    match = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    opt.style.display = match ? '' : 'none';
-                });
-            });
-        });
-
         // --- 9. GLOBAL INITIALIZATION ---
         async function initDashboard() {
-            populateTimeZones(); // Initialize global list
-            
-            // 1. Initial Data check
+            console.log(">>> initDashboard() started");
+
             let city = '@Model.SelectedCity';
+            console.log("Initial city:", city);
             
-            // If we are at defaults and no city preference, double check location
-            // (Note: we use a simpler check here for the "quick open" intent)
-            if (city === "London" || '@Model.FromCurrency' === 'USD') {
-                try {
-                    const res = await fetch('/Todo/GetLocationJson');
-                    const loc = await res.json();
-                    if (loc) {
-                        if (city === "London" && loc.city) {
-                             city = loc.city;
-                             if (weatherInput) weatherInput.value = city;
-                        }
-                        // Auto-select currency if at default
-                        if ('@Model.FromCurrency' === 'USD' && loc.currency && fromSelect) {
-                            fromSelect.value = loc.currency;
-                        }
+            // Try browser geolocation first if no city specified
+            if (!city || city === "London") {
+                if (navigator.geolocation) {
+                    try {
+                        console.log("Attempting geolocation...");
+                        const position = await new Promise((resolve, reject) => {
+                            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 3000 });
+                        });
+                        const { latitude, longitude } = position.coords;
+                        const res = await fetch(`/Todo/GetWeatherByCoordsJson?lat=${latitude}&lon=${longitude}`);
+                        const data = await res.json();
+                        updateWeatherUI(data);
+                        city = data.city;
+                        console.log("Geolocation successful, city:", city);
+                    } catch (err) {
+                        console.warn("Geolocation failed, using default city");
                     }
-                } catch(e) {}
+                }
             }
 
-            // 2. Fire off all fetches in parallel
-            Promise.all([
-                refreshWeatherData(city),
-                refreshCurrencyData(),
-                refreshTimeData()
-            ]).then(() => {
-                console.log("Dashboard initialized.");
-            });
+            // Always fetch data on page load
+            const finalCity = city || "London";
+            console.log("Fetching data for city:", finalCity);
+            
+            console.log("Calling refreshWeatherData...");
+            refreshWeatherData(finalCity);
+            
+            console.log("Calling refreshCurrencyData...");
+            refreshCurrencyData();
+            
+            console.log("Calling refreshTimeData...");
+            refreshTimeData();
+            
+            console.log("<<< initDashboard() complete");
         }
 
         // Modified weather fetch for init
         async function refreshWeatherData(cityValue) {
+            console.log(">>> refreshWeatherData() called for:", cityValue);
+            const card = document.querySelector('.insight-card.weather');
             try {
                 const response = await fetch(`/Todo/GetWeatherJson?city=${encodeURIComponent(cityValue)}`);
+                console.log("Weather API response status:", response.status);
                 const data = await response.json();
+                console.log("Weather data received:", data);
                 updateWeatherUI(data);
-                const card = document.querySelector('.insight-card.weather');
                 if (card) card.classList.remove('loading');
+                console.log("<<< refreshWeatherData() complete");
             } catch (e) {
-                console.error("Weather init failed", e);
+                console.error("Weather fetch failed:", e);
+                if (card) card.classList.remove('loading');
             }
         }
 
         // --- 10. Local Clock & Timezone Detection ---
-        function startLocalClock() {
+        function refreshLocalClock() {
             const timeDisplay = document.getElementById('localClockTime');
             const dateDisplay = document.getElementById('localClockDate');
-            const tzLabel = document.getElementById('localTzLabel');
             const formatToggle = document.getElementById('timeFormatToggle');
+            const now = new Date();
+            const is12h = formatToggle ? !formatToggle.checked : true; // Inverted check logic if toggle is structured as 12H-24H
             
+            // Get checked state: our toggle is [checked=24H]
+            const use24h = formatToggle ? formatToggle.checked : false;
+
+            if (timeDisplay) {
+                timeDisplay.textContent = now.toLocaleTimeString(undefined, { 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit', 
+                    hour12: !use24h 
+                });
+            }
+            if (dateDisplay) dateDisplay.textContent = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function startLocalClock() {
+            const tzLabel = document.getElementById('localTzLabel');
             const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
             if (tzLabel) tzLabel.textContent = userTz;
 
             // Attempt to sync Source Zone in converter
             const sourceSel = document.getElementById('sourceTimeSelect');
-            if (sourceSel) {
+            const sourceInput = document.getElementById('sourceTimeSearch');
+            if (sourceSel && sourceInput) {
                  const ianaCity = userTz.split('/').pop().replace('_', ' ');
                  Array.from(sourceSel.options).forEach(opt => {
-                     if (opt.value.includes(ianaCity) || opt.value === userTz) {
+                     // Check for IANA ID match or descriptive match
+                     if (opt.value === userTz || opt.text.includes(ianaCity)) {
                          sourceSel.value = opt.value;
+                         updateInputText(sourceInput, opt.value);
                      }
                  });
             }
 
-            function updateTime() {
-                const now = new Date();
-                const is12h = formatToggle ? formatToggle.checked : false;
-                
-                if (timeDisplay) {
-                    timeDisplay.textContent = now.toLocaleTimeString(undefined, { 
-                        hour: '2-digit', 
-                        minute: '2-digit', 
-                        second: '2-digit', 
-                        hour12: is12h 
-                    });
-                }
-                if (dateDisplay) dateDisplay.textContent = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            }
-
-            if (formatToggle) formatToggle.addEventListener('change', () => {
-                updateTime();
-                refreshTimeData(); // Refresh panel too
-            });
-
-            updateTime();
-            setInterval(updateTime, 1000);
+            refreshLocalClock();
+            setInterval(refreshLocalClock, 1000);
         }
 
         // --- 9. Initialization ---
-        window.addEventListener('DOMContentLoaded', () => {
+        function initializeAll() {
+            console.log("=== INITIALIZING DASHBOARD ===");
             initDashboard();
             startConverterClocks();
             updateWorldClocks();
             startLocalClock();
-        });
+            console.log("=== INITIALIZATION COMPLETE ===");
+        }
+
+        // Run immediately if DOM is already loaded, otherwise wait
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeAll);
+        } else {
+            // DOM is already loaded, run immediately
+            initializeAll();
+        }
     </script>
 }

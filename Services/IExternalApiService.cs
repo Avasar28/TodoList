@@ -11,6 +11,7 @@ namespace TodoListApp.Services
         Task<TimeData> GetTimeConversionAsync(string sourceTimeZone, string targetTimeZone, string? customTime = null);
         Task<UserLocationData> GetLocationFromIpAsync(string ip);
         Task<CurrencyHistoryData> GetCurrencyHistoryAsync(string from, string to, int days = 7);
+        Task<string?> GetCurrencyFromLocationAsync(string location);
     }
 
     public class WeatherData
@@ -70,6 +71,7 @@ namespace TodoListApp.Services
         public decimal Rate { get; set; }
         public decimal ConvertedAmount { get; set; } // For 1 unit
         public string LastUpdated { get; set; } = string.Empty;
+        public bool? IsUp { get; set; } // null if unknown, true if up, false if down
     }
 
     public class TimeData

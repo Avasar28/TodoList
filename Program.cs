@@ -14,11 +14,14 @@ builder.Services.AddAuthentication("CookieAuth")
         options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
         options.SlidingExpiration = true;
     });
-builder.Services.AddHttpClient();
+builder.Services.AddHttpClient<TodoListApp.Services.IExternalApiService, TodoListApp.Services.ExternalApiService>()
+    .ConfigureHttpClient(client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(10); // Prevent hanging on slow APIs
+    });
 builder.Services.AddScoped<TodoListApp.Services.ITodoService, TodoListApp.Services.JsonFileTodoService>();
 builder.Services.AddScoped<TodoListApp.Services.IUserService, TodoListApp.Services.JsonUserService>();
 builder.Services.AddScoped<TodoListApp.Services.IEmailService, TodoListApp.Services.SmtpEmailService>();
-builder.Services.AddScoped<TodoListApp.Services.IExternalApiService, TodoListApp.Services.ExternalApiService>();
 
 builder.Services.AddSession(options =>
 {

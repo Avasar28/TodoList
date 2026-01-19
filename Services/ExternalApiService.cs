@@ -29,26 +29,31 @@ namespace TodoListApp.Services
                 if (!root.TryGetProperty("results", out var results) || results.GetArrayLength() == 0) 
                     return new WeatherData { City = city, Description = "City not found" };
 
-                var lat = results[0].GetProperty("latitude").GetDouble();
-                var lon = results[0].GetProperty("longitude").GetDouble();
+                var result = results[0];
+                var lat = result.GetProperty("latitude").GetDouble();
+                var lon = result.GetProperty("longitude").GetDouble();
                 
-                var name = results[0].GetProperty("name").GetString() ?? "";
-                var district = results[0].TryGetProperty("admin2", out var d) ? d.GetString() : "";
-                var state = results[0].TryGetProperty("admin1", out var s) ? s.GetString() : "";
-                var country = results[0].TryGetProperty("country", out var c) ? c.GetString() : "";
+                var name = result.GetProperty("name").GetString() ?? "";
+                var admin4 = result.TryGetProperty("admin4", out var a4) ? a4.GetString() : ""; // Village
+                var admin3 = result.TryGetProperty("admin3", out var a3) ? a3.GetString() : ""; // Town/City
+                var admin2 = result.TryGetProperty("admin2", out var a2) ? a2.GetString() : ""; // District
+                var admin1 = result.TryGetProperty("admin1", out var a1) ? a1.GetString() : ""; // State
+                var country = result.TryGetProperty("country", out var c) ? c.GetString() : "";
 
                 var data = await FetchWeatherDataAsync(lat, lon, name);
-                data.LocalArea = name;
-                data.District = district ?? "";
-                data.State = state ?? "";
+                
+                // Prioritize naming: Village > Town > City
+                data.LocalArea = !string.IsNullOrEmpty(admin4) ? admin4 : (name != admin3 ? name : "");
+                data.City = !string.IsNullOrEmpty(admin3) ? admin3 : name;
+                data.District = admin2 ?? "";
+                data.State = admin1 ?? "";
                 data.Country = country ?? "";
                 
                 // If name is a PIN/Number, use district/state as City
                 if (int.TryParse(name, out _)) {
-                    data.City = !string.IsNullOrEmpty(district) ? district : (!string.IsNullOrEmpty(state) ? state : name);
-                } else {
-                    data.City = name;
+                    data.City = !string.IsNullOrEmpty(admin3) ? admin3 : (!string.IsNullOrEmpty(admin2) ? admin2 : name);
                 }
+                
                 return data;
             }
             catch
@@ -63,6 +68,7 @@ namespace TodoListApp.Services
             string state = "";
             string country = "";
             string localArea = "";
+            string district = "";
             
             try
             {
@@ -75,9 +81,19 @@ namespace TodoListApp.Services
                     var root = doc.RootElement;
                     
                     localArea = root.TryGetProperty("locality", out var l) ? l.GetString() ?? "" : "";
-                    cityName = root.TryGetProperty("city", out var c) ? c.GetString() ?? "My Location" : (localArea ?? "My Location");
+                    cityName = root.TryGetProperty("city", out var c) ? c.GetString() ?? "" : "";
                     state = root.TryGetProperty("principalSubdivision", out var s) ? s.GetString() ?? "" : "";
                     country = root.TryGetProperty("countryName", out var cn) ? cn.GetString() ?? "" : "";
+
+                    // Extract District from localityInfo if possible
+                    if (root.TryGetProperty("localityInfo", out var info) && info.TryGetProperty("administrative", out var admin)) {
+                        foreach (var item in admin.EnumerateArray()) {
+                            var order = item.TryGetProperty("order", out var o) ? o.GetInt32() : 0;
+                            if (order == 6 || order == 5) { // Common orders for districts/counties
+                                district = item.GetProperty("name").GetString() ?? "";
+                            }
+                        }
+                    }
                 }
             }
             catch { }
@@ -86,16 +102,11 @@ namespace TodoListApp.Services
             {
                 var data = await FetchWeatherDataAsync(lat, lon, cityName ?? localArea ?? "My Location");
                 data.LocalArea = localArea ?? "";
+                data.City = !string.IsNullOrEmpty(cityName) ? cityName : (localArea ?? "My Location");
+                data.District = district ?? "";
                 data.State = state ?? "";
                 data.Country = country ?? "";
                 
-                // If locality and city differ, locality is likely the village/area
-                if (!string.IsNullOrEmpty(localArea) && localArea != cityName) {
-                    data.City = localArea;
-                    data.District = cityName ?? "My Location";
-                } else {
-                    data.City = cityName ?? "My Location";
-                }
                 return data;
             }
             catch
@@ -183,22 +194,36 @@ namespace TodoListApp.Services
         {
             try
             {
-                var url = $"https://api.frankfurter.app/latest?amount=1&from={from}&to={to}";
-                var response = await _httpClient.GetAsync(url);
-                response.EnsureSuccessStatusCode();
-                var json = await response.Content.ReadAsStringAsync();
+                // Fetch latest and previous day to calculate movement
+                var yesterday = DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-dd");
+                var latestUrl = $"https://api.frankfurter.app/latest?amount=1&from={from}&to={to}";
+                var yesterdayUrl = $"https://api.frankfurter.app/{yesterday}?from={from}&to={to}";
 
-                using var doc = JsonDocument.Parse(json);
-                var rates = doc.RootElement.GetProperty("rates");
-                var rate = rates.GetProperty(to).GetDecimal();
+                var latestTask = _httpClient.GetStringAsync(latestUrl);
+                var yesterdayTask = _httpClient.GetStringAsync(yesterdayUrl);
+
+                await Task.WhenAll(latestTask);
+                
+                var latestJson = await latestTask;
+                using var latestDoc = JsonDocument.Parse(latestJson);
+                var latestRate = latestDoc.RootElement.GetProperty("rates").GetProperty(to).GetDecimal();
+
+                bool? isUp = null;
+                try {
+                    var yesterdayJson = await yesterdayTask;
+                    using var yesterdayDoc = JsonDocument.Parse(yesterdayJson);
+                    var yesterdayRate = yesterdayDoc.RootElement.GetProperty("rates").GetProperty(to).GetDecimal();
+                    isUp = latestRate >= yesterdayRate;
+                } catch { }
 
                 return new CurrencyConversionData
                 {
                     From = from,
                     To = to,
-                    Rate = rate,
-                    ConvertedAmount = rate,
-                    LastUpdated = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " UTC"
+                    Rate = latestRate,
+                    ConvertedAmount = latestRate,
+                    LastUpdated = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " UTC",
+                    IsUp = isUp
                 };
             }
             catch
@@ -267,7 +292,7 @@ namespace TodoListApp.Services
         public async Task<UserLocationData> GetLocationFromIpAsync(string ip)
         {
             if (string.IsNullOrEmpty(ip) || ip == "::1" || ip == "127.0.0.1")
-                return new UserLocationData { City = "London", TimeZoneId = "GMT Standard Time", Currency = "USD" };
+                return new UserLocationData { City = "", TimeZoneId = "", Currency = "" };
 
             try
             {
@@ -318,7 +343,37 @@ namespace TodoListApp.Services
             catch { return new CurrencyHistoryData(); }
         }
 
-        private TimeZoneInfo GetTimeZone(string id)
+        public async Task<string?> GetCurrencyFromLocationAsync(string location)
+        {
+            try
+            {
+                var url = $"https://geocoding-api.open-meteo.com/v1/search?name={Uri.EscapeDataString(location)}&count=1&language=en&format=json";
+                var response = await _httpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(json);
+                    var results = doc.RootElement.TryGetProperty("results", out var r) ? r : default;
+                    if (results.ValueKind == JsonValueKind.Array && results.GetArrayLength() > 0)
+                    {
+                        var country = results[0].TryGetProperty("country", out var c) ? c.GetString() : null;
+                        if (!string.IsNullOrEmpty(country))
+                        {
+                            // Map country name to currency code
+                            foreach (var curr in TodoListApp.ViewModels.DashboardViewModel.StaticAvailableCurrencies)
+                            {
+                                var info = GetCurrencyInfo(curr);
+                                if (info.Country.Equals(country, StringComparison.OrdinalIgnoreCase))
+                                    return curr;
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            return null;
+        }
+  private TimeZoneInfo GetTimeZone(string id)
         {
             try 
             {
@@ -374,14 +429,45 @@ namespace TodoListApp.Services
             61 or 63 or 65 => "🌧️", 71 or 73 or 75 => "❄️", 95 or 96 or 99 => "⚡", _ => "🌡️"
         };
 
-        public static string GetCurrencyFlag(string currencyCode) => currencyCode.ToUpper() switch {
-            "USD" => "🇺🇸", "EUR" => "🇪🇺", "GBP" => "🇬🇧", "JPY" => "🇯🇵", "AUD" => "🇦🇺",
-            "CAD" => "🇨🇦", "CHF" => "🇨🇭", "CNY" => "🇨🇳", "HKD" => "🇭🇰", "NZD" => "🇳🇿",
-            "INR" => "🇮🇳", "BRL" => "🇧🇷", "RUB" => "🇷🇺", "KRW" => "🇰🇷", "MXN" => "🇲🇽",
-            "SGD" => "🇸🇬", "THB" => "🇹🇭", "TRY" => "🇹🇷", "ZAR" => "🇿🇦", "ILS" => "🇮🇱",
-            "PHP" => "🇵🇭", "MYR" => "🇲🇾", "IDR" => "🇮🇩", "CZK" => "🇨🇿", "HUF" => "🇭🇺",
-            "PLN" => "🇵🇱", "RON" => "🇷🇴", "SEK" => "🇸🇪", "ISK" => "🇮🇸", "NOK" => "🇳🇴",
-            "HRK" => "🇭🇷", "BGN" => "🇧🇬", "DKK" => "🇩🇰", "AED" => "🇦🇪", "SAR" => "🇸🇦", _ => "🏳️"
+        public static string GetCurrencyFlag(string currencyCode) => GetCurrencyInfo(currencyCode).Flag;
+
+        public static (string Flag, string Country, string Name) GetCurrencyInfo(string code) => code.ToUpper() switch {
+            "USD" => ("🇺🇸", "United States", "US Dollar"),
+            "EUR" => ("🇪🇺", "Eurozone", "Euro"),
+            "GBP" => ("🇬🇧", "United Kingdom", "British Pound"),
+            "JPY" => ("🇯🇵", "Japan", "Japanese Yen"),
+            "AUD" => ("🇦🇺", "Australia", "Australian Dollar"),
+            "CAD" => ("🇨🇦", "Canada", "Canadian Dollar"),
+            "CHF" => ("🇨🇭", "Switzerland", "Swiss Franc"),
+            "CNY" => ("🇨🇳", "China", "Chinese Yuan"),
+            "HKD" => ("🇭🇰", "Hong Kong", "Hong Kong Dollar"),
+            "NZD" => ("🇳🇿", "New Zealand", "New Zealand Dollar"),
+            "INR" => ("🇮🇳", "India", "Indian Rupee"),
+            "BRL" => ("🇧🇷", "Brazil", "Brazilian Real"),
+            "RUB" => ("🇷🇺", "Russia", "Russian Ruble"),
+            "KRW" => ("🇰🇷", "South Korea", "South Korean Won"),
+            "MXN" => ("🇲🇽", "Mexico", "Mexican Peso"),
+            "SGD" => ("🇸🇬", "Singapore", "Singapore Dollar"),
+            "THB" => ("🇹🇭", "Thailand", "Thai Baht"),
+            "TRY" => ("🇹🇷", "Turkey", "Turkish Lira"),
+            "ZAR" => ("🇿🇦", "South Africa", "South African Rand"),
+            "ILS" => ("🇮🇱", "Israel", "Israeli New Shekel"),
+            "PHP" => ("🇵🇭", "Philippines", "Philippine Peso"),
+            "MYR" => ("🇲🇾", "Malaysia", "Malaysian Ringgit"),
+            "IDR" => ("🇮🇩", "Indonesia", "Indonesian Rupiah"),
+            "CZK" => ("🇨🇿", "Czech Republic", "Czech Koruna"),
+            "HUF" => ("🇭🇺", "Hungary", "Hungarian Forint"),
+            "PLN" => ("🇵🇱", "Poland", "Polish Zloty"),
+            "RON" => ("🇷🇴", "Romania", "Romanian Leu"),
+            "SEK" => ("🇸🇪", "Sweden", "Swedish Krona"),
+            "ISK" => ("🇮🇸", "Iceland", "Icelandic Krona"),
+            "NOK" => ("🇳🇴", "Norway", "Norwegian Krone"),
+            "HRK" => ("🇭🇷", "Croatia", "Croatian Kuna"),
+            "BGN" => ("🇧🇬", "Bulgaria", "Bulgarian Lev"),
+            "DKK" => ("🇩🇰", "Denmark", "Danish Krone"),
+            "AED" => ("🇦🇪", "United Arab Emirates", "UAE Dirham"),
+            "SAR" => ("🇸🇦", "Saudi Arabia", "Saudi Riyal"),
+            _ => ("🏳️", "Unknown", "Currency")
         };
     }
 }
