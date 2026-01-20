@@ -1,0 +1,243 @@
+@model TodoListApp.ViewModels.NewsItem
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="news-detail-page">
+    <div class="news-detail-container">
+        <!-- Sticky Header Controls -->
+        <div class="sticky-controls">
+            <a asp-action="Dashboard" class="back-link">
+                <span class="back-icon">←</span> Back to Dashboard
+            </a>
+            <div class="verified-badge">
+                <span class="badge-icon">✓</span> Verified Source
+            </div>
+        </div>
+
+        <!-- Article Header -->
+        <header class="article-header-premium">
+            <div class="article-meta-premium">
+                <span class="source-tag">@Model.Source</span>
+                <span class="dot-separator">•</span>
+                <span class="date-tag">@Model.Published</span>
+            </div>
+            <h1 class="article-title-premium">@Model.Title</h1>
+        </header>
+
+        <!-- Hero Image -->
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <div class="article-hero-modern">
+                <img src="@Model.ImageUrl" alt="Featured Image" class="hero-img-full" onerror="this.src='https://images.unsplash.com/photo-1504711432869-efd597cdd045?auto=format&fit=crop&q=80&w=2070'">
+            </div>
+        }
+
+        <!-- Article Body -->
+        <div class="article-content-modern">
+            <div class="content-intro">
+                @Model.Description
+            </div>
+            
+            <div class="content-divider"></div>
+
+            <div class="content-extended-note">
+                <p>This article summary is served via our authenticated news partner. For the full journalistic coverage, you can visit the original publication.</p>
+                <a href="@Model.Link" target="_blank" rel="noopener noreferrer" class="visit-original-btn">
+                    Visit Original Publication <span class="ext-icon">↗</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="article-footer-premium">
+            <p>© @DateTime.Now.Year - News Hub Integration. Content provided by @Model.Source.</p>
+        </footer>
+    </div>
+</div>
+
+<style>
+    .news-detail-page {
+        min-height: 100vh;
+        background: radial-gradient(circle at top right, #1e293b 0%, #0f172a 100%);
+        padding: 2rem 1rem;
+        color: #eceff4;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .news-detail-container {
+        max-width: 900px;
+        margin: 0 auto;
+        animation: fadeInSlide 0.6s ease-out;
+    }
+
+    @@keyframes fadeInSlide {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .sticky-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+        padding: 0.5rem 0;
+    }
+
+    .back-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255, 255, 255, 0.6);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s;
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .back-link:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(-5px);
+    }
+
+    .verified-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.8rem;
+        background: rgba(46, 213, 115, 0.15);
+        color: #2ed573;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        border: 1px solid rgba(46, 213, 115, 0.3);
+    }
+
+    .article-header-premium {
+        margin-bottom: 2.5rem;
+    }
+
+    .article-meta-premium {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .source-tag {
+        color: #818cf8;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .article-title-premium {
+        font-size: 3rem;
+        font-weight: 800;
+        line-height: 1.1;
+        background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.7) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+    }
+
+    .article-hero-modern {
+        width: 100%;
+        height: 500px;
+        border-radius: 30px;
+        overflow: hidden;
+        margin-bottom: 3rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .hero-img-full {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .article-content-modern {
+        font-size: 1.25rem;
+        line-height: 1.8;
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .content-intro {
+        margin-bottom: 3rem;
+        position: relative;
+    }
+
+    .content-intro::first-letter {
+        font-size: 4rem;
+        font-weight: 800;
+        float: left;
+        margin-right: 0.75rem;
+        line-height: 1;
+        color: #818cf8;
+    }
+
+    .content-divider {
+        height: 1px;
+        background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
+        margin: 4rem 0;
+    }
+
+    .content-extended-note {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 2.5rem;
+        border-radius: 24px;
+        text-align: center;
+    }
+
+    .content-extended-note p {
+        margin-bottom: 1.5rem;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1.1rem;
+    }
+
+    .visit-original-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: #818cf8;
+        color: white;
+        padding: 0.8rem 2rem;
+        border-radius: 14px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+        box-shadow: 0 10px 20px rgba(129, 140, 248, 0.3);
+    }
+
+    .visit-original-btn:hover {
+        background: #6366f1;
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(129, 140, 248, 0.4);
+    }
+
+    .article-footer-premium {
+        margin-top: 6rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        text-align: center;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    @@media (max-width: 768px) {
+        .article-title-premium { font-size: 2.25rem; }
+        .article-hero-modern { height: 300px; }
+        .news-detail-page { padding: 1.5rem 1rem; }
+        .article-content-modern { font-size: 1.1rem; }
+    }
+</style>

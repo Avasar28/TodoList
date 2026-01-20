@@ -11,14 +11,15 @@ namespace TodoListApp.Controllers
     {
         private readonly ITodoService _todoService;
         private readonly IExternalApiService _externalApiService;
-
         private readonly IUserService _userService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public TodoController(ITodoService todoService, IExternalApiService externalApiService, IUserService userService)
+        public TodoController(ITodoService todoService, IExternalApiService externalApiService, IUserService userService, IWebHostEnvironment webHostEnvironment)
         {
             _todoService = todoService;
             _externalApiService = externalApiService;
             _userService = userService;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public async Task<IActionResult> Dashboard(string? city, string? fromCurrency, string? toCurrency, string? sourceTime, string? targetTime)
@@ -66,19 +67,8 @@ namespace TodoListApp.Controllers
                 ToCurrency = toCurrency,
                 SourceTimeZone = sourceTime,
                 TargetTimeZone = targetTime,
-                AvailableTimeZones = TimeZoneInfo.GetSystemTimeZones()
-                    .Select(z => {
-                        var offset = z.BaseUtcOffset;
-                        var offsetDisplay = $"UTC{(offset.Ticks >= 0 ? "+" : "-")}{Math.Abs(offset.Hours):D2}:{Math.Abs(offset.Minutes):D2}";
-                        return new ViewModels.TimeZoneOption { 
-                            Id = z.Id, 
-                            Name = z.DisplayName,
-                            Offset = offsetDisplay,
-                            FullName = $"{z.DisplayName} {z.Id}".ToLower()
-                        };
-                    })
-                    .OrderBy(z => z.Name)
-                    .ToList()
+                AvailableCurrencies = new List<string> { "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "HKD", "NZD", "SGD", "INR" }, 
+                AvailableTimeZones = LoadTimeZones()
             };
 
             // Don't fetch data server-side - let client handle it for faster initial render
@@ -143,6 +133,54 @@ namespace TodoListApp.Controllers
                 ip = Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? "";
 
             var data = await _externalApiService.GetLocationFromIpAsync(ip);
+            return Json(data);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ResolveTimeZone(string location)
+        {
+            var timezoneId = await _externalApiService.GetTimeZoneByLocationAsync(location);
+            return Json(new { timezoneId });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetNewsJson(string location, string? category = null, string sortBy = "relevance")
+        {
+            var data = await _externalApiService.GetNewsAsync(location, category, sortBy);
+            return Json(data);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetNewsDetailJson(string url)
+        {
+            var content = await _externalApiService.GetNewsDetailAsync(url);
+            return Json(new { content });
+        }
+
+        [HttpGet]
+        public IActionResult NewsDetail(int index)
+        {
+            var cachedNews = _externalApiService.GetCachedNews();
+            if (index < 0 || index >= cachedNews.Count)
+            {
+                return RedirectToAction("Dashboard");
+            }
+
+            var item = cachedNews[index];
+            return View(item);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SearchCountries(string query)
+        {
+            var data = await _externalApiService.SearchCountriesAsync(query);
+            return Json(data);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCountryDetails(string name)
+        {
+            var data = await _externalApiService.GetCountryDetailsAsync(name);
             return Json(data);
         }
 
@@ -314,6 +352,54 @@ namespace TodoListApp.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return View(item);
+        }
+
+        private List<ViewModels.TimeZoneOption> LoadTimeZones()
+        {
+            var path = Path.Combine(_webHostEnvironment.WebRootPath, "data", "timezones.json");
+            if (!System.IO.File.Exists(path))
+            {
+                // Fallback if file missing
+                return new List<ViewModels.TimeZoneOption>();
+            }
+
+            var json = System.IO.File.ReadAllText(path);
+            var zones = System.Text.Json.JsonSerializer.Deserialize<List<TimeZoneEntry>>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            return zones.Select(z => new ViewModels.TimeZoneOption
+            {
+                Id = z.Id, // Windows ID (value sent to server)
+                Name = z.Iana, // "Asia/Kolkata" 
+                Offset = $"UTC{(z.Offset >= 0 ? "+" : "")}{z.Offset}",
+                Abbr = z.Abbr,
+                // Searchable text: Name + IANA + SearchKeywords
+                FullName = $"{z.DisplayName} {z.Iana} {z.SearchKeywords ?? ""} {z.Abbr}".ToLower() 
+            })
+            .OrderBy(z => z.Name)
+            .ToList();
+        }
+
+        private class TimeZoneEntry
+        {
+            public string Id { get; set; } = "";
+            public string Iana { get; set; } = "";
+            public string DisplayName { get; set; } = "";
+            public string? SearchKeywords { get; set; }
+            public double Offset { get; set; }
+            public string? Abbr { get; set; }
+        }
+
+        private static string GetLocationAliases(string timezoneId)
+        {
+            // Keeping this for potential legacy use or removed if fully replaced by JSON keywords
+            // Map IANA timezone IDs to common search terms (cities, states, countries)
+            var aliases = new Dictionary<string, string>
+            {
+                // India
+                ["Asia/Kolkata"] = " india mumbai delhi bangalore chennai hyderabad pune kolkata calcutta indian ist",
+                // ... (rest omitted for brevity)
+            };
+            return aliases.TryGetValue(timezoneId, out var alias) ? alias : "";
         }
     }
 }

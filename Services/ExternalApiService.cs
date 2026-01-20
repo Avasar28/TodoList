@@ -3,17 +3,25 @@ using System.Net.Http;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+using System.Text.RegularExpressions;
+using System.Collections.Generic;
+using TodoListApp.ViewModels;
 
 namespace TodoListApp.Services
 {
     public class ExternalApiService : IExternalApiService
     {
         private readonly HttpClient _httpClient;
+        private static List<NewsItem> _newsCache = new List<NewsItem>();
+        private static JsonDocument? _tempCache;
 
         public ExternalApiService(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
+
+        public List<NewsItem> GetCachedNews() => _newsCache;
 
         public async Task<WeatherData> GetWeatherAsync(string city)
         {
@@ -373,6 +381,29 @@ namespace TodoListApp.Services
             catch { }
             return null;
         }
+
+        public async Task<string?> GetTimeZoneByLocationAsync(string location)
+        {
+            try
+            {
+                var url = $"https://geocoding-api.open-meteo.com/v1/search?name={Uri.EscapeDataString(location)}&count=1&language=en&format=json";
+                var response = await _httpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(json);
+                    var results = doc.RootElement.TryGetProperty("results", out var r) ? r : default;
+                    
+                    if (results.ValueKind == JsonValueKind.Array && results.GetArrayLength() > 0)
+                    {
+                        // OpenMeteo returns 'timezone' field (e.g. "Asia/Kolkata")
+                        return results[0].TryGetProperty("timezone", out var tz) ? tz.GetString() : null;
+                    }
+                }
+            }
+            catch { }
+            return null;
+        }
   private TimeZoneInfo GetTimeZone(string id)
         {
             try 
@@ -469,5 +500,401 @@ namespace TodoListApp.Services
             "SAR" => ("🇸🇦", "Saudi Arabia", "Saudi Riyal"),
             _ => ("🏳️", "Unknown", "Currency")
         };
+
+        public async Task<NewsData> GetNewsAsync(string location, string? category = null, string sortBy = "relevance")
+        {
+            try
+            {
+                // 1. Resolve Location (Geocoding fallback)
+                var geoUrl = $"https://geocoding-api.open-meteo.com/v1/search?name={Uri.EscapeDataString(location)}&count=1&language=en&format=json";
+                var geoRes = await _httpClient.GetAsync(geoUrl);
+                var geoJson = await geoRes.Content.ReadAsStringAsync();
+                
+                string resolvedName = location;
+                string countryCode = "US";
+                
+                using (var doc = JsonDocument.Parse(geoJson))
+                {
+                    if (doc.RootElement.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                    {
+                        var res = results[0];
+                        var city = res.TryGetProperty("admin3", out var a3) ? a3.GetString() : "";
+                        var district = res.TryGetProperty("admin2", out var a2) ? a2.GetString() : "";
+                        var country = res.TryGetProperty("country_code", out var cc) ? cc.GetString() : "US";
+                        
+                        resolvedName = !string.IsNullOrEmpty(city) ? city : (!string.IsNullOrEmpty(district) ? district : res.GetProperty("name").GetString() ?? location);
+                        countryCode = country ?? "US";
+                    }
+                }
+
+                // 2. Build Query
+                var queryBuilder = new System.Text.StringBuilder($"{resolvedName}");
+                if (!string.IsNullOrEmpty(category) && category != "All")
+                {
+                    queryBuilder.Append($" {category}");
+                }
+
+                // Append local context if searching for village/small area
+                if (!location.Equals(resolvedName, StringComparison.OrdinalIgnoreCase))
+                {
+                    queryBuilder.Append($" OR {location}");
+                }
+
+                var finalQuery = Uri.EscapeDataString(queryBuilder.ToString());
+                var rssUrl = $"https://news.google.com/rss/search?q={finalQuery}&hl=en-{countryCode}&gl={countryCode}&ceid={countryCode}:en";
+
+                // 3. Fetch and Parse RSS
+                var rssRes = await _httpClient.GetAsync(rssUrl);
+                var rssXml = await rssRes.Content.ReadAsStringAsync();
+                var xdoc = XDocument.Parse(rssXml);
+                XNamespace media = "http://search.yahoo.com/mrss/";
+
+                var items = xdoc.Descendants("item").Select(item => {
+                    var title = item.Element("title")?.Value ?? "";
+                    var description = item.Element("description")?.Value ?? "";
+                    var source = item.Element("source")?.Value ?? "News Source";
+                    var pubDate = item.Element("pubDate")?.Value ?? "";
+                    var link = item.Element("link")?.Value ?? "";
+
+                    // Extract image from description (common in Google News RSS)
+                    var imgMatch = Regex.Match(description, "<img src=\"([^\"]+)\"");
+                    var imgUrl = imgMatch.Success ? imgMatch.Groups[1].Value : "";
+
+                    // Try media:content if description photo is missing
+                    if (string.IsNullOrEmpty(imgUrl))
+                    {
+                        var mediaContent = item.Element(media + "content");
+                        if (mediaContent != null)
+                        {
+                            imgUrl = mediaContent.Attribute("url")?.Value ?? "";
+                        }
+                    }
+
+                    // Try looking for direct thumbnail element
+                    if (string.IsNullOrEmpty(imgUrl))
+                    {
+                        var mediaThumbnail = item.Element(media + "thumbnail");
+                        if (mediaThumbnail != null)
+                        {
+                            imgUrl = mediaThumbnail.Attribute("url")?.Value ?? "";
+                        }
+                    }
+
+                    // Clean title (often includes " - Source")
+                    var cleanTitle = title;
+                    if (title.Contains(" - ")) 
+                    {
+                        cleanTitle = title.Substring(0, title.LastIndexOf(" - ")).Trim();
+                    }
+
+                    // Format date
+                    if (DateTime.TryParse(pubDate, out var dt))
+                    {
+                        pubDate = dt.ToString("MMM dd, yyyy HH:mm");
+                    }
+
+                    // Improve summary extraction: 
+                    // 1. Remove specific unwanted HTML structures (like the table and images we already handled)
+                    // 2. Extract meaningful text snippets
+                    var cleanSummary = description;
+                    if (description.Contains("<li>")) {
+                        // Often Google News lists related articles in <li> tags, let's extract the main one or join them
+                        var snippets = Regex.Matches(description, "<li>.*?<a.*?>(.*?)</a>")
+                                            .Select(m => m.Groups[1].Value)
+                                            .ToList();
+                        if (snippets.Any()) cleanSummary = string.Join(". ", snippets);
+                    }
+                    
+                    cleanSummary = Regex.Replace(cleanSummary, "<.*?>", "").Trim();
+                    if (cleanSummary.Length > 300) cleanSummary = cleanSummary.Substring(0, 297) + "...";
+
+                    return new NewsItem {
+                        Title = cleanTitle,
+                        Description = cleanSummary,
+                        Source = source,
+                        Published = pubDate,
+                        Link = link,
+                        ImageUrl = imgUrl,
+                        Category = category ?? "General"
+                    };
+                }).ToList();
+
+                // 4. Sort if requested
+                if (sortBy == "latest")
+                {
+                    items = items.OrderByDescending(i => {
+                        DateTime.TryParse(i.Published, out var dt);
+                        return dt;
+                    }).ToList();
+                }
+
+                var finalItems = items.Take(100).ToList();
+                _newsCache = finalItems; // Update cache
+
+                return new NewsData {
+                    Items = finalItems,
+                    ResolvedLocation = resolvedName
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"News Error: {ex.Message}");
+                return new NewsData { ResolvedLocation = location };
+            }
+        }
+
+        public Task<string> GetNewsDetailAsync(string url)
+        {
+            // Direct scraping is now disabled per user request for authenticity and compliance.
+            // Content is now served via extended summaries passed from the RSS feed directly.
+            return Task.FromResult("This article is served as an authenticated summary. Please click the 'Read More' link to view the full story on the publisher's website if needed.");
+        }
+
+        public async Task<List<CountryData>> SearchCountriesAsync(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query)) return new List<CountryData>();
+
+            try
+            {
+                var response = await _httpClient.GetAsync($"https://restcountries.com/v3.1/name/{Uri.EscapeDataString(query)}?fields=name,flags,cca2,capital,region,subregion,continents,population,area,languages,currencies,timezones,borders,maps,flag");
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(json);
+                    return doc.RootElement.EnumerateArray().Select(MapToCountryData).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Country Search Error: {ex.Message}");
+            }
+            return new List<CountryData>();
+        }
+
+        public async Task<CountryData?> GetCountryDetailsAsync(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return null;
+
+            try
+            {
+                // Use full text search for exact name
+                var response = await _httpClient.GetAsync($"https://restcountries.com/v3.1/name/{Uri.EscapeDataString(name)}?fullText=true&fields=name,flags,cca2,capital,region,subregion,continents,population,area,languages,currencies,timezones,borders,maps,flag,latlng,idd,tld,car");
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(json);
+                    var results = doc.RootElement.EnumerateArray().ToList();
+                    if (results.Any())
+                    {
+                        var data = MapToCountryData(results[0]);
+                        // Enrich with Wikipedia
+                        await EnrichWithWikipedia(data);
+                        // Enrich with GDP
+                        await EnrichWithGDP(data);
+                        // Enrich with Electricity
+                        EnrichWithElectricity(data);
+                        // Enrich with Climate
+                        await EnrichWithClimate(data);
+                        return data;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Country Details Error: {ex.Message}");
+            }
+            return null;
+        }
+
+        private async Task EnrichWithClimate(CountryData data)
+        {
+            try
+            {
+                if (_tempCache == null)
+                {
+                    var res = await _httpClient.GetAsync("https://raw.githubusercontent.com/samayo/country-json/master/src/country-by-yearly-average-temperature.json");
+                    if (res.IsSuccessStatusCode)
+                    {
+                        var json = await res.Content.ReadAsStringAsync();
+                        _tempCache = JsonDocument.Parse(json);
+                    }
+                }
+
+                if (_tempCache != null)
+                {
+                    foreach (var item in _tempCache.RootElement.EnumerateArray())
+                    {
+                        var cName = item.GetProperty("country").GetString();
+                        if (cName != null && (cName.Equals(data.Name, StringComparison.OrdinalIgnoreCase) || cName.Equals(data.OfficialName, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            if (item.TryGetProperty("temperature", out var temp) && temp.ValueKind == JsonValueKind.Number)
+                            {
+                                data.AverageTemperature = temp.GetDouble().ToString("F1") + "°C (Annual Avg)";
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private async Task EnrichWithGDP(CountryData data)
+        {
+            try
+            {
+                // World Bank API for GDP (using ISO2 code)
+                var response = await _httpClient.GetAsync($"http://api.worldbank.org/v2/country/{data.IsoCode}/indicator/NY.GDP.MKTP.CD?format=json&date=2021:2023");
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(json);
+                    if (doc.RootElement.GetArrayLength() > 1)
+                    {
+                        var list = doc.RootElement[1];
+                        foreach (var item in list.EnumerateArray())
+                        {
+                            if (item.TryGetProperty("value", out var val) && val.ValueKind == JsonValueKind.Number)
+                            {
+                                double gdpValue = val.GetDouble();
+                                if (gdpValue >= 1e12) data.GDP = $"${(gdpValue / 1e12):F2} Trillion";
+                                else if (gdpValue >= 1e9) data.GDP = $"${(gdpValue / 1e9):F2} Billion";
+                                else data.GDP = $"${(gdpValue / 1e6):F2} Million";
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private void EnrichWithElectricity(CountryData data)
+        {
+            // Basic regional/country specific electricity info
+            if (data.IsoCode == "US" || data.IsoCode == "CA" || data.IsoCode == "MX") { data.ElectricityVoltage = "120V"; data.ElectricityPlugTypes = "A, B"; }
+            else if (data.IsoCode == "JP") { data.ElectricityVoltage = "100V"; data.ElectricityPlugTypes = "A, B"; }
+            else if (data.IsoCode == "GB" || data.IsoCode == "IE" || data.IsoCode == "HK" || data.IsoCode == "SG" || data.IsoCode == "MY") { data.ElectricityVoltage = "230V"; data.ElectricityPlugTypes = "G"; }
+            else if (data.IsoCode == "AU" || data.IsoCode == "NZ") { data.ElectricityVoltage = "230V"; data.ElectricityPlugTypes = "I"; }
+            else if (data.IsoCode == "IN") { data.ElectricityVoltage = "230V"; data.ElectricityPlugTypes = "C, D, M"; }
+            else if (data.Region == "Europe") { data.ElectricityVoltage = "230V"; data.ElectricityPlugTypes = "C, E, F"; }
+            else { data.ElectricityVoltage = "220-240V"; data.ElectricityPlugTypes = "C, G, M common"; }
+        }
+
+        private async Task EnrichWithWikipedia(CountryData data)
+        {
+            try
+            {
+                var wikiResponse = await _httpClient.GetAsync($"https://en.wikipedia.org/api/rest_v1/page/summary/{Uri.EscapeDataString(data.Name)}");
+                if (wikiResponse.IsSuccessStatusCode)
+                {
+                    var wikiJson = await wikiResponse.Content.ReadAsStringAsync();
+                    using var wikiDoc = JsonDocument.Parse(wikiJson);
+                    var root = wikiDoc.RootElement;
+
+                    if (root.TryGetProperty("extract", out var extract))
+                    {
+                        string summary = extract.GetString() ?? "";
+                        data.WikipediaSummary = summary;
+                        
+                        // Extract Religions (heuristic)
+                        if (summary.Contains("Muslim")) data.Religions = "Islam (Major)";
+                        else if (summary.Contains("Christian")) data.Religions = "Christianity (Major)";
+                        else if (summary.Contains("Hindu")) data.Religions = "Hinduism (Major)";
+                        else if (summary.Contains("Buddhist")) data.Religions = "Buddhism (Major)";
+                        
+                        // Extract Industry mentions
+                        if (summary.Contains("agriculture")) data.MajorIndustries = "Agriculture, Service";
+                        else if (summary.EndsWith("technology", StringComparison.OrdinalIgnoreCase) || summary.Contains(" technology")) data.MajorIndustries = "Technology, Manufacturing";
+                        else if (summary.Contains("oil")) data.MajorIndustries = "Petroleum, Gas";
+
+                        // Climate Type heuristic
+                        if (summary.Contains("tropical")) data.ClimateType = "Tropical";
+                        else if (summary.Contains("temperate")) data.ClimateType = "Temperate";
+                        else if (summary.Contains("desert")) data.ClimateType = "Arid / Desert";
+                        else if (summary.Contains("mediterranean")) data.ClimateType = "Mediterranean";
+                        else if (summary.Contains("continental")) data.ClimateType = "Continental";
+
+                        // Natural Resources heuristic
+                        var resources = new List<string>();
+                        if (summary.Contains("gold")) resources.Add("Gold");
+                        if (summary.Contains("oil")) resources.Add("Oil");
+                        if (summary.Contains("gas")) resources.Add("Natural Gas");
+                        if (summary.Contains("timber")) resources.Add("Timber");
+                        if (summary.Contains("minerals")) resources.Add("Minerals");
+                        if (resources.Any()) data.NaturalResources = string.Join(", ", resources);
+
+                        // Famous Places (Search for capitalized names that are likely cities/places)
+                        var places = new List<string>();
+                        if (summary.Contains("UNESCO")) data.GlobalRankings["UNESCO Sites"] = "Multiple";
+                        
+                        // Organizations
+                        if (summary.Contains("UN ")) data.InternationalOrganizations.Add("UN");
+                        if (summary.Contains("WHO ")) data.InternationalOrganizations.Add("WHO");
+                        if (summary.Contains("EU ")) data.InternationalOrganizations.Add("EU");
+                        if (summary.Contains("NATO")) data.InternationalOrganizations.Add("NATO");
+                        if (summary.Contains("G20")) data.InternationalOrganizations.Add("G20");
+                        if (summary.Contains("ASEAN")) data.InternationalOrganizations.Add("ASEAN");
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private CountryData MapToCountryData(JsonElement el)
+        {
+            var nameEl = el.GetProperty("name");
+            var currencies = new Dictionary<string, (string Name, string Symbol)>();
+            if (el.TryGetProperty("currencies", out var currEl) && currEl.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var prop in currEl.EnumerateObject())
+                {
+                    var cName = prop.Value.TryGetProperty("name", out var cn) ? cn.GetString() ?? "" : "";
+                    var cSym = prop.Value.TryGetProperty("symbol", out var cs) ? cs.GetString() ?? "" : "";
+                    currencies[prop.Name] = (cName, cSym);
+                }
+            }
+
+            var languages = new List<string>();
+            if (el.TryGetProperty("languages", out var langEl) && langEl.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var prop in langEl.EnumerateObject())
+                {
+                    languages.Add(prop.Value.GetString() ?? "");
+                }
+            }
+
+            var latlng = el.TryGetProperty("latlng", out var ll) && ll.GetArrayLength() >= 2 
+                ? (ll[0].GetDouble(), ll[1].GetDouble()) 
+                : (0.0, 0.0);
+
+            return new CountryData
+            {
+                Name = nameEl.TryGetProperty("common", out var common) ? common.GetString() ?? "" : "",
+                OfficialName = nameEl.TryGetProperty("official", out var official) ? official.GetString() ?? "" : "",
+                FlagUrl = el.TryGetProperty("flags", out var fl) && fl.TryGetProperty("svg", out var svg) ? svg.GetString() ?? "" : "",
+                FlagEmoji = el.TryGetProperty("flag", out var fe) ? fe.GetString() ?? "" : "",
+                IsoCode = el.TryGetProperty("cca2", out var code) ? code.GetString() ?? "" : "",
+                Capital = el.TryGetProperty("capital", out var cap) && cap.GetArrayLength() > 0 ? cap[0].GetString() ?? "" : "N/A",
+                Region = el.TryGetProperty("region", out var reg) ? reg.GetString() ?? "" : "",
+                Subregion = el.TryGetProperty("subregion", out var sub) ? sub.GetString() ?? "" : "",
+                Continents = el.TryGetProperty("continents", out var cont) ? cont.EnumerateArray().Select(c => c.GetString() ?? "").ToList() : new List<string>(),
+                Population = el.TryGetProperty("population", out var pop) ? pop.GetInt64() : 0,
+                Area = el.TryGetProperty("area", out var area) ? area.GetDouble() : 0,
+                Languages = languages,
+                Currencies = currencies,
+                Timezones = el.TryGetProperty("timezones", out var tz) ? tz.EnumerateArray().Select(t => t.GetString() ?? "").ToList() : new List<string>(),
+                Borders = el.TryGetProperty("borders", out var bord) ? bord.EnumerateArray().Select(b => b.GetString() ?? "").ToList() : new List<string>(),
+                GoogleMapsUrl = el.TryGetProperty("maps", out var maps) && maps.TryGetProperty("googleMaps", out var gm) ? gm.GetString() ?? "" : "",
+                Latitude = latlng.Item1,
+                Longitude = latlng.Item2,
+                DrivingSide = el.TryGetProperty("car", out var car) && car.TryGetProperty("side", out var side) ? side.GetString() ?? "N/A" : "N/A",
+                InternetDomains = el.TryGetProperty("tld", out var tld) ? tld.EnumerateArray().Select(d => d.GetString() ?? "").ToList() : new List<string>(),
+                CallingCode = el.TryGetProperty("idd", out var idd) 
+                    ? (idd.TryGetProperty("root", out var root) ? root.GetString() ?? "" : "") + 
+                      (idd.TryGetProperty("suffixes", out var suff) && suff.GetArrayLength() > 0 ? suff[0].GetString() ?? "" : "")
+                    : "N/A"
+            };
+        }
     }
 }

@@ -9,7 +9,25 @@ namespace TodoListApp.ViewModels
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Offset { get; set; } = string.Empty;
+        public string Abbr { get; set; } = string.Empty; // e.g. IST, EST
         public string FullName { get; set; } = string.Empty; // Includes cities/countries search terms
+    }
+
+    public class NewsItem
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Source { get; set; } = string.Empty;
+        public string Published { get; set; } = string.Empty;
+        public string Link { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+        public string Category { get; set; } = "General";
+    }
+
+    public class NewsData
+    {
+        public List<NewsItem> Items { get; set; } = new List<NewsItem>();
+        public string ResolvedLocation { get; set; } = string.Empty;
     }
 
     public class DashboardViewModel
@@ -21,13 +39,14 @@ namespace TodoListApp.ViewModels
         public WeatherData Weather { get; set; } = new WeatherData();
         public CurrencyConversionData Currency { get; set; } = new CurrencyConversionData();
         public TimeData TimeConversion { get; set; } = new TimeData();
+        public NewsData News { get; set; } = new NewsData();
 
         // Interactive Inputs
         public string SelectedCity { get; set; } = "";
         public string FromCurrency { get; set; } = "USD";
         public string ToCurrency { get; set; } = "EUR";
-        public string SourceTimeZone { get; set; } = "UTC";
-        public string TargetTimeZone { get; set; } = "GMT Standard Time";
+        public string SourceTimeZone { get; set; } = ""; // Start empty
+        public string TargetTimeZone { get; set; } = ""; // Start empty
 
         public static List<string> StaticAvailableCurrencies { get; set; } = new List<string> { 
             "USD", "EUR", "GBP", "JPY", "INR", "AUD", "CAD", "CHF", "CNY", "HKD", 
@@ -36,7 +55,7 @@ namespace TodoListApp.ViewModels
             "HRK", "BGN", "DKK", "AED", "SAR" 
         };
 
-        public List<string> AvailableCurrencies => StaticAvailableCurrencies;
+        public List<string> AvailableCurrencies { get; set; } = new List<string>(StaticAvailableCurrencies);
         public List<TimeZoneOption> AvailableTimeZones { get; set; } = new List<TimeZoneOption>();
     }
 }

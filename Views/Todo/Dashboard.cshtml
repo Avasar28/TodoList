@@ -4,6 +4,148 @@
     ViewData["Title"] = "Real-time Dashboard";
 }
 
+<!-- Leaflet for Country Maps -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<style>
+    /* --- Country Explorer Expanded Styles --- */
+    .country-summary-box {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        animation: fadeInSlide 0.6s ease-out;
+    }
+
+    .country-summary-box h3 {
+        font-size: 1.15rem;
+        color: #a5b4fc;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-top: 0;
+        font-weight: 600;
+    }
+
+    .wiki-extract {
+        font-size: 0.98rem;
+        line-height: 1.75;
+        color: rgba(255, 255, 255, 0.85);
+        font-style: italic;
+        margin-bottom: 0;
+    }
+
+    .motto-pill {
+        background: rgba(245, 158, 11, 0.15) !important;
+        color: #fbbf24 !important;
+        border: 1px solid rgba(245, 158, 11, 0.3) !important;
+    }
+
+    .administration-note {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Map Styling */
+    .country-map-container {
+        height: 300px;
+        width: 100%;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: 10;
+        overflow: hidden;
+    }
+
+    .info-group .icon {
+        font-style: normal;
+        margin-right: 0.5rem;
+    }
+
+    .places-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .place-tag {
+        background: rgba(165, 180, 252, 0.1);
+        color: #a5b4fc;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        border: 1px solid rgba(165, 180, 252, 0.2);
+    }
+
+    /* Accordion Styles */
+    .country-accordion {
+        margin-bottom: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .country-accordion.open {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(165, 180, 252, 0.2);
+    }
+
+    .accordion-header {
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.2s ease;
+    }
+
+    .accordion-header:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .accordion-header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: #a5b4fc;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .accordion-icon {
+        font-size: 0.8rem;
+        transition: transform 0.3s ease;
+        opacity: 0.6;
+    }
+
+    .country-accordion.open .accordion-icon {
+        transform: rotate(180deg);
+    }
+
+    .accordion-content {
+        padding: 0 1.5rem 1.5rem 1.5rem;
+        display: none;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    .country-accordion.open .accordion-content {
+        display: block;
+    }
+
+    @@keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
 <div class="dashboard-container centered-view">
     <div class="dashboard-header text-center">
         <h1>Welcome, @Model.UserName</h1>
@@ -67,6 +209,36 @@
             </div>
             <div class="widget-action">
                 <span>View World Clock</span>
+            </div>
+        </div>
+
+        <!-- News Widget -->
+        <div class="insight-card summary-widget news loading" id="newsWidgetCard" onclick="openDetails('news')">
+            <div class="widget-preview">
+                <div class="insight-icon">📰</div>
+                <div class="insight-info">
+                    <span class="insight-label">Local & Global News</span>
+                    <span class="insight-value" id="summaryNewsCount">-- Items</span>
+                    <span class="insight-meta" id="summaryNewsMeta">@Model.SelectedCity • Loading...</span>
+                </div>
+            </div>
+            <div class="widget-action">
+                <span>Read Latest Stories</span>
+            </div>
+        </div>
+
+        <!-- Country Details Widget -->
+        <div class="insight-card summary-widget country" onclick="openDetails('country')">
+            <div class="widget-preview">
+                <div class="insight-icon">🌐</div>
+                <div class="insight-info">
+                    <span class="insight-label">Country Explorer</span>
+                    <span class="insight-value" id="summaryCountryName">Search Country</span>
+                    <span class="insight-meta" id="summaryCountryMeta">A-Z Global Insight</span>
+                </div>
+            </div>
+            <div class="widget-action">
+                <span>Explore Destinations</span>
             </div>
         </div>
     </div>
@@ -313,7 +485,7 @@
                 <div class="format-toggle">
                     <span class="toggle-label">12H</span>
                     <label class="switch">
-                        <input type="checkbox" id="timeFormatToggle" onchange="refreshTimeData(); refreshLocalClock();">
+                        <input type="checkbox" id="conversionFormatToggle" onchange="handleConversionFormatChange()">
                         <span class="slider round"></span>
                     </label>
                     <span class="toggle-label">24H</span>
@@ -321,11 +493,6 @@
             </div>
 
             <div class="currency-converter-card">
-                <div class="form-group">
-                    <label>Time to Convert</label>
-                    <input type="time" id="convertTimeInput" class="form-control" />
-                    <small class="text-muted">Defaults to current time if left empty</small>
-                </div>
                 
                 <div class="currency-horizontal-row">
                     <div class="currency-btn-item">
@@ -337,9 +504,12 @@
                             </div>
                             <div class="custom-options" id="sourceTimeOptions">
                                 @foreach(var tz in Model.AvailableTimeZones) {
-                                    <div class="option-item" data-value="@tz.Id" data-text="@tz.Name" data-full="@tz.FullName">
-                                        <span class="opt-code">@tz.Offset</span>
-                                        <span class="opt-country">@tz.Name</span>
+                                    <div class="option-item opt-item-layout" data-value="@tz.Id" data-text="@tz.Name" data-full="@tz.FullName">
+                                        <div class="opt-main">
+                                            <span class="opt-city">@tz.Name</span>
+                                            <span class="opt-meta">@tz.Abbr</span>
+                                        </div>
+                                        <span class="opt-offset">@tz.Offset</span>
                                     </div>
                                 }
                             </div>
@@ -362,9 +532,12 @@
                             </div>
                             <div class="custom-options" id="targetTimeOptions">
                                 @foreach(var tz in Model.AvailableTimeZones) {
-                                    <div class="option-item" data-value="@tz.Id" data-text="@tz.Name" data-full="@tz.FullName">
-                                        <span class="opt-code">@tz.Offset</span>
-                                        <span class="opt-country">@tz.Name</span>
+                                    <div class="option-item opt-item-layout" data-value="@tz.Id" data-text="@tz.Name" data-full="@tz.FullName">
+                                        <div class="opt-main">
+                                            <span class="opt-city">@tz.Name</span>
+                                            <span class="opt-meta">@tz.Abbr</span>
+                                        </div>
+                                        <span class="opt-offset">@tz.Offset</span>
                                     </div>
                                 }
                             </div>
@@ -411,6 +584,121 @@
                  <span class="city">Dubai</span>
                  <span class="time" data-tz="Asia/Dubai">--:--</span>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- News Details Panel (Feed) -->
+<div class="details-panel" id="newsDetails" style="max-width: 900px;">
+    <div class="panel-header">
+        <div class="header-info">
+            <h2>Local & Global News</h2>
+            <p id="newsResolvedLocation" class="text-muted small">Auto-detecting location...</p>
+        </div>
+        <button class="close-panel" onclick="closeDetails()">×</button>
+    </div>
+    <div class="panel-content">
+        <!-- News Controls -->
+        <div class="news-controls">
+            <div class="search-bar-row">
+                <div class="input-with-button">
+                    <input type="text" id="newsSearchInput" class="form-control" placeholder="Search news by location or keyword..." />
+                    <button type="submit" class="btn-primary-sm" onclick="event.preventDefault(); refreshNewsData();">Search</button>
+                </div>
+                <div class="sort-selector">
+                    <select id="newsSortSelect" onchange="refreshNewsData()" class="form-select-sm">
+                        <option value="relevance">Most Relevant</option>
+                        <option value="latest">Latest News</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="category-pills" id="newsCategoryPills">
+                <button class="pill active" data-category="All">All</button>
+                <button class="pill" data-category="World">World</button>
+                <button class="pill" data-category="Business">Business</button>
+                <button class="pill" data-category="Technology">Technology</button>
+                <button class="pill" data-category="Health">Health</button>
+                <button class="pill" data-category="Science">Science</button>
+                <button class="pill" data-category="Sports">Sports</button>
+                <button class="pill" data-category="Entertainment">Entertainment</button>
+            </div>
+        </div>
+
+        <!-- News Feed Container -->
+        <div class="news-feed-container" id="newsFeed">
+            <!-- Loading State -->
+            <div class="news-loading-state">
+                <div class="spinner"></div>
+                <p>Fetching authentic news...</p>
+            </div>
+        </div>
+
+        <div class="news-load-more-container" id="newsLoadMoreContainer" style="display: none; justify-content: center; padding: 2rem 0;">
+            <button class="btn-secondary-glass" onclick="loadMoreNews()">Show More Stories</button>
+        </div>
+    </div>
+</div>
+
+<!-- News Article Detail Page (Internal/Immersive) -->
+<div class="details-panel" id="newsArticleDetails" style="max-width: 1000px; z-index: 1002;">
+    <div class="panel-header">
+        <button class="back-btn" onclick="backToNewsFeed()">← Back to Feed</button>
+        <button class="close-panel" onclick="closeDetails()">×</button>
+    </div>
+    <div class="panel-content article-reader" id="articleReaderContent">
+        <div class="article-header">
+            <div class="article-meta">
+                <span id="articleSource" class="source-badge">Source</span>
+                <span id="articleDate" class="date-text">Date</span>
+            </div>
+            <h1 id="articleTitle">Article Title</h1>
+        </div>
+        <div id="articleImageContainer" class="article-image-full"></div>
+        <div id="articleBody" class="article-body">
+            <!-- Content will be injected here -->
+            <div class="article-loading">
+                <div class="spinner"></div>
+                <p>Extracting article content for in-app reading...</p>
+            </div>
+        </div>
+        <div class="article-footer">
+            <a id="articleSourceLink" href="#" target="_blank" class="btn-secondary-sm">Read Full Story on Source Website</a>
+        </div>
+    </div>
+</div>
+
+<!-- Country Details Panel -->
+<div class="details-panel" id="countryDetails" style="max-width: 900px;">
+    <div class="panel-header">
+        <div class="header-info">
+            <h2>Country Explorer</h2>
+            <p class="text-muted small">Global facts & information A-Z</p>
+        </div>
+        <button class="close-panel" onclick="closeDetails()">×</button>
+    </div>
+    <div class="panel-content country-explorer">
+        <div class="country-search-area">
+            <div class="search-input-wrapper">
+                <i class="search-icon-glass">🔍</i>
+                <input type="text" id="countrySearchInput" class="form-control" placeholder="Search any country (e.g. Canada, Brazil)..." oninput="handleCountrySearchInput(this.value)" autocomplete="off" />
+                <div id="countrySearchResults" class="country-dropdown-glass" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div id="countryLoadingState" class="news-loading-state" style="display: none;">
+            <div class="spinner"></div>
+            <p>Fetching global data...</p>
+        </div>
+
+        <div id="countryPlaceholder" class="placeholder-empty">
+            <div class="placeholder-icon">🌏</div>
+            <h3>Discover the World</h3>
+            <p>Search for any country to view comprehensive details including flags, capitals, populations, and more.</p>
+        </div>
+
+        <div id="countryDetailsContent" class="country-details-view" style="display: none;">
+            <!-- Content injected via JS -->
         </div>
     </div>
 </div>
@@ -870,18 +1158,74 @@
                     }
                 });
             } else {
-                // Time-specific Enter check
-                input.addEventListener('keydown', (e) => {
+                // Time-specific Enter key - Smart Resolution
+                input.addEventListener('keydown', async (e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        const term = input.value.toLowerCase().trim();
+                        const term = input.value.trim();
                         const items = Array.from(options.querySelectorAll('.option-item'));
-                        const match = items.find(it => 
-                            it.getAttribute('data-text').toLowerCase().includes(term) ||
-                            it.getAttribute('data-full')?.toLowerCase().includes(term)
-                        );
-                        if (match) match.click();
-                        input.blur();
+                        
+                        // 1. Check for exact text match or match within visible options
+                        // Use a loose match first on what's filtered
+                        const visibleItem = items.find(it => it.style.display !== 'none' && (
+                             it.getAttribute('data-text').toLowerCase() === term.toLowerCase() ||
+                             it.getAttribute('data-full').toLowerCase().includes(term.toLowerCase())
+                        ));
+
+                        if (visibleItem) {
+                            visibleItem.click();
+                            input.blur();
+                            wrapper.classList.remove('active');
+                            return;
+                        }
+
+                        // 2. Resolve via Geocoding (Smart Auto-Detect)
+                        input.classList.add('resolving'); // Add loading spinner style if any
+                        const originalPlaceholder = input.placeholder;
+                        input.placeholder = "Detecting timezone...";
+                        
+                        try {
+                            const res = await fetch(`/Todo/ResolveTimeZone?location=${encodeURIComponent(term)}`);
+                            const data = await res.json();
+                            
+                            if (data.timezoneId) {
+                                // Try to find the IANA ID match
+                                // Note: Server returns IANA ID (e.g. Asia/Kolkata), but we might have Windows IDs in values?
+                                // Our updated controller ensures IDs are IANA-compatible or we map them.
+                                // Let's try matching the ID directly or the IANA part of the name
+                                
+                                let match = items.find(it => it.getAttribute('data-value') === data.timezoneId);
+                                
+                                // Fallback: Try matching by text content (e.g. server returns "Asia/Kolkata", option is "Asia/Kolkata (UTC+5.5)")
+                                if (!match) {
+                                     match = items.find(it => it.getAttribute('data-text').startsWith(data.timezoneId));
+                                }
+
+                                if (match) {
+                                    // Show success feedback
+                                    // toast(`Resolved '${term}' to ${data.timezoneId}`); // If we had a toast function
+                                    console.log(`Resolved '${term}' to ${data.timezoneId}`);
+                                    
+                                    select.value = match.getAttribute('data-value');
+                                    input.value = match.getAttribute('data-text').trim();
+                                    match.scrollIntoView({ block: 'center' });
+                                    
+                                    refreshTimeData();
+                                } else {
+                                    alert(`Location found (${data.timezoneId}), but not in our supported list.`);
+                                }
+                            } else {
+                                alert(`Could not find a timezone for: "${term}". Try a major city name.`);
+                            }
+                        } catch (err) {
+                            console.error("Timezone resolution failed", err);
+                            alert("Error detecting timezone. Please check your connection.");
+                        } finally {
+                            input.classList.remove('resolving');
+                            input.placeholder = originalPlaceholder;
+                            input.blur();
+                            wrapper.classList.remove('active');
+                        }
                     }
                 });
             }
@@ -920,51 +1264,77 @@
 
             if (!srcSel || !targetSel) return;
 
-            const temp = srcSel.value;
+            // 1. Swap hidden select values
+            const tempVal = srcSel.value;
             srcSel.value = targetSel.value;
-            targetSel.value = temp;
+            targetSel.value = tempVal;
 
-            if (srcInput) updateInputText(srcInput, srcSel.value);
-            if (targetInput) updateInputText(targetInput, targetSel.value);
+            // 2. Swap visible input texts directly (much safer than re-looking up)
+            if (srcInput && targetInput) {
+                const tempText = srcInput.value;
+                srcInput.value = targetInput.value;
+                targetInput.value = tempText;
+            }
 
             refreshTimeData();
         });
 
-        // --- 7. Time Converter AJAX ---
+        // --- 7. TIME HUB LOGIC ---
         const timeForm = document.getElementById('timeForm');
         const sourceSelect = document.getElementById('sourceTimeSelect');
         const targetSelect = document.getElementById('targetTimeSelect');
-        const timeInput = document.getElementById('convertTimeInput');
+        let lastTimeData = null; // Client-side cache for instant toggling
 
-        if (timeInput) timeInput.addEventListener('input', refreshTimeData);
+        function handleTimeFormatChange() {
+             if (lastTimeData) {
+                 updateTimeUI(lastTimeData);
+             }
+             refreshLocalClock();
+        }
 
         async function refreshTimeData() {
             console.log(">>> refreshTimeData() called");
-            if (!sourceSelect || !targetSelect) {
-                console.warn("Time selects not found!");
-                return;
-            }
+            if (!sourceSelect || !targetSelect) return;
+
             const source = sourceSelect.value;
             const target = targetSelect.value;
-            const time = timeInput ? timeInput.value : '';
-            console.log("Time zones:", source, "to", target, "time:", time);
+            
+            // Handle Empty State
+            if (!source || !target) {
+                console.log("Source or Target empty, clearing result.");
+                document.getElementById('timeResultVal').textContent = "--:--";
+                document.getElementById('timeAbbr').textContent = "";
+                document.querySelector('.insight-card.time')?.classList.remove('loading');
+                return;
+            }
+
+            const time = ''; // Always use current time
+            console.log("Time zones:", source, "to", target);
             const card = document.querySelector('.insight-card.time');
+            if (card) card.classList.add('loading');
 
             try {
                 const res = await fetch(`/Todo/GetTimeJson?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}&time=${encodeURIComponent(time)}`);
-                console.log("Time API response status:", res.status);
                 const data = await res.json();
-                console.log("Time data received:", data);
+                lastTimeData = data; // Cache it
                 updateTimeUI(data);
-                console.log("<<< refreshTimeData() complete");
             } catch (e) {
                 console.error("Time fetch failed:", e);
+            } finally {
                 if (card) card.classList.remove('loading');
             }
         }
 
+
+
+        function handleConversionFormatChange() {
+             if (lastTimeData) {
+                 updateTimeUI(lastTimeData);
+             }
+        }
+
         function updateTimeUI(data) {
-            const is12h = document.getElementById('timeFormatToggle')?.checked;
+            const is12h = document.getElementById('conversionFormatToggle')?.checked;
             
             // Format time helper
             const formatTime = (timeStr) => {
@@ -984,8 +1354,15 @@
                     targetDisplay.textContent = formatTime(data.targetTime);
                     targetDisplay.setAttribute('data-offset', data.totalOffsetMinutes);
                 }
-                const metaDisplay = document.getElementById('summaryTimeMeta');
-                if (metaDisplay) metaDisplay.textContent = data.targetZone;
+
+                // FIX: Update the main panel result with formatting
+                const resultVal = document.getElementById('timeResultVal');
+                if (resultVal) {
+                    resultVal.textContent = formatTime(data.targetTime);
+                }
+                
+                const resultAbbr = document.getElementById('timeAbbr');
+                if (resultAbbr) resultAbbr.textContent = data.targetAbbr || 'UTC';
             }
 
             const resultVal = document.getElementById('timeResultVal');
@@ -1013,16 +1390,178 @@
             }
         }
 
+
         if (sourceSelect) sourceSelect.addEventListener('change', refreshTimeData);
         if (targetSelect) targetSelect.addEventListener('change', refreshTimeData);
-        if (timeInput) timeInput.addEventListener('input', refreshTimeData);
         
-        if (swapTimeBtn) {
-            swapTimeBtn.addEventListener('click', () => {
+        const swapTimeZonesBtn = document.getElementById('swapTimeZones');
+        if (swapTimeZonesBtn) {
+            swapTimeZonesBtn.addEventListener('click', () => {
                 const temp = sourceSelect.value;
                 sourceSelect.value = targetSelect.value;
                 targetSelect.value = temp;
                 refreshTimeData();
+            });
+        }
+
+        // --- 11. NEWS WIDGET LOGIC ---
+        let currentNewsCategory = 'All';
+        let lastResolvedNewsLocation = "";
+        let allNewsItems = [];
+        let newsVisibleCount = 0;
+        const NEWS_PAGE_SIZE = 12;
+        const NEWS_PLACEHOLDER_IMG = "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80"; // Premium abstract news image
+
+        async function refreshNewsData() {
+            const feedContainer = document.getElementById('newsFeed');
+            const searchInput = document.getElementById('newsSearchInput');
+            const sortSelect = document.getElementById('newsSortSelect');
+            const resolvedLabel = document.getElementById('newsResolvedLocation');
+            const card = document.getElementById('newsWidgetCard');
+            
+            const location = searchInput.value || lastResolvedNewsLocation || '@Model.SelectedCity' || 'London';
+            const category = currentNewsCategory === 'All' ? '' : currentNewsCategory;
+            const sortBy = sortSelect.value;
+            
+            if (card) card.classList.add('loading');
+            feedContainer.innerHTML = '<div class="news-loading-state"><div class="spinner"></div><p>Fetching authentic news...</p></div>';
+
+            try {
+                const res = await fetch(`/Todo/GetNewsJson?location=${encodeURIComponent(location)}&category=${encodeURIComponent(category)}&sortBy=${sortBy}`);
+                const data = await res.json();
+                
+                lastResolvedNewsLocation = data.resolvedLocation;
+                if (resolvedLabel) resolvedLabel.textContent = `Showing news for: ${data.resolvedLocation}`;
+                
+                // Store all items for pagination
+                allNewsItems = data.items || [];
+                newsVisibleCount = 0; // Reset index
+                
+                renderNewsFeed(false); // Initial render (full list replaced)
+                updateLoadMoreVisibility();
+                
+                if (card) {
+                    card.classList.remove('loading');
+                    const countDisplay = document.getElementById('summaryNewsCount');
+                    const metaDisplay = document.getElementById('summaryNewsMeta');
+                    if (countDisplay) countDisplay.textContent = `${allNewsItems.length} Stories`;
+                    if (metaDisplay) metaDisplay.textContent = `${data.resolvedLocation} • ${category || 'General'}`;
+                }
+            } catch (err) {
+                console.error("News fetch failed:", err);
+                feedContainer.innerHTML = '<div class="news-loading-state"><p>⚠️ Failed to load news. Please try a different location.</p></div>';
+                if (card) card.classList.remove('loading');
+            }
+        }
+
+        function updateLoadMoreVisibility() {
+            const container = document.getElementById('newsLoadMoreContainer');
+            if (container) {
+                container.style.display = (newsVisibleCount < allNewsItems.length) ? 'flex' : 'none';
+            }
+        }
+
+        function loadMoreNews() {
+            renderNewsFeed(true); // Append mode
+            updateLoadMoreVisibility();
+        }
+
+        function renderNewsFeed(append = false) {
+            const container = document.getElementById('newsFeed');
+            
+            const start = newsVisibleCount;
+            const end = Math.min(start + NEWS_PAGE_SIZE, allNewsItems.length);
+            const batch = allNewsItems.slice(start, end);
+            newsVisibleCount = end;
+
+            if (!append && batch.length === 0) {
+                container.innerHTML = '<div class="news-loading-state"><p>No relevant news stories found for this location.</p></div>';
+                return;
+            }
+
+            const html = batch.map((item, index) => {
+                const globalIndex = start + index;
+                const displayImg = item.imageUrl || NEWS_PLACEHOLDER_IMG;
+
+                return `
+                    <div class="news-item-card" onclick="viewArticle(${globalIndex})">
+                        <div class="news-image" 
+                             style="background-image: url('${displayImg.replace(/'/g, "%27")}'), url('${NEWS_PLACEHOLDER_IMG}')"
+                             onerror="this.style.backgroundImage='url(${NEWS_PLACEHOLDER_IMG})'">
+                        </div>
+                        <div class="news-content">
+                            <div class="news-source-row">
+                                <span class="news-source">${item.source}</span>
+                                <span class="news-date">${item.published}</span>
+                            </div>
+                            <h3 class="news-headline">${item.title}</h3>
+                            <p class="news-snippet">${item.description}</p>
+                            <div class="news-footer">
+                                <button class="btn-read-more">Read More <span class="arrow">→</span></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (append) {
+                container.insertAdjacentHTML('beforeend', html);
+            } else {
+                container.innerHTML = html;
+            }
+        }
+
+        function viewArticle(index) {
+            window.location.href = `/Todo/NewsDetail?index=${index}`;
+        }
+
+        async function openArticleDetail(url, title, source, date, img, description) {
+            const detailPanel = document.getElementById('newsArticleDetails');
+            const bodyContainer = document.getElementById('articleBody');
+            const overlay = document.getElementById('detailsOverlay');
+            
+            // Ensure any other panel is closed and overlay is visible
+            document.querySelectorAll('.details-panel').forEach(p => p.classList.remove('active'));
+            
+            // Show panel and overlay
+            detailPanel.classList.add('active');
+            if (overlay) overlay.classList.add('active');
+            
+            // Set content
+            document.getElementById('articleTitle').textContent = title || 'Untitled';
+            document.getElementById('articleSource').textContent = source || 'News Source';
+            document.getElementById('articleDate').textContent = date || '';
+            document.getElementById('articleSourceLink').href = url || '#';
+            
+            const imgContainer = document.getElementById('articleImageContainer');
+            imgContainer.innerHTML = `<img src="${img}" alt="Featured Image" class="article-hero-img" onerror="this.src='${NEWS_PLACEHOLDER_IMG}'">`;
+            
+            // Clean and set description (extended summary)
+            bodyContainer.innerHTML = `<div class="article-content-wrapper"><p class="article-intro-text">${description || 'Detailed content not available.'}</p></div>`;
+        }
+
+        function backToNewsFeed() {
+            openDetails('news');
+        }
+
+        // --- Category Pill Interaction ---
+        document.querySelectorAll('#newsCategoryPills .pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                document.querySelectorAll('#newsCategoryPills .pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                currentNewsCategory = pill.getAttribute('data-category');
+                refreshNewsData();
+            });
+        });
+
+        // Search on Enter
+        const newsSearchInput = document.getElementById('newsSearchInput');
+        if (newsSearchInput) {
+            newsSearchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    refreshNewsData();
+                }
             });
         }
 
@@ -1048,7 +1587,20 @@
                         city = data.city;
                         console.log("Geolocation successful, city:", city);
                     } catch (err) {
-                        console.warn("Geolocation failed, using default city");
+                        console.info("Dev Mode: Browser geolocation unavailable (Localhost), trying IP fallback...");
+                        try {
+                            const ipRes = await fetch('https://ipapi.co/json/');
+                            const ipData = await ipRes.json();
+                            if (ipData.city) {
+                                console.log("IP Fallback successful:", ipData.city);
+                                const res = await fetch(`/Todo/GetWeatherJson?city=${encodeURIComponent(ipData.city)}`);
+                                const data = await res.json();
+                                updateWeatherUI(data);
+                                city = data.city;
+                            }
+                        } catch (e) {
+                            console.warn("All location detections failed, using default.");
+                        }
                     }
                 }
             }
@@ -1065,6 +1617,9 @@
             
             console.log("Calling refreshTimeData...");
             refreshTimeData();
+
+            console.log("Calling refreshNewsData...");
+            refreshNewsData();
             
             console.log("<<< initDashboard() complete");
         }
@@ -1130,6 +1685,261 @@
 
             refreshLocalClock();
             setInterval(refreshLocalClock, 1000);
+        }
+
+        // --- 11. Country Explorer ---
+        let countrySearchTimeout;
+
+        async function handleCountrySearchInput(query) {
+            if (countrySearchTimeout) clearTimeout(countrySearchTimeout);
+            
+            const resultsContainer = document.getElementById('countrySearchResults');
+            if (!query || query.length < 2) {
+                resultsContainer.style.display = 'none';
+                return;
+            }
+
+            countrySearchTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/Todo/SearchCountries?query=${encodeURIComponent(query)}`);
+                    const data = await res.json();
+                    
+                    if (data && data.length > 0) {
+                        renderCountrySearchResults(data);
+                        resultsContainer.style.display = 'block';
+                    } else {
+                        resultsContainer.style.display = 'none';
+                    }
+                } catch (e) {
+                    console.error("Country search failed:", e);
+                }
+            }, 300);
+        }
+
+        function renderCountrySearchResults(countries) {
+            const list = document.getElementById('countrySearchResults');
+            list.innerHTML = countries.map(c => `
+                <div class="country-search-item" onclick="selectCountry('${c.name.replace(/'/g, "\\'")}')">
+                    <span class="flag-mini">${c.flagEmoji}</span>
+                    <div class="country-info-mini">
+                        <span class="name">${c.name}</span>
+                        <span class="capital">${c.capital}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function selectCountry(name) {
+            document.getElementById('countrySearchResults').style.display = 'none';
+            document.getElementById('countryPlaceholder').style.display = 'none';
+            document.getElementById('countryLoadingState').style.display = 'flex';
+            document.getElementById('countryDetailsContent').style.display = 'none';
+            
+            try {
+                const res = await fetch(`/Todo/GetCountryDetails?name=${encodeURIComponent(name)}`);
+                if (!res.ok) throw new Error("Country not found");
+                
+                const data = await res.json();
+                
+                if (data && data.name) {
+                    renderCountryDetails(data);
+                    // Also update summary card
+                    document.getElementById('summaryCountryName').textContent = data.name;
+                    document.getElementById('summaryCountryMeta').textContent = `${data.flagEmoji} ${data.capital} • ${data.region}`;
+                    const card = document.querySelector('.insight-card.country');
+                    if (card) card.classList.remove('loading');
+                } else {
+                    throw new Error("Invalid country data");
+                }
+            } catch (e) {
+                console.error("Failed to load country details:", e);
+                const container = document.getElementById('countryDetailsContent');
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 3rem 1rem; color: rgba(255,255,255,0.6);">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🔎</div>
+                        <h3>Country Not Found</h3>
+                        <p>We couldn't retrieve details for "${name}". Please try a different name.</p>
+                        <button onclick="document.getElementById('countryPlaceholder').style.display='flex'; document.getElementById('countryDetailsContent').style.display='none';" class="btn-primary-sm" style="margin-top:1rem;">Back to Search</button>
+                    </div>
+                `;
+            } finally {
+                document.getElementById('countryLoadingState').style.display = 'none';
+                document.getElementById('countryDetailsContent').style.display = 'block';
+            }
+        }
+
+        let countryMap = null;
+
+        function renderCountryDetails(c) {
+            const container = document.getElementById('countryDetailsContent');
+            
+            const currs = Object.entries(c.currencies).map(([code, info]) => `${info.name || info.item1} (${info.symbol || info.item2 || code})`).join(', ');
+            const langs = c.languages.join(', ');
+            const pop = new Intl.NumberFormat().format(c.population);
+            const area = new Intl.NumberFormat().format(c.area);
+            const density = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(c.populationDensity);
+
+            // Try to find Motto in Wikipedia summary via simple regex
+            let motto = "N/A";
+            const mottoMatch = c.wikipediaSummary.match(/motto is ["']?([^"'.]+)["']?/i) || c.wikipediaSummary.match(/["']([^"']+)["'] is the national motto/i);
+            if (mottoMatch) motto = mottoMatch[1];
+
+            container.innerHTML = `
+                <div class="country-header-premium">
+                    <div class="flag-hero">
+                        <img src="${c.flagUrl}" alt="${c.name} Flag" class="flag-img-big" />
+                    </div>
+                    <div class="header-text">
+                        <h1>${c.name} ${c.flagEmoji}</h1>
+                        <p class="official-name">${c.officialName}</p>
+                        <div class="quick-stats-pills">
+                            <span class="stat-pill">📍 ${c.capital}</span>
+                            <span class="stat-pill">🆔 ${c.isoCode}</span>
+                            <span class="stat-pill motto-pill">💬 ${motto}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="country-summary-box">
+                    <h3>About ${c.name}</h3>
+                    <p class="wiki-extract">${c.wikipediaSummary || 'Fetching detailed historical and political summary...'}</p>
+                </div>
+
+                <!-- 🧭 Geography Section (Open by default) -->
+                <div class="country-accordion open" id="accGeo">
+                    <div class="accordion-header" onclick="toggleAccordion('accGeo')">
+                        <h3><i class="icon">🧭</i> Geography & Map</h3>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="country-map-container" id="countryMap"></div>
+                        <div class="info-group">
+                            <div class="detail-row"><span>Total Area</span> <strong>${area} km²</strong></div>
+                            <div class="detail-row"><span>Coordinates</span> <strong>${c.latitude.toFixed(2)}, ${c.longitude.toFixed(2)}</strong></div>
+                            <div class="detail-row"><span>Region</span> <strong>${c.region}</strong></div>
+                            <div class="detail-row"><span>Sub-region</span> <strong>${c.subregion || 'N/A'}</strong></div>
+                            <div class="detail-row"><span>Continents</span> <strong>${c.continents.join(', ')}</strong></div>
+                            <div class="borders-section mt-3">
+                                <span>Borders & Neighbors</span>
+                                <div class="border-pills">
+                                    ${c.borders.length > 0 ? c.borders.map(b => `<span class="border-pill">${b}</span>`).join('') : '<em>No Land Borders</em>'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ⛅ Climate Section -->
+                <div class="country-accordion" id="accClimate">
+                    <div class="accordion-header" onclick="toggleAccordion('accClimate')">
+                        <h3><i class="icon">⛅</i> Climate & Environment</h3>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="info-group">
+                            <div class="detail-row"><span>Climate Type</span> <strong>${c.climateType}</strong></div>
+                            <div class="detail-row"><span>Avg Temperature</span> <strong>${c.averageTemperature}</strong></div>
+                            <div class="detail-row"><span>Natural Resources</span> <strong>${c.naturalResources}</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 👥 Demographics Section -->
+                <div class="country-accordion" id="accDemo">
+                    <div class="accordion-header" onclick="toggleAccordion('accDemo')">
+                        <h3><i class="icon">👥</i> Demographics & Culture</h3>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="info-group">
+                            <div class="detail-row"><span>Total Population</span> <strong>${pop}</strong></div>
+                            <div class="detail-row"><span>Pop. Density</span> <strong>${density} / km²</strong></div>
+                            <div class="detail-row"><span>Religions</span> <strong>${c.religions || 'Diverse'}</strong></div>
+                            <div class="detail-row"><span>Languages</span> <strong>${langs}</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 💰 Economy Section -->
+                <div class="country-accordion" id="accEcon">
+                    <div class="accordion-header" onclick="toggleAccordion('accEcon')">
+                        <h3><i class="icon">💰</i> Economy & Infrastructure</h3>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="info-group mb-3">
+                            <div class="detail-row"><span>Total GDP</span> <strong>${c.gdp || 'N/A'}</strong></div>
+                            <div class="detail-row"><span>Currencies</span> <strong>${currs}</strong></div>
+                            <div class="detail-row"><span>Major Industries</span> <strong>${c.majorIndustries || 'N/A'}</strong></div>
+                        </div>
+                        <div class="info-group">
+                            <div class="detail-row"><span>Electricity</span> <strong>${c.electricityVoltage}, ${c.electricityPlugTypes}</strong></div>
+                            <div class="detail-row"><span>Driving Side</span> <strong class="text-capitalize">${c.drivingSide}</strong></div>
+                            <div class="detail-row"><span>Calling Code</span> <strong>${c.callingCode}</strong></div>
+                            <div class="detail-row"><span>Domain (TLD)</span> <strong>${c.internetDomains.join(', ')}</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✨ Additional Info Section -->
+                <div class="country-accordion" id="accAdd">
+                    <div class="accordion-header" onclick="toggleAccordion('accAdd')">
+                        <h3><i class="icon">✨</i> Global Standings & Insight</h3>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="info-group">
+                            <div class="detail-row"><span>Global Rankings</span> 
+                                <div>
+                                    ${Object.keys(c.globalRankings).length > 0 ? Object.entries(c.globalRankings).map(([k, v]) => `<div class="small"><strong>${k}:</strong> ${v}</div>`).join('') : '<em>Updates pending...</em>'}
+                                </div>
+                            </div>
+                            <div class="detail-row"><span>Organizations</span> 
+                                 <div class="scroll-pills">${c.internationalOrganizations.length > 0 ? c.internationalOrganizations.map(o => `<span class="pill-sm">${o}</span>`).join('') : '<em>Processing...</em>'}</div>
+                            </div>
+                            <div class="detail-row"><span>Google Maps</span> 
+                                <a href="${c.googleMapsUrl}" target="_blank" class="btn-primary-sm" style="display:inline-block; margin-top:0;">Navigate External ↗</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Init Map after DOM update
+            setTimeout(() => initCountryMap(c.latitude, c.longitude, c.name), 100);
+        }
+
+        function toggleAccordion(id) {
+            const acc = document.getElementById(id);
+            if (acc) {
+                const isOpen = acc.classList.contains('open');
+                // Close others if you want, but user might want multiple open
+                // For now just toggle
+                acc.classList.toggle('open');
+                
+                // If opening geography, ensure map resizes
+                if (id === 'accGeo' && !isOpen) {
+                    setTimeout(() => { if(countryMap) countryMap.invalidateSize(); }, 310);
+                }
+            }
+        }
+
+        function initCountryMap(lat, lng, name) {
+            if (countryMap) {
+                countryMap.remove();
+            }
+            
+            countryMap = L.map('countryMap').setView([lat, lng], 5);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(countryMap);
+
+            L.marker([lat, lng]).addTo(countryMap)
+                .bindPopup(name)
+                .openPopup();
+            
+            // Fix map resize inside dynamic content
+            setTimeout(() => countryMap.invalidateSize(), 300);
         }
 
         // --- 9. Initialization ---

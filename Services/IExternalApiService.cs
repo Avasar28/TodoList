@@ -12,6 +12,12 @@ namespace TodoListApp.Services
         Task<UserLocationData> GetLocationFromIpAsync(string ip);
         Task<CurrencyHistoryData> GetCurrencyHistoryAsync(string from, string to, int days = 7);
         Task<string?> GetCurrencyFromLocationAsync(string location);
+        Task<string?> GetTimeZoneByLocationAsync(string location);
+        Task<ViewModels.NewsData> GetNewsAsync(string location, string? category = null, string sortBy = "relevance");
+        Task<string> GetNewsDetailAsync(string url);
+        List<ViewModels.NewsItem> GetCachedNews();
+        Task<List<CountryData>> SearchCountriesAsync(string query);
+        Task<CountryData?> GetCountryDetailsAsync(string name);
     }
 
     public class WeatherData
@@ -98,5 +104,65 @@ namespace TodoListApp.Services
     {
         public List<string> Labels { get; set; } = new List<string>(); // Dates
         public List<decimal> Values { get; set; } = new List<decimal>(); // Rates
+    }
+
+    public class CountryData
+    {
+        public string Name { get; set; } = string.Empty;
+        public string OfficialName { get; set; } = string.Empty;
+        public string FlagUrl { get; set; } = string.Empty;
+        public string FlagEmoji { get; set; } = string.Empty;
+        public string IsoCode { get; set; } = string.Empty;
+        public string Capital { get; set; } = string.Empty;
+        public string Region { get; set; } = string.Empty;
+        public string Subregion { get; set; } = string.Empty;
+        public List<string> Continents { get; set; } = new List<string>();
+        public long Population { get; set; }
+        public double Area { get; set; }
+        public double PopulationDensity => Area > 0 ? Population / Area : 0;
+        public List<string> Languages { get; set; } = new List<string>();
+        public Dictionary<string, (string Name, string Symbol)> Currencies { get; set; } = new Dictionary<string, (string Name, string Symbol)>();
+        public List<string> Timezones { get; set; } = new List<string>();
+        public List<string> Borders { get; set; } = new List<string>();
+        public string GoogleMapsUrl { get; set; } = string.Empty;
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        
+        // Advanced Fields (from Wikipedia/CIA)
+        public string GovernmentType { get; set; } = "N/A";
+        public string HeadOfState { get; set; } = "N/A";
+        public string IndependenceDay { get; set; } = "N/A";
+        public string NationalMotto { get; set; } = "N/A";
+        public string MajorEthnicGroups { get; set; } = "N/A";
+        public string WikipediaSummary { get; set; } = string.Empty;
+        public string LandArea { get; set; } = "N/A";
+        public string WaterArea { get; set; } = "N/A";
+
+        // Economy
+        public string GDP { get; set; } = "N/A";
+        public string MajorIndustries { get; set; } = "N/A";
+
+        // Culture & Society
+        public string NationalAnthem { get; set; } = "N/A";
+        public string NationalAnimal { get; set; } = "N/A";
+        public string NationalSport { get; set; } = "N/A";
+        public string Religions { get; set; } = "N/A";
+
+        // Infrastructure
+        public string DrivingSide { get; set; } = "N/A";
+        public List<string> InternetDomains { get; set; } = new List<string>();
+        public string CallingCode { get; set; } = "N/A";
+        public string ElectricityVoltage { get; set; } = "N/A";
+        public string ElectricityPlugTypes { get; set; } = "N/A";
+
+        // Climate & Environment
+        public string ClimateType { get; set; } = "N/A";
+        public string AverageTemperature { get; set; } = "N/A";
+        public string NaturalResources { get; set; } = "N/A";
+
+        // Additional Information
+        public List<string> FamousPlaces { get; set; } = new List<string>();
+        public Dictionary<string, string> GlobalRankings { get; set; } = new Dictionary<string, string>();
+        public List<string> InternationalOrganizations { get; set; } = new List<string>();
     }
 }
