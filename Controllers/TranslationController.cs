@@ -27,7 +27,10 @@ namespace TodoListApp.Controllers
 
     public class TranslationRequest
     {
+        [System.Text.Json.Serialization.JsonPropertyName("texts")]
         public string[] Texts { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("targetLang")]
         public string TargetLang { get; set; }
     }
 }
