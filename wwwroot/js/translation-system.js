@@ -65,12 +65,37 @@ class TranslationManager {
         localStorage.setItem('app_lang', lang);
 
         if (lang === 'en') {
-            location.reload();
+            this.restoreToEnglish();
         } else {
             this.translationCache.clear();
             // Re-scan with new language. 
             // IMPORTANT: Because we use originalTextMap, we will translate from English source, thus it works perfectly.
             this.scanAndTranslate(document.body);
+        }
+    }
+
+    restoreToEnglish() {
+        // Walk the visible DOM to find nodes we have tracked
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, null, false);
+        let node;
+        while (node = walker.nextNode()) {
+            if (this.originalTextMap.has(node)) {
+                const original = this.originalTextMap.get(node);
+
+                // Handle Text Nodes
+                if (node.nodeType === Node.TEXT_NODE && typeof original === 'string') {
+                    // Only restore if different (optimization)
+                    if (node.nodeValue !== original) {
+                        node.nodeValue = original;
+                    }
+                }
+                // Handle Elements (Attributes)
+                else if (node.nodeType === Node.ELEMENT_NODE && typeof original === 'object') {
+                    for (const [attr, val] of Object.entries(original)) {
+                        node.setAttribute(attr, val);
+                    }
+                }
+            }
         }
     }
 
@@ -112,8 +137,7 @@ class TranslationManager {
         this.observer.observe(document.body, {
             childList: true,
             subtree: true,
-            attributes: true,
-            attributeFilter: ['placeholder', 'title', 'alt', 'value', 'aria-label']
+            attributeFilter: ['placeholder', 'title', 'alt', 'aria-label']
         });
     }
 
@@ -177,9 +201,8 @@ class TranslationManager {
                 }
             }
 
-            // 2. Handle Attributes
             if (node.nodeType === Node.ELEMENT_NODE) {
-                ['placeholder', 'title', 'alt', 'value', 'aria-label'].forEach(attr => {
+                ['placeholder', 'aria-label'].forEach(attr => {
                     // Use a composite key object for WeakMap uniqueness on attributes?
                     // WeakMap keys must be objects. We can store a map of attributes on the node in WeakMap.
                     // Let's simpler: store a property on the map: node -> { attr: originalVal }
@@ -306,7 +329,7 @@ class TranslationManager {
     }
 
     isTranslatableAttribute(attr) {
-        return ['placeholder', 'title', 'alt', 'value', 'aria-label'].includes(attr);
+        return ['placeholder', 'aria-label'].includes(attr);
     }
 
     scanAndTranslate(root) {
