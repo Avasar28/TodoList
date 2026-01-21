@@ -656,12 +656,38 @@ namespace TodoListApp.Services
 
             try
             {
-                var response = await _httpClient.GetAsync($"https://restcountries.com/v3.1/name/{Uri.EscapeDataString(query)}?fields=name,flags,cca2,capital,region,subregion,continents,population,area,languages,currencies,timezones,borders,maps,flag");
+                // Normalize query for better matching
+                var normalizedQuery = query.Trim().ToLower();
+                
+                // Search by name, but also try alternate spellings and codes if query is short
+                string searchUrl = $"https://restcountries.com/v3.1/name/{Uri.EscapeDataString(normalizedQuery)}?fields=name,flags,cca2,capital,region,subregion,continents,population,area,languages,currencies,timezones,borders,maps,flag";
+                
+                var response = await _httpClient.GetAsync(searchUrl);
+                
+                // If name search fails and query is 2-3 chars, try alpha code
+                if (!response.IsSuccessStatusCode && normalizedQuery.Length >= 2 && normalizedQuery.Length <= 3)
+                {
+                    searchUrl = $"https://restcountries.com/v3.1/alpha/{Uri.EscapeDataString(normalizedQuery)}?fields=name,flags,cca2,capital,region,subregion,continents,population,area,languages,currencies,timezones,borders,maps,flag";
+                    response = await _httpClient.GetAsync(searchUrl);
+                }
+
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
                     using var doc = JsonDocument.Parse(json);
-                    return doc.RootElement.EnumerateArray().Select(MapToCountryData).ToList();
+                    
+                    if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                    {
+                        return doc.RootElement.EnumerateArray()
+                            .Select(MapToCountryData)
+                            .OrderByDescending(c => c.Name.Equals(normalizedQuery, StringComparison.OrdinalIgnoreCase) || c.OfficialName.Equals(normalizedQuery, StringComparison.OrdinalIgnoreCase))
+                            .ToList();
+                    }
+                    else if (doc.RootElement.ValueKind == JsonValueKind.Object)
+                    {
+                        // Single result from alpha search
+                        return new List<CountryData> { MapToCountryData(doc.RootElement) };
+                    }
                 }
             }
             catch (Exception ex)
@@ -677,24 +703,46 @@ namespace TodoListApp.Services
 
             try
             {
-                // Use full text search for exact name
+                // Try full text search first (safest for exact matches)
                 var response = await _httpClient.GetAsync($"https://restcountries.com/v3.1/name/{Uri.EscapeDataString(name)}?fullText=true&fields=name,flags,cca2,capital,region,subregion,continents,population,area,languages,currencies,timezones,borders,maps,flag,latlng,idd,tld,car");
+                
+                // If fail, try partial name search (normalization fallback)
+                if (!response.IsSuccessStatusCode)
+                {
+                    response = await _httpClient.GetAsync($"https://restcountries.com/v3.1/name/{Uri.EscapeDataString(name)}?fields=name,flags,cca2,capital,region,subregion,continents,population,area,languages,currencies,timezones,borders,maps,flag,latlng,idd,tld,car");
+                }
+
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
                     using var doc = JsonDocument.Parse(json);
-                    var results = doc.RootElement.EnumerateArray().ToList();
+                    var results = doc.RootElement.ValueKind == JsonValueKind.Array ? doc.RootElement.EnumerateArray().ToList() : new List<JsonElement> { doc.RootElement };
+                    
                     if (results.Any())
                     {
-                        var data = MapToCountryData(results[0]);
-                        // Enrich with Wikipedia
-                        await EnrichWithWikipedia(data);
-                        // Enrich with GDP
-                        await EnrichWithGDP(data);
-                        // Enrich with Electricity
-                        EnrichWithElectricity(data);
-                        // Enrich with Climate
-                        await EnrichWithClimate(data);
+                        // Prioritize the best match
+                        var bestMatch = results.FirstOrDefault(r => 
+                            r.GetProperty("name").GetProperty("common").GetString()?.Equals(name, StringComparison.OrdinalIgnoreCase) == true ||
+                            r.GetProperty("name").GetProperty("official").GetString()?.Equals(name, StringComparison.OrdinalIgnoreCase) == true);
+                        
+                        if (bestMatch.ValueKind == JsonValueKind.Undefined || bestMatch.ValueKind == JsonValueKind.Null)
+                        {
+                            bestMatch = results[0];
+                        }
+
+                        var data = MapToCountryData(bestMatch);
+                        
+                        // Concurrent Enrichment
+                        var tasks = new List<Task>
+                        {
+                            EnrichWithWikipedia(data),
+                            EnrichWithGDP(data),
+                            EnrichWithClimate(data),
+                            EnrichWithBorderNames(data),
+                            Task.Run(() => EnrichWithElectricity(data))
+                        };
+                        
+                        await Task.WhenAll(tasks);
                         return data;
                     }
                 }
@@ -781,11 +829,55 @@ namespace TodoListApp.Services
             else { data.ElectricityVoltage = "220-240V"; data.ElectricityPlugTypes = "C, G, M common"; }
         }
 
+        private async Task EnrichWithBorderNames(CountryData data)
+        {
+            if (data.Borders == null || !data.Borders.Any())
+            {
+                data.BorderCountryNames = new List<string>();
+                return;
+            }
+
+            try
+            {
+                // Fetch border country names concurrently
+                var borderNameTasks = data.Borders.Select(async isoCode =>
+                {
+                    try
+                    {
+                        var response = await _httpClient.GetAsync($"https://restcountries.com/v3.1/alpha/{isoCode}?fields=name");
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var json = await response.Content.ReadAsStringAsync();
+                            using var doc = JsonDocument.Parse(json);
+                            var nameObj = doc.RootElement.GetProperty("name");
+                            return nameObj.TryGetProperty("common", out var common) ? common.GetString() ?? isoCode : isoCode;
+                        }
+                    }
+                    catch { }
+                    return isoCode; // Fallback to ISO code if fetch fails
+                }).ToList();
+
+                var borderNames = await Task.WhenAll(borderNameTasks);
+                data.BorderCountryNames = borderNames.ToList();
+            }
+            catch
+            {
+                // If enrichment fails entirely, fallback to ISO codes
+                data.BorderCountryNames = data.Borders.ToList();
+            }
+        }
+
         private async Task EnrichWithWikipedia(CountryData data)
         {
             try
             {
                 var wikiResponse = await _httpClient.GetAsync($"https://en.wikipedia.org/api/rest_v1/page/summary/{Uri.EscapeDataString(data.Name)}");
+                if (!wikiResponse.IsSuccessStatusCode)
+                {
+                    // Try official name if common name fails
+                    wikiResponse = await _httpClient.GetAsync($"https://en.wikipedia.org/api/rest_v1/page/summary/{Uri.EscapeDataString(data.OfficialName)}");
+                }
+
                 if (wikiResponse.IsSuccessStatusCode)
                 {
                     var wikiJson = await wikiResponse.Content.ReadAsStringAsync();
@@ -797,44 +889,122 @@ namespace TodoListApp.Services
                         string summary = extract.GetString() ?? "";
                         data.WikipediaSummary = summary;
                         
+                        // Extract National Motto (Improved Regex)
+                        var mottoMatch = Regex.Match(summary, "is [\"']?([^\"'.]+)[\"']?\\s+is the national motto", RegexOptions.IgnoreCase) 
+                                     ?? Regex.Match(summary, "motto is [\"']?([^\"'.]+)[\"']?", RegexOptions.IgnoreCase);
+                        if (mottoMatch.Success) data.NationalMotto = mottoMatch.Groups[1].Value.Trim('"', '\'');
+
                         // Extract Religions (heuristic)
-                        if (summary.Contains("Muslim")) data.Religions = "Islam (Major)";
-                        else if (summary.Contains("Christian")) data.Religions = "Christianity (Major)";
-                        else if (summary.Contains("Hindu")) data.Religions = "Hinduism (Major)";
-                        else if (summary.Contains("Buddhist")) data.Religions = "Buddhism (Major)";
+                        if (summary.Contains("Muslim", StringComparison.OrdinalIgnoreCase)) data.Religions = "Islam (Predominant)";
+                        else if (summary.Contains("Christian", StringComparison.OrdinalIgnoreCase)) data.Religions = "Christianity (Predominant)";
+                        else if (summary.Contains("Hindu", StringComparison.OrdinalIgnoreCase)) data.Religions = "Hinduism (Predominant)";
+                        else if (summary.Contains("Buddhist", StringComparison.OrdinalIgnoreCase)) data.Religions = "Buddhism (Predominant)";
                         
                         // Extract Industry mentions
-                        if (summary.Contains("agriculture")) data.MajorIndustries = "Agriculture, Service";
-                        else if (summary.EndsWith("technology", StringComparison.OrdinalIgnoreCase) || summary.Contains(" technology")) data.MajorIndustries = "Technology, Manufacturing";
-                        else if (summary.Contains("oil")) data.MajorIndustries = "Petroleum, Gas";
+                        var industries = new List<string>();
+                        if (summary.Contains("agriculture", StringComparison.OrdinalIgnoreCase)) industries.Add("Agriculture");
+                        if (summary.Contains("technology", StringComparison.OrdinalIgnoreCase)) industries.Add("Technology");
+                        if (summary.Contains("manufacturing", StringComparison.OrdinalIgnoreCase)) industries.Add("Manufacturing");
+                        if (summary.Contains("tourism", StringComparison.OrdinalIgnoreCase)) industries.Add("Tourism");
+                        if (summary.Contains("oil", StringComparison.OrdinalIgnoreCase) || summary.Contains("petroleum", StringComparison.OrdinalIgnoreCase)) industries.Add("Petroleum");
+                        if (industries.Any()) data.MajorIndustries = string.Join(", ", industries);
+
+                        // Extract Government Type
+                        if (summary.Contains("constitutional monarchy", StringComparison.OrdinalIgnoreCase)) 
+                            data.GovernmentType = "Constitutional Monarchy";
+                        else if (summary.Contains("parliamentary republic", StringComparison.OrdinalIgnoreCase)) 
+                            data.GovernmentType = "Parliamentary Republic";
+                        else if (summary.Contains("federal republic", StringComparison.OrdinalIgnoreCase)) 
+                            data.GovernmentType = "Federal Republic";
+                        else if (summary.Contains("presidential republic", StringComparison.OrdinalIgnoreCase)) 
+                            data.GovernmentType = "Presidential Republic";
+                        else if (summary.Contains("semi-presidential", StringComparison.OrdinalIgnoreCase)) 
+                            data.GovernmentType = "Semi-Presidential Republic";
+                        else if (summary.Contains("absolute monarchy", StringComparison.OrdinalIgnoreCase)) 
+                            data.GovernmentType = "Absolute Monarchy";
+                        else if (summary.Contains("monarchy", StringComparison.OrdinalIgnoreCase)) 
+                            data.GovernmentType = "Monarchy";
+                        else if (summary.Contains("republic", StringComparison.OrdinalIgnoreCase)) 
+                            data.GovernmentType = "Republic";
+                        else if (summary.Contains("theocracy", StringComparison.OrdinalIgnoreCase)) 
+                            data.GovernmentType = "Theocracy";
+                        else if (summary.Contains("dictatorship", StringComparison.OrdinalIgnoreCase)) 
+                            data.GovernmentType = "Dictatorship";
+
+                        // Extract Independence Date
+                        var indepPatterns = new[]
+                        {
+                            @"independence (?:on|in) (\d{1,2}\s+\w+\s+\d{4})",
+                            @"independent (?:on|since|in) (\d{1,2}\s+\w+\s+\d{4}|\d{4})",
+                            @"gained independence (?:on|in) (\d{1,2}\s+\w+\s+\d{4}|\d{4})",
+                            @"became independent (?:on|in) (\d{1,2}\s+\w+\s+\d{4}|\d{4})"
+                        };
+                        
+                        foreach (var pattern in indepPatterns)
+                        {
+                            var indepMatch = Regex.Match(summary, pattern, RegexOptions.IgnoreCase);
+                            if (indepMatch.Success)
+                            {
+                                data.IndependenceDay = indepMatch.Groups[1].Value;
+                                break;
+                            }
+                        }
 
                         // Climate Type heuristic
-                        if (summary.Contains("tropical")) data.ClimateType = "Tropical";
-                        else if (summary.Contains("temperate")) data.ClimateType = "Temperate";
-                        else if (summary.Contains("desert")) data.ClimateType = "Arid / Desert";
-                        else if (summary.Contains("mediterranean")) data.ClimateType = "Mediterranean";
-                        else if (summary.Contains("continental")) data.ClimateType = "Continental";
+                        if (summary.Contains("tropical", StringComparison.OrdinalIgnoreCase)) data.ClimateType = "Tropical";
+                        else if (summary.Contains("temperate", StringComparison.OrdinalIgnoreCase)) data.ClimateType = "Temperate";
+                        else if (summary.Contains("desert", StringComparison.OrdinalIgnoreCase) || summary.Contains("arid", StringComparison.OrdinalIgnoreCase)) data.ClimateType = "Arid / Desert";
+                        else if (summary.Contains("mediterranean", StringComparison.OrdinalIgnoreCase)) data.ClimateType = "Mediterranean";
+                        else if (summary.Contains("continental", StringComparison.OrdinalIgnoreCase)) data.ClimateType = "Continental";
+                        else if (summary.Contains("polar", StringComparison.OrdinalIgnoreCase) || summary.Contains("arctic", StringComparison.OrdinalIgnoreCase)) data.ClimateType = "Polar / Arctic";
+                        else if (summary.Contains("subarctic", StringComparison.OrdinalIgnoreCase)) data.ClimateType = "Subarctic";
 
                         // Natural Resources heuristic
                         var resources = new List<string>();
-                        if (summary.Contains("gold")) resources.Add("Gold");
-                        if (summary.Contains("oil")) resources.Add("Oil");
-                        if (summary.Contains("gas")) resources.Add("Natural Gas");
-                        if (summary.Contains("timber")) resources.Add("Timber");
-                        if (summary.Contains("minerals")) resources.Add("Minerals");
+                        var resourceKeywords = new[] { "gold", "oil", "gas", "timber", "minerals", "coal", "iron", "copper", "diamonds" };
+                        foreach (var kw in resourceKeywords) if (summary.Contains(kw, StringComparison.OrdinalIgnoreCase)) resources.Add(char.ToUpper(kw[0]) + kw.Substring(1));
                         if (resources.Any()) data.NaturalResources = string.Join(", ", resources);
 
-                        // Famous Places (Search for capitalized names that are likely cities/places)
-                        var places = new List<string>();
-                        if (summary.Contains("UNESCO")) data.GlobalRankings["UNESCO Sites"] = "Multiple";
-                        
                         // Organizations
-                        if (summary.Contains("UN ")) data.InternationalOrganizations.Add("UN");
-                        if (summary.Contains("WHO ")) data.InternationalOrganizations.Add("WHO");
-                        if (summary.Contains("EU ")) data.InternationalOrganizations.Add("EU");
-                        if (summary.Contains("NATO")) data.InternationalOrganizations.Add("NATO");
-                        if (summary.Contains("G20")) data.InternationalOrganizations.Add("G20");
-                        if (summary.Contains("ASEAN")) data.InternationalOrganizations.Add("ASEAN");
+                        var orgs = new List<string>();
+                        if (summary.Contains("United Nations") || summary.Contains("UN ")) orgs.Add("UN");
+                        if (summary.Contains("World Health Organization") || summary.Contains("WHO ")) orgs.Add("WHO");
+                        if (summary.Contains("European Union") || summary.Contains("EU ")) orgs.Add("EU");
+                        if (summary.Contains("NATO")) orgs.Add("NATO");
+                        if (summary.Contains("G20")) orgs.Add("G20");
+                        if (summary.Contains("WTO")) orgs.Add("WTO");
+                        if (summary.Contains("Commonwealth")) orgs.Add("Commonwealth");
+                        data.InternationalOrganizations = orgs.Any() ? orgs : new List<string> { "Member of UN and various international bodies" };
+
+                        // Extract National Anthem
+                        var anthemMatch = Regex.Match(summary, @"national anthem is [""']?([^""'.]+)[""']?", RegexOptions.IgnoreCase);
+                        if (anthemMatch.Success) data.NationalAnthem = anthemMatch.Groups[1].Value;
+
+                        // Extract National Animal
+                        var animalPatterns = new[]
+                        {
+                            @"national animal is (?:the )?([^.,]+)",
+                            @"national bird is (?:the )?([^.,]+)",
+                            @"national symbol is (?:the )?([^.,]+)"
+                        };
+                        foreach (var pattern in animalPatterns)
+                        {
+                            var match = Regex.Match(summary, pattern, RegexOptions.IgnoreCase);
+                            if (match.Success)
+                            {
+                                data.NationalAnimal = match.Groups[1].Value.Trim();
+                                break;
+                            }
+                        }
+
+                        // Extract National Sport
+                        var sportMatch = Regex.Match(summary, @"national sport is ([^.,]+)", RegexOptions.IgnoreCase);
+                        if (sportMatch.Success) data.NationalSport = sportMatch.Groups[1].Value.Trim();
+
+                        // Global Rankings
+                        if (summary.Contains("wealthiest", StringComparison.OrdinalIgnoreCase)) data.GlobalRankings["Economic Status"] = "Top Tier";
+                        if (summary.Contains("highest human development", StringComparison.OrdinalIgnoreCase)) data.GlobalRankings["Human Development"] = "Very High";
+                        if (summary.Contains("UNESCO World Heritage", StringComparison.OrdinalIgnoreCase)) data.GlobalRankings["UNESCO Heritage"] = "Multiple Sites";
                     }
                 }
             }
@@ -868,32 +1038,45 @@ namespace TodoListApp.Services
                 ? (ll[0].GetDouble(), ll[1].GetDouble()) 
                 : (0.0, 0.0);
 
+            // Extract borders
+            var borders = el.TryGetProperty("borders", out var bord) ? bord.EnumerateArray().Select(b => b.GetString() ?? "").ToList() : new List<string>();
+            
+            // Determine if landlocked (has borders but no coastline, or explicitly marked as landlocked)
+            bool isLandlocked = el.TryGetProperty("landlocked", out var ll_flag) && ll_flag.GetBoolean();
+
             return new CountryData
             {
-                Name = nameEl.TryGetProperty("common", out var common) ? common.GetString() ?? "" : "",
-                OfficialName = nameEl.TryGetProperty("official", out var official) ? official.GetString() ?? "" : "",
+                Name = nameEl.TryGetProperty("common", out var common) ? common.GetString() ?? "Unknown Name" : "Unknown Name",
+                OfficialName = nameEl.TryGetProperty("official", out var official) ? official.GetString() ?? "Not officially defined" : "Not officially defined",
                 FlagUrl = el.TryGetProperty("flags", out var fl) && fl.TryGetProperty("svg", out var svg) ? svg.GetString() ?? "" : "",
                 FlagEmoji = el.TryGetProperty("flag", out var fe) ? fe.GetString() ?? "" : "",
                 IsoCode = el.TryGetProperty("cca2", out var code) ? code.GetString() ?? "" : "",
-                Capital = el.TryGetProperty("capital", out var cap) && cap.GetArrayLength() > 0 ? cap[0].GetString() ?? "" : "N/A",
-                Region = el.TryGetProperty("region", out var reg) ? reg.GetString() ?? "" : "",
-                Subregion = el.TryGetProperty("subregion", out var sub) ? sub.GetString() ?? "" : "",
+                IsoCodeAlpha3 = el.TryGetProperty("cca3", out var code3) ? code3.GetString() ?? "" : "",
+                Capital = el.TryGetProperty("capital", out var cap) && cap.GetArrayLength() > 0 ? cap[0].GetString() ?? "Not officially defined" : "Not officially defined",
+                Region = el.TryGetProperty("region", out var reg) ? reg.GetString() ?? "Not officially defined" : "Not officially defined",
+                Subregion = el.TryGetProperty("subregion", out var sub) ? sub.GetString() ?? "Not officially defined" : "Not officially defined",
                 Continents = el.TryGetProperty("continents", out var cont) ? cont.EnumerateArray().Select(c => c.GetString() ?? "").ToList() : new List<string>(),
                 Population = el.TryGetProperty("population", out var pop) ? pop.GetInt64() : 0,
                 Area = el.TryGetProperty("area", out var area) ? area.GetDouble() : 0,
-                Languages = languages,
+                Languages = languages.Any() ? languages : new List<string> { "Data not publicly available" },
                 Currencies = currencies,
                 Timezones = el.TryGetProperty("timezones", out var tz) ? tz.EnumerateArray().Select(t => t.GetString() ?? "").ToList() : new List<string>(),
-                Borders = el.TryGetProperty("borders", out var bord) ? bord.EnumerateArray().Select(b => b.GetString() ?? "").ToList() : new List<string>(),
+                Borders = borders,
+                IsLandlocked = isLandlocked,
                 GoogleMapsUrl = el.TryGetProperty("maps", out var maps) && maps.TryGetProperty("googleMaps", out var gm) ? gm.GetString() ?? "" : "",
                 Latitude = latlng.Item1,
                 Longitude = latlng.Item2,
-                DrivingSide = el.TryGetProperty("car", out var car) && car.TryGetProperty("side", out var side) ? side.GetString() ?? "N/A" : "N/A",
+                DrivingSide = el.TryGetProperty("car", out var car) && car.TryGetProperty("side", out var side) ? side.GetString() ?? "Not officially defined" : "Not officially defined",
                 InternetDomains = el.TryGetProperty("tld", out var tld) ? tld.EnumerateArray().Select(d => d.GetString() ?? "").ToList() : new List<string>(),
                 CallingCode = el.TryGetProperty("idd", out var idd) 
                     ? (idd.TryGetProperty("root", out var root) ? root.GetString() ?? "" : "") + 
                       (idd.TryGetProperty("suffixes", out var suff) && suff.GetArrayLength() > 0 ? suff[0].GetString() ?? "" : "")
-                    : "N/A"
+                    : "Not officially defined",
+                Demonym = el.TryGetProperty("demonyms", out var dem) && 
+                          dem.TryGetProperty("eng", out var engDem) && 
+                          engDem.TryGetProperty("m", out var male) 
+                    ? male.GetString() ?? "Not officially defined" 
+                    : "Not officially defined"
             };
         }
     }

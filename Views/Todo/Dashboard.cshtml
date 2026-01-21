@@ -5,8 +5,9 @@
 }
 
 <!-- Leaflet for Country Maps -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<!-- Leaflet for Country Maps (Local) -->
+<link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+<script src="~/lib/leaflet/leaflet.js"></script>
 
 <style>
     /* --- Country Explorer Expanded Styles --- */
@@ -1770,144 +1771,244 @@
 
         let countryMap = null;
 
-        function renderCountryDetails(c) {
-            const container = document.getElementById('countryDetailsContent');
+    function renderCountryDetails(c) {
+        const container = document.getElementById('countryDetailsContent');
+        if (!container) return;
+
+        // --- Helper: Validate Data ---
+        // Returns false if value is missing, empty, or a known fallback
+        const isValid = (val) => {
+            if (!val) return false;
+            if (Array.isArray(val) && val.length === 0) return false;
+            const s = String(val).trim().toLowerCase();
+            const invalids = ["n/a", "not officially defined", "data not publicly available", "unknown name", "pending", "undefined"];
+            return !invalids.includes(s);
+        };
+
+        // --- Helper: Render Row ---
+        // Renders a detail row only if the value is valid
+        const renderRow = (label, value, isHtml = false, capitalizeClass = "") => {
+            if (!isValid(value)) return "";
+            // Special check for array strings (like invalid fallback in list)
+            if (Array.isArray(value) && value.some(v => !isValid(v))) return ""; 
             
-            const currs = Object.entries(c.currencies).map(([code, info]) => `${info.name || info.item1} (${info.symbol || info.item2 || code})`).join(', ');
-            const langs = c.languages.join(', ');
-            const pop = new Intl.NumberFormat().format(c.population);
-            const area = new Intl.NumberFormat().format(c.area);
-            const density = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(c.populationDensity);
+            return `<div class="detail-row"><span>${label}</span> ${isHtml ? value : `<strong class="${capitalizeClass}">${value}</strong>`}</div>`;
+        };
 
-            // Try to find Motto in Wikipedia summary via simple regex
-            let motto = "N/A";
-            const mottoMatch = c.wikipediaSummary.match(/motto is ["']?([^"'.]+)["']?/i) || c.wikipediaSummary.match(/["']([^"']+)["'] is the national motto/i);
-            if (mottoMatch) motto = mottoMatch[1];
+        // --- Data Preparation ---
+        const currs = Object.entries(c.currencies).map(([code, info]) => `${info.name || info.item1} (${info.symbol || info.item2 || code})`).join(', ');
+        const langs = c.languages.filter(l => isValid(l)).join(', ');
+        const pop = isValid(c.population) ? new Intl.NumberFormat().format(c.population) : "";
+        const area = isValid(c.area) ? new Intl.NumberFormat().format(c.area) : "";
+        const density = isValid(c.populationDensity) ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(c.populationDensity) : "";
+        
+        let motto = "N/A";
+        const mottoMatch = c.wikipediaSummary.match(/motto is [\"']?([^\"\'.]+)[\"']?/i) || c.wikipediaSummary.match(/[\"\']([^\"\']+)[\"\'] is the national motto/i);
+        if (mottoMatch) motto = mottoMatch[1];
+        
+        // Use backend motto if valid, otherwise regex match, otherwise N/A (which will be hidden)
+        const finalMotto = isValid(c.nationalMotto) ? c.nationalMotto : (isValid(motto) ? motto : "");
 
-            container.innerHTML = `
-                <div class="country-header-premium">
-                    <div class="flag-hero">
-                        <img src="${c.flagUrl}" alt="${c.name} Flag" class="flag-img-big" />
-                    </div>
-                    <div class="header-text">
-                        <h1>${c.name} ${c.flagEmoji}</h1>
-                        <p class="official-name">${c.officialName}</p>
-                        <div class="quick-stats-pills">
-                            <span class="stat-pill">📍 ${c.capital}</span>
-                            <span class="stat-pill">🆔 ${c.isoCode}</span>
-                            <span class="stat-pill motto-pill">💬 ${motto}</span>
-                        </div>
+        // --- Build Sections ---
+        
+        // 1. Geography
+        let geoContent = "";
+        geoContent += renderRow("Total Area", area ? `${area} km²` : "");
+        geoContent += renderRow("Coordinates", (c.latitude && c.longitude) ? `${c.latitude.toFixed(2)}, ${c.longitude.toFixed(2)}` : "");
+        geoContent += renderRow("Region", c.region);
+        geoContent += renderRow("Sub-region", c.subregion);
+        geoContent += renderRow("Continents", c.continents.join(', '));
+        
+        // Borders (Special rendering)
+        let borderContent = "";
+        if (c.borderCountryNames && c.borderCountryNames.length > 0) {
+             borderContent = c.borderCountryNames.map(b => `<span class="border-pill">${b}</span>`).join('');
+        }
+        
+        // Only show borders section if we have borders OR explicit landlocked context
+        let bordersHtml = "";
+        if (borderContent && borderContent.indexOf('Data unavailable') === -1) {
+             bordersHtml = `
+             <div class="borders-section mt-3">
+                <span>Borders & Neighbors</span>
+                <div class="border-pills">${borderContent}</div>
+             </div>`;
+        } else if (c.isLandlocked) {
+             // Keep landlocked status visible as it is a key geo feature
+             bordersHtml = `
+             <div class="borders-section mt-3">
+                <span>Geography Status</span>
+                <div class="border-pills"><em>Landlocked</em></div>
+             </div>`;
+        } else if (!borderContent && !c.isLandlocked) {
+             bordersHtml = `
+             <div class="borders-section mt-3">
+                <span>Geography Status</span>
+                <div class="border-pills"><em>Island / Coastal</em></div>
+             </div>`;
+        }
+
+        const geoSection = `
+            <div class="country-accordion open" id="accGeo">
+                <div class="accordion-header" onclick="toggleAccordion('accGeo')">
+                    <h3><i class="icon">🧭</i> Geography & Map</h3>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="country-map-container" id="countryMap"></div>
+                    <div class="info-group">
+                        ${geoContent}
+                        ${bordersHtml}
                     </div>
                 </div>
+            </div>`;
 
-                <div class="country-summary-box">
-                    <h3>About ${c.name}</h3>
-                    <p class="wiki-extract">${c.wikipediaSummary || 'Fetching detailed historical and political summary...'}</p>
+        // 2. Climate
+        let climateRows = "";
+        climateRows += renderRow("Climate Type", c.climateType);
+        climateRows += renderRow("Avg Temperature", c.averageTemperature);
+        climateRows += renderRow("Natural Resources", c.naturalResources);
+        
+        const climateSection = climateRows ? `
+            <div class="country-accordion" id="accClimate">
+                <div class="accordion-header" onclick="toggleAccordion('accClimate')">
+                    <h3><i class="icon">⛅</i> Climate & Environment</h3>
+                    <span class="accordion-icon">▼</span>
                 </div>
+                <div class="accordion-content">
+                    <div class="info-group">${climateRows}</div>
+                </div>
+            </div>` : "";
 
-                <!-- 🧭 Geography Section (Open by default) -->
-                <div class="country-accordion open" id="accGeo">
-                    <div class="accordion-header" onclick="toggleAccordion('accGeo')">
-                        <h3><i class="icon">🧭</i> Geography & Map</h3>
-                        <span class="accordion-icon">▼</span>
-                    </div>
-                    <div class="accordion-content">
-                        <div class="country-map-container" id="countryMap"></div>
-                        <div class="info-group">
-                            <div class="detail-row"><span>Total Area</span> <strong>${area} km²</strong></div>
-                            <div class="detail-row"><span>Coordinates</span> <strong>${c.latitude.toFixed(2)}, ${c.longitude.toFixed(2)}</strong></div>
-                            <div class="detail-row"><span>Region</span> <strong>${c.region}</strong></div>
-                            <div class="detail-row"><span>Sub-region</span> <strong>${c.subregion || 'N/A'}</strong></div>
-                            <div class="detail-row"><span>Continents</span> <strong>${c.continents.join(', ')}</strong></div>
-                            <div class="borders-section mt-3">
-                                <span>Borders & Neighbors</span>
-                                <div class="border-pills">
-                                    ${c.borders.length > 0 ? c.borders.map(b => `<span class="border-pill">${b}</span>`).join('') : '<em>No Land Borders</em>'}
-                                </div>
-                            </div>
-                        </div>
+        // 3. Demographics
+        let demoRows = "";
+        demoRows += renderRow("Total Population", pop);
+        demoRows += renderRow("Pop. Density", density ? `${density} / km²` : "");
+        demoRows += renderRow("Religions", c.religions);
+        demoRows += renderRow("Languages", langs);
+        demoRows += renderRow("Demonym", c.demonym);
+        
+        const demoSection = demoRows ? `
+            <div class="country-accordion" id="accDemo">
+                <div class="accordion-header" onclick="toggleAccordion('accDemo')">
+                    <h3><i class="icon">👥</i> Demographics & Culture</h3>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="info-group">${demoRows}</div>
+                </div>
+            </div>` : "";
+
+        // 4. Economy
+        let econRows = "";
+        econRows += renderRow("Total GDP", c.gdp);
+        econRows += renderRow("Currencies", currs);
+        econRows += renderRow("Major Industries", c.majorIndustries);
+        
+        // Infra
+        let infraRows = "";
+        infraRows += renderRow("Electricity", (isValid(c.electricityVoltage) || isValid(c.electricityPlugTypes)) ? `${c.electricityVoltage}, ${c.electricityPlugTypes}` : "");
+        infraRows += renderRow("Driving Side", c.drivingSide, false, "text-capitalize");
+        infraRows += renderRow("Calling Code", c.callingCode);
+        infraRows += renderRow("Domain (TLD)", c.internetDomains && c.internetDomains.length > 0 ? c.internetDomains.join(', ') : "");
+
+        const econSection = (econRows || infraRows) ? `
+             <div class="country-accordion" id="accEcon">
+                <div class="accordion-header" onclick="toggleAccordion('accEcon')">
+                    <h3><i class="icon">💰</i> Economy & Infrastructure</h3>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    ${econRows ? `<div class="info-group mb-3">${econRows}</div>` : ""}
+                    ${infraRows ? `<div class="info-group">${infraRows}</div>` : ""}
+                </div>
+            </div>` : "";
+
+        // 5. Culture
+        let cultureRows = "";
+        cultureRows += renderRow("National Anthem", c.nationalAnthem);
+        cultureRows += renderRow("National Animal", c.nationalAnimal);
+        cultureRows += renderRow("National Sport", c.nationalSport);
+        
+        const cultureSection = cultureRows ? `
+            <div class="country-accordion" id="accCulture">
+                <div class="accordion-header" onclick="toggleAccordion('accCulture')">
+                    <h3><i class="icon">🎨</i> Culture & Identity</h3>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="info-group">${cultureRows}</div>
+                </div>
+            </div>` : "";
+            
+        // 6. Global & Extra
+        let globalRows = "";
+        
+        // Rankings
+        if (c.globalRankings && Object.keys(c.globalRankings).length > 0) {
+            const rankingHtml = Object.entries(c.globalRankings).map(([k, v]) => `<div class="small"><strong>${k}:</strong> ${v}</div>`).join('');
+            globalRows += `<div class="detail-row"><span>Global Rankings</span> <div>${rankingHtml}</div></div>`;
+        }
+        
+        // Orgs
+        if (c.internationalOrganizations && c.internationalOrganizations.length > 0 && isValid(c.internationalOrganizations[0])) { 
+            const orgsHtml = c.internationalOrganizations.map(o => `<span class="pill-sm">${o}</span>`).join('');
+            globalRows += `<div class="detail-row"><span>Organizations</span> <div class="scroll-pills">${orgsHtml}</div></div>`;
+        }
+        
+        // Google Maps
+        if (isValid(c.googleMapsUrl)) {
+             globalRows += `<div class="detail-row"><span>Google Maps</span> <a href="${c.googleMapsUrl}" target="_blank" class="btn-primary-sm" style="display:inline-block; margin-top:0;">Navigate External ↗</a></div>`;
+        }
+
+        const globalSection = globalRows ? `
+            <div class="country-accordion" id="accAdd">
+                <div class="accordion-header" onclick="toggleAccordion('accAdd')">
+                    <h3><i class="icon">✨</i> Global Standings & Insight</h3>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="info-group">${globalRows}</div>
+                </div>
+            </div>` : "";
+
+
+        // --- Final Assembly ---
+        container.innerHTML = `
+            <div class="country-header-premium">
+                <div class="flag-hero">
+                    <img src="${c.flagUrl}" alt="${c.name} Flag" class="flag-img-big" />
+                </div>
+                <div class="header-text">
+                    <h1>${c.name} ${c.flagEmoji}</h1>
+                    <p class="official-name">${c.officialName}</p>
+                    <div class="quick-stats-pills">
+                        ${isValid(c.capital) ? `<span class="stat-pill">📍 ${c.capital}</span>` : ""}
+                        <span class="stat-pill">🆔 ${c.isoCode} ${c.isoCodeAlpha3 ? `/ ${c.isoCodeAlpha3}` : ""}</span>
+                        <span class="stat-pill">${c.isLandlocked ? '🏔️ Landlocked' : '🌊 Coastal'}</span>
+                        ${finalMotto ? `<span class="stat-pill motto-pill">💬 ${finalMotto}</span>` : ""}
                     </div>
                 </div>
+            </div>
 
-                <!-- ⛅ Climate Section -->
-                <div class="country-accordion" id="accClimate">
-                    <div class="accordion-header" onclick="toggleAccordion('accClimate')">
-                        <h3><i class="icon">⛅</i> Climate & Environment</h3>
-                        <span class="accordion-icon">▼</span>
-                    </div>
-                    <div class="accordion-content">
-                        <div class="info-group">
-                            <div class="detail-row"><span>Climate Type</span> <strong>${c.climateType}</strong></div>
-                            <div class="detail-row"><span>Avg Temperature</span> <strong>${c.averageTemperature}</strong></div>
-                            <div class="detail-row"><span>Natural Resources</span> <strong>${c.naturalResources}</strong></div>
-                        </div>
-                    </div>
-                </div>
+            <div class="country-summary-box">
+                <h3>About ${c.name}</h3>
+                <p class="wiki-extract">${c.wikipediaSummary || 'Fetching detailed historical and political summary...'}</p>
+            </div>
 
-                <!-- 👥 Demographics Section -->
-                <div class="country-accordion" id="accDemo">
-                    <div class="accordion-header" onclick="toggleAccordion('accDemo')">
-                        <h3><i class="icon">👥</i> Demographics & Culture</h3>
-                        <span class="accordion-icon">▼</span>
-                    </div>
-                    <div class="accordion-content">
-                        <div class="info-group">
-                            <div class="detail-row"><span>Total Population</span> <strong>${pop}</strong></div>
-                            <div class="detail-row"><span>Pop. Density</span> <strong>${density} / km²</strong></div>
-                            <div class="detail-row"><span>Religions</span> <strong>${c.religions || 'Diverse'}</strong></div>
-                            <div class="detail-row"><span>Languages</span> <strong>${langs}</strong></div>
-                        </div>
-                    </div>
-                </div>
+            ${geoSection}
+            ${climateSection}
+            ${demoSection}
+            ${econSection}
+            ${cultureSection}
+            ${globalSection}
+        `;
 
-                <!-- 💰 Economy Section -->
-                <div class="country-accordion" id="accEcon">
-                    <div class="accordion-header" onclick="toggleAccordion('accEcon')">
-                        <h3><i class="icon">💰</i> Economy & Infrastructure</h3>
-                        <span class="accordion-icon">▼</span>
-                    </div>
-                    <div class="accordion-content">
-                        <div class="info-group mb-3">
-                            <div class="detail-row"><span>Total GDP</span> <strong>${c.gdp || 'N/A'}</strong></div>
-                            <div class="detail-row"><span>Currencies</span> <strong>${currs}</strong></div>
-                            <div class="detail-row"><span>Major Industries</span> <strong>${c.majorIndustries || 'N/A'}</strong></div>
-                        </div>
-                        <div class="info-group">
-                            <div class="detail-row"><span>Electricity</span> <strong>${c.electricityVoltage}, ${c.electricityPlugTypes}</strong></div>
-                            <div class="detail-row"><span>Driving Side</span> <strong class="text-capitalize">${c.drivingSide}</strong></div>
-                            <div class="detail-row"><span>Calling Code</span> <strong>${c.callingCode}</strong></div>
-                            <div class="detail-row"><span>Domain (TLD)</span> <strong>${c.internetDomains.join(', ')}</strong></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ✨ Additional Info Section -->
-                <div class="country-accordion" id="accAdd">
-                    <div class="accordion-header" onclick="toggleAccordion('accAdd')">
-                        <h3><i class="icon">✨</i> Global Standings & Insight</h3>
-                        <span class="accordion-icon">▼</span>
-                    </div>
-                    <div class="accordion-content">
-                        <div class="info-group">
-                            <div class="detail-row"><span>Global Rankings</span> 
-                                <div>
-                                    ${Object.keys(c.globalRankings).length > 0 ? Object.entries(c.globalRankings).map(([k, v]) => `<div class="small"><strong>${k}:</strong> ${v}</div>`).join('') : '<em>Updates pending...</em>'}
-                                </div>
-                            </div>
-                            <div class="detail-row"><span>Organizations</span> 
-                                 <div class="scroll-pills">${c.internationalOrganizations.length > 0 ? c.internationalOrganizations.map(o => `<span class="pill-sm">${o}</span>`).join('') : '<em>Processing...</em>'}</div>
-                            </div>
-                            <div class="detail-row"><span>Google Maps</span> 
-                                <a href="${c.googleMapsUrl}" target="_blank" class="btn-primary-sm" style="display:inline-block; margin-top:0;">Navigate External ↗</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Init Map after DOM update
+        // Init Map after DOM update
+        if (c.latitude && c.longitude) {
             setTimeout(() => initCountryMap(c.latitude, c.longitude, c.name), 100);
         }
+    }
 
         function toggleAccordion(id) {
             const acc = document.getElementById(id);
@@ -1928,6 +2029,14 @@
             if (countryMap) {
                 countryMap.remove();
             }
+            
+            // Fix Leaflet's default icon path issues by pointing to local assets
+            delete L.Icon.Default.prototype._getIconUrl;
+            L.Icon.Default.mergeOptions({
+                iconRetinaUrl: '/lib/leaflet/images/marker-icon-2x.png',
+                iconUrl: '/lib/leaflet/images/marker-icon.png',
+                shadowUrl: '/lib/leaflet/images/marker-shadow.png',
+            });
             
             countryMap = L.map('countryMap').setView([lat, lng], 5);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

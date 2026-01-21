@@ -18,6 +18,21 @@
             </div>
             <div class="user-info">
                 <span>Hello, <span class="username">@(User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? User.Identity.Name)</span></span>
+                
+                <select id="heroLangSwitcher" class="form-select form-select-sm language-picker" style="display:inline-block; width:auto; margin: 0 10px; border-radius: 12px; cursor: pointer;">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                    <option value="it">Italiano</option>
+                    <option value="hi">हिंदी</option>
+                    <option value="zh">中文</option>
+                    <option value="ja">日本語</option>
+                    <option value="ru">Русский</option>
+                    <option value="ar">العربية</option>
+                    <option value="pt">Português</option>
+                </select>
+
                 <a href="/Account/Logout" class="logout-link">Logout</a>
             </div>
         </div>
@@ -30,6 +45,7 @@
     </div>
 
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/translation-system.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

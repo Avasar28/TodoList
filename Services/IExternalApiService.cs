@@ -112,7 +112,8 @@ namespace TodoListApp.Services
         public string OfficialName { get; set; } = string.Empty;
         public string FlagUrl { get; set; } = string.Empty;
         public string FlagEmoji { get; set; } = string.Empty;
-        public string IsoCode { get; set; } = string.Empty;
+        public string IsoCode { get; set; } = string.Empty; // Alpha-2
+        public string IsoCodeAlpha3 { get; set; } = string.Empty; // Alpha-3
         public string Capital { get; set; } = string.Empty;
         public string Region { get; set; } = string.Empty;
         public string Subregion { get; set; } = string.Empty;
@@ -123,42 +124,45 @@ namespace TodoListApp.Services
         public List<string> Languages { get; set; } = new List<string>();
         public Dictionary<string, (string Name, string Symbol)> Currencies { get; set; } = new Dictionary<string, (string Name, string Symbol)>();
         public List<string> Timezones { get; set; } = new List<string>();
-        public List<string> Borders { get; set; } = new List<string>();
+        public List<string> Borders { get; set; } = new List<string>(); // ISO codes
+        public List<string> BorderCountryNames { get; set; } = new List<string>(); // Full country names
+        public bool IsLandlocked { get; set; }
         public string GoogleMapsUrl { get; set; } = string.Empty;
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         
         // Advanced Fields (from Wikipedia/CIA)
-        public string GovernmentType { get; set; } = "N/A";
-        public string HeadOfState { get; set; } = "N/A";
-        public string IndependenceDay { get; set; } = "N/A";
-        public string NationalMotto { get; set; } = "N/A";
-        public string MajorEthnicGroups { get; set; } = "N/A";
-        public string WikipediaSummary { get; set; } = string.Empty;
-        public string LandArea { get; set; } = "N/A";
-        public string WaterArea { get; set; } = "N/A";
+        public string GovernmentType { get; set; } = "Not officially defined";
+        public string HeadOfState { get; set; } = "Data not publicly available";
+        public string IndependenceDay { get; set; } = "Not officially defined";
+        public string NationalMotto { get; set; } = "Not officially defined";
+        public string MajorEthnicGroups { get; set; } = "Data not publicly available";
+        public string WikipediaSummary { get; set; } = "Global summary is currently being retrieved...";
+        public string LandArea { get; set; } = "Data not publicly available";
+        public string WaterArea { get; set; } = "Data not publicly available";
 
         // Economy
-        public string GDP { get; set; } = "N/A";
-        public string MajorIndustries { get; set; } = "N/A";
+        public string GDP { get; set; } = "Data not publicly available";
+        public string MajorIndustries { get; set; } = "Data not publicly available";
 
         // Culture & Society
-        public string NationalAnthem { get; set; } = "N/A";
-        public string NationalAnimal { get; set; } = "N/A";
-        public string NationalSport { get; set; } = "N/A";
-        public string Religions { get; set; } = "N/A";
+        public string NationalAnthem { get; set; } = "Not officially defined";
+        public string NationalAnimal { get; set; } = "Not officially defined";
+        public string NationalSport { get; set; } = "Not officially defined";
+        public string Religions { get; set; } = "Data not publicly available";
+        public string Demonym { get; set; } = "Not officially defined"; // Citizen name
 
         // Infrastructure
-        public string DrivingSide { get; set; } = "N/A";
+        public string DrivingSide { get; set; } = "Not officially defined";
         public List<string> InternetDomains { get; set; } = new List<string>();
-        public string CallingCode { get; set; } = "N/A";
-        public string ElectricityVoltage { get; set; } = "N/A";
-        public string ElectricityPlugTypes { get; set; } = "N/A";
+        public string CallingCode { get; set; } = "Not officially defined";
+        public string ElectricityVoltage { get; set; } = "Not officially defined";
+        public string ElectricityPlugTypes { get; set; } = "Not officially defined";
 
         // Climate & Environment
-        public string ClimateType { get; set; } = "N/A";
-        public string AverageTemperature { get; set; } = "N/A";
-        public string NaturalResources { get; set; } = "N/A";
+        public string ClimateType { get; set; } = "Data not publicly available";
+        public string AverageTemperature { get; set; } = "Data not publicly available";
+        public string NaturalResources { get; set; } = "Data not publicly available";
 
         // Additional Information
         public List<string> FamousPlaces { get; set; } = new List<string>();
