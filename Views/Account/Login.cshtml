@@ -6,12 +6,12 @@
 
 <div class="auth-container">
     <div class="auth-card">
-        <h2>Welcome Back</h2>
-        <p class="auth-subtitle">Login with your email</p>
+        <h2 data-translate="true">Welcome Back</h2>
+        <p class="auth-subtitle" data-translate="true">Login with your email</p>
 
         @if (TempData["SuccessMessage"] != null)
         {
-            <div class="alert alert-success">
+            <div class="alert alert-success" data-translate="true">
                 @TempData["SuccessMessage"]
             </div>
         }
@@ -20,25 +20,25 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             
             <div class="form-group">
-                <label asp-for="Email"></label>
+                <label asp-for="Email" data-translate="true">Email</label>
                 <input asp-for="Email" class="form-control" placeholder="example@domain.com" autocomplete="email" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
             
             <div class="form-group">
-                <label asp-for="Password"></label>
+                <label asp-for="Password" data-translate="true">Password</label>
                 <input asp-for="Password" class="form-control" />
                 <span asp-validation-for="Password" class="text-danger"></span>
                 <div class="forgot-container">
-                    <a asp-action="ForgotPassword" class="forgot-link">Forgot Password?</a>
+                    <a asp-action="ForgotPassword" class="forgot-link" data-translate="true">Forgot Password?</a>
                 </div>
             </div>
 
-            <button type="submit" class="btn-auth">Login</button>
+            <button type="submit" class="btn-auth" data-translate="true">Login</button>
         </form>
 
         <p class="auth-footer">
-            Don't have an account? <a asp-action="Signup">Sign up</a>
+            <span data-translate="true">Don't have an account?</span> <a asp-action="Signup" data-translate="true">Sign up</a>
         </p>
     </div>
 </div>

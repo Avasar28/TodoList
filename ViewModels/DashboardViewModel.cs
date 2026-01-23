@@ -21,6 +21,9 @@ namespace TodoListApp.ViewModels
         public string Published { get; set; } = string.Empty;
         public string Link { get; set; } = string.Empty;
         public string ImageUrl { get; set; } = string.Empty;
+        public string SourceUrl { get; set; } = string.Empty;
+        public string Sentiment { get; set; } = "Neutral"; // Positive, Neutral, Negative
+        public string LocationTag { get; set; } = string.Empty;
         public string Category { get; set; } = "General";
     }
 

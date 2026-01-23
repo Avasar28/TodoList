@@ -12,28 +12,23 @@
     {
         <div class="nav-bar">
             <div class="nav-links">
-                <a asp-controller="Todo" asp-action="Dashboard" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">Dashboard</a>
-                <a asp-controller="Todo" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">My Tasks</a>
-                <a asp-controller="Todo" asp-action="UserList" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "UserList" ? "active" : "")">User List</a>
+                <a asp-controller="Todo" asp-action="Dashboard" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" data-translate="true">Dashboard</a>
+                <a asp-controller="Todo" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" data-translate="true">My Tasks</a>
+                <a asp-controller="Todo" asp-action="UserList" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "UserList" ? "active" : "")" data-translate="true">User List</a>
             </div>
             <div class="user-info">
-                <span>Hello, <span class="username">@(User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? User.Identity.Name)</span></span>
-                
-                <select id="heroLangSwitcher" class="form-select form-select-sm language-picker" style="display:inline-block; width:auto; margin: 0 10px; border-radius: 12px; cursor: pointer;">
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                    <option value="fr">Français</option>
-                    <option value="de">Deutsch</option>
-                    <option value="it">Italiano</option>
-                    <option value="hi">हिंदी</option>
-                    <option value="zh">中文</option>
-                    <option value="ja">日本語</option>
-                    <option value="ru">Русский</option>
-                    <option value="ar">العربية</option>
-                    <option value="pt">Português</option>
+                <select id="googleLangSwitcher" class="form-select form-select-sm language-picker" style="display:inline-block; width:auto; margin: 0 10px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: inherit;">
+                    <option value="en">🇺🇸 English</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="hi">🇮🇳 Hindi</option>
+                    <option value="zh">🇨🇳 Chinese</option>
+                    <option value="ja">🇯🇵 Japanese</option>
+                    <option value="ru">🇷🇺 Russian</option>
+                    <option value="ar">🇸🇦 Arabic</option>
                 </select>
-
-                <a href="/Account/Logout" class="logout-link">Logout</a>
+                <a href="/Account/Logout" class="logout-link" data-translate="true">Logout</a>
             </div>
         </div>
     }
@@ -43,8 +38,6 @@
             @RenderBody()
         </main>
     </div>
-
-    <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/translation-system.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

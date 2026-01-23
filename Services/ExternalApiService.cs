@@ -528,98 +528,66 @@ namespace TodoListApp.Services
                 }
 
                 // 2. Build Query
-                var queryBuilder = new System.Text.StringBuilder($"{resolvedName}");
+                // CRITICAL: Use the raw 'location' provided by user for the query. 
+                // Resolved names (from geocoding) are used ONLY for the UI label and market context (gl).
+                var queryBuilder = new System.Text.StringBuilder($"{location}"); 
+                
                 if (!string.IsNullOrEmpty(category) && category != "All")
                 {
                     queryBuilder.Append($" {category}");
                 }
-
-                // Append local context if searching for village/small area
-                if (!location.Equals(resolvedName, StringComparison.OrdinalIgnoreCase))
+                else
                 {
-                    queryBuilder.Append($" OR {location}");
+                    // If no category, ensure we get News (Google search works better with this hint)
+                    if (!location.ToLower().Contains("news")) queryBuilder.Append(" news");
                 }
 
                 var finalQuery = Uri.EscapeDataString(queryBuilder.ToString());
-                var rssUrl = $"https://news.google.com/rss/search?q={finalQuery}&hl=en-{countryCode}&gl={countryCode}&ceid={countryCode}:en";
-
-                // 3. Fetch and Parse RSS
-                var rssRes = await _httpClient.GetAsync(rssUrl);
-                var rssXml = await rssRes.Content.ReadAsStringAsync();
-                var xdoc = XDocument.Parse(rssXml);
-                XNamespace media = "http://search.yahoo.com/mrss/";
-
-                var items = xdoc.Descendants("item").Select(item => {
+                
+                // --- GOOGLE NEWS RSS ENGINE ---
+                var googleUrl = $"https://news.google.com/rss/search?q={finalQuery}&hl=en-{countryCode}&gl={countryCode}&ceid={countryCode}:en";
+                var googleXml = await _httpClient.GetStringAsync(googleUrl);
+               
+                // --- PARSE GOOGLE RSS (Fast & Lightweight) ---
+                var gDoc = XDocument.Parse(googleXml);
+                var items = gDoc.Descendants("item").Select(item => {
                     var title = item.Element("title")?.Value ?? "";
                     var description = item.Element("description")?.Value ?? "";
-                    var source = item.Element("source")?.Value ?? "News Source";
+                    
+                    var sourceEl = item.Element("source");
+                    var source = sourceEl?.Value ?? "News";
+                    var sourceUrl = sourceEl?.Attribute("url")?.Value ?? "";
+                    
                     var pubDate = item.Element("pubDate")?.Value ?? "";
                     var link = item.Element("link")?.Value ?? "";
-
-                    // Extract image from description (common in Google News RSS)
-                    var imgMatch = Regex.Match(description, "<img src=\"([^\"]+)\"");
-                    var imgUrl = imgMatch.Success ? imgMatch.Groups[1].Value : "";
-
-                    // Try media:content if description photo is missing
-                    if (string.IsNullOrEmpty(imgUrl))
-                    {
-                        var mediaContent = item.Element(media + "content");
-                        if (mediaContent != null)
-                        {
-                            imgUrl = mediaContent.Attribute("url")?.Value ?? "";
-                        }
-                    }
-
-                    // Try looking for direct thumbnail element
-                    if (string.IsNullOrEmpty(imgUrl))
-                    {
-                        var mediaThumbnail = item.Element(media + "thumbnail");
-                        if (mediaThumbnail != null)
-                        {
-                            imgUrl = mediaThumbnail.Attribute("url")?.Value ?? "";
-                        }
-                    }
-
-                    // Clean title (often includes " - Source")
-                    var cleanTitle = title;
-                    if (title.Contains(" - ")) 
-                    {
-                        cleanTitle = title.Substring(0, title.LastIndexOf(" - ")).Trim();
-                    }
-
-                    // Format date
-                    if (DateTime.TryParse(pubDate, out var dt))
-                    {
-                        pubDate = dt.ToString("MMM dd, yyyy HH:mm");
-                    }
-
-                    // Improve summary extraction: 
-                    // 1. Remove specific unwanted HTML structures (like the table and images we already handled)
-                    // 2. Extract meaningful text snippets
-                    var cleanSummary = description;
-                    if (description.Contains("<li>")) {
-                        // Often Google News lists related articles in <li> tags, let's extract the main one or join them
-                        var snippets = Regex.Matches(description, "<li>.*?<a.*?>(.*?)</a>")
-                                            .Select(m => m.Groups[1].Value)
-                                            .ToList();
-                        if (snippets.Any()) cleanSummary = string.Join(". ", snippets);
-                    }
                     
-                    cleanSummary = Regex.Replace(cleanSummary, "<.*?>", "").Trim();
+                    // Basic cleanup
+                    var cleanSummary = Regex.Replace(description, "<.*?>", "");
+                    cleanSummary = System.Net.WebUtility.HtmlDecode(cleanSummary).Trim();
                     if (cleanSummary.Length > 300) cleanSummary = cleanSummary.Substring(0, 297) + "...";
 
+                    if (DateTime.TryParse(pubDate, out var dt)) pubDate = dt.ToString("MMM dd, yyyy HH:mm");
+                    if (title.Contains(" - ")) title = title.Substring(0, title.LastIndexOf(" - ")).Trim();
+
+                    // --- INSIGHT ENGINE ---
+                    var topic = GetNewsCategory(title, description, resolvedName);
+                    var sentiment = AnalyzeSentiment(title, description);
+                    var locationTag = ExtractLocationTag(title, description, resolvedName);
+
                     return new NewsItem {
-                        Title = cleanTitle,
+                        Title = title,
                         Description = cleanSummary,
                         Source = source,
+                        SourceUrl = sourceUrl,
                         Published = pubDate,
                         Link = link,
-                        ImageUrl = imgUrl,
-                        Category = category ?? "General"
+                        Sentiment = sentiment,
+                        LocationTag = locationTag,
+                        Category = topic 
                     };
-                }).ToList();
+                }).Where(x => !string.IsNullOrEmpty(x.Title)).ToList();
 
-                // 4. Sort if requested
+                // Sort by Latest if requested
                 if (sortBy == "latest")
                 {
                     items = items.OrderByDescending(i => {
@@ -628,20 +596,166 @@ namespace TodoListApp.Services
                     }).ToList();
                 }
 
-                var finalItems = items.Take(100).ToList();
-                _newsCache = finalItems; // Update cache
+                _newsCache = items; 
 
                 return new NewsData {
-                    Items = finalItems,
+                    Items = items,
                     ResolvedLocation = resolvedName
                 };
+
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"News Error: {ex.Message}");
-                return new NewsData { ResolvedLocation = location };
+                return new NewsData { ResolvedLocation = location, Items = new List<NewsItem>() };
             }
         }
+
+        private string AnalyzeSentiment(string title, string desc)
+        {
+            var text = (title + " " + desc).ToLower();
+            
+            // Positive Keywords
+            var posMatch = Regex.Matches(text, @"\b(growth|surge|gain|profit|win|success|breakthrough|positive|better|recovery|helping|innovation|excellent|bright|jump|soar|top|best|solution|cure|peace|deal|signed|launch|expanding)\b").Count;
+            
+            // Negative Keywords
+            var negMatch = Regex.Matches(text, @"\b(drop|crash|loss|fail|error|warning|risk|danger|crisis|war|strike|down|lowest|bad|issue|protest|death|killed|accident|storm|damage|fear|inflation|bankrupt|threat)\b").Count;
+
+            if (posMatch > negMatch) return "Positive";
+            if (negMatch > posMatch) return "Negative";
+            return "Neutral";
+        }
+
+        private string ExtractLocationTag(string title, string desc, string queryLocation)
+        {
+            var text = (title + " " + desc).ToLower();
+            
+            // Priority 1: User's searched location
+            if (text.Contains(queryLocation.ToLower())) return queryLocation;
+
+            // Priority 2: Common Country/Region matches
+            if (text.Contains("uk") || text.Contains("britain") || text.Contains("london")) return "UK";
+            if (text.Contains("us") || text.Contains("america") || text.Contains("washington") || text.Contains("new york")) return "USA";
+            if (text.Contains("india") || text.Contains("delhi") || text.Contains("mumbai")) return "India";
+            if (text.Contains("china") || text.Contains("beijing")) return "China";
+            if (text.Contains("europe") || text.Contains("eu")) return "Europe";
+            if (text.Contains("canada")) return "Canada";
+            if (text.Contains("australia")) return "Australia";
+
+            // Priority 3: Try to find Capitalized cities (simplified) - if we had a list, we'd use it, but let's keep it simple
+            return "Global";
+        }
+
+        // --- SMART TOPIC ANALYSIS (Refined NLP-Lite) ---
+        private string GetNewsCategory(string title, string desc, string locationName)
+        {
+            var text = (title + " " + desc).ToLower();
+            
+            // 0. Local / Location Based (Priority)
+            // If the news explicitly mentions the searched city (e.g. "Surat")
+            if (!string.IsNullOrEmpty(locationName) && text.Contains(locationName.ToLower())) return "City";
+
+            // 1. Tech & Science
+            if (Regex.IsMatch(text, @"\b(ai|artificial intelligence|apple|google|microsoft|meta|nvidia|crypto|bitcoin|blockchain|software|cyber|hacker|nasa|space|galaxy|rocket|quantum|robot|smartphone|app|update|feature|device|tech)\b")) return "Technology";
+            
+            // 2. Business & Economy
+            if (Regex.IsMatch(text, @"\b(stock|market|economy|inflation|gdp|bank|invest|trade|revenue|profit|ceo|startup|business|finance|fed|rates|tax|gold|oil|price|deal|merger|housing|real estate|property)\b")) return "Business";
+            
+            // 3. Politics & World
+            if (Regex.IsMatch(text, @"\b(election|poll|vote|president|minister|parliament|senate|law|court|policy|war|army|military|nato|un|treaty|diplomacy|protest|strike|democrat|republican|government|prime minister|biden|trump|modi)\b")) return "Politics";
+            
+            // 4. Sports
+            if (Regex.IsMatch(text, @"\b(sport|football|soccer|cricket|tennis|nba|nfl|f1|formula 1|league|cup|champion|player|team|coach|score|medal|olympic|game|match|win|loss|tournament|ipl)\b")) return "Sports";
+            
+            // 5. Health
+            if (Regex.IsMatch(text, @"\b(health|doctor|hospital|virus|vaccine|cancer|medicine|study|research|diet|nutrition|sleep|menatal|fitness|disease|covid|flu|pandemic)\b")) return "Health";
+
+            // 6. Entertainment
+            if (Regex.IsMatch(text, @"\b(movie|film|actor|music|song|concert|festival|award|oscar|grammy|netflix|star|celebrity|hollywood|series|show|artist|cinema)\b")) return "Entertainment";
+
+            // 7. Environment & Weather
+            if (Regex.IsMatch(text, @"\b(climate|weather|rain|storm|hurricane|flood|heat|global warming|carbon|forest|wildfire|earth|ocean|solar|energy|temperature|monsoon|snow)\b")) return "Environment";
+
+            return "General";
+        }
+
+        // --- DYNAMIC VISUAL MAPPER (Curated Pools) ---
+        // Returns a varied, high-quality image from a pool based on the article hash.
+        private string GetDynamicImage(string category, string articleTitle)
+        {
+            // Deterministic Index: Abs(Hash) % Count
+            // Ensures the same article always gets the same image, but different articles get different ones.
+            int hash = Math.Abs(articleTitle.GetHashCode());
+            
+            string[] pool = category switch
+            {
+                "Technology" => new[] {
+                    "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80", // Circuit
+                    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80", // Cyber
+                    "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&q=80", // Code
+                    "https://images.unsplash.com/photo-1531297461136-8208630f9604?w=800&q=80", // Chip
+                    "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&q=80"  // Matrix
+                },
+                "Business" => new[] {
+                    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80", // Chart
+                    "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&q=80", // Stocks
+                    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80", // Skyscrappers
+                    "https://images.unsplash.com/photo-1554224155-984063681ee4?w=800&q=80", // Meeting
+                    "https://images.unsplash.com/photo-1611974765270-ca12586343bb?w=800&q=80"  // Trading
+                },
+                "Politics" => new[] {
+                    "https://images.unsplash.com/photo-1541872703-74c59636a226?w=800&q=80", // Podium
+                    "https://images.unsplash.com/photo-1529101091760-61df6be5d18b?w=800&q=80", // Flags
+                    "https://images.unsplash.com/photo-1555848962-6e79363ec58f?w=800&q=80", // Vote
+                    "https://images.unsplash.com/photo-1477281746055-612b48937664?w=800&q=80", // Capitol
+                    "https://images.unsplash.com/photo-1575320181282-9afab399332c?w=800&q=80"  // Microphone
+                },
+                "Sports" => new[] {
+                    "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80", // Runner
+                    "https://images.unsplash.com/photo-1579952363873-27f3bde9be2b?w=800&q=80", // Ball
+                    "https://images.unsplash.com/photo-1471295253337-3ceaaedca402?w=800&q=80", // Stadium
+                    "https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=800&q=80", // Gym
+                    "https://images.unsplash.com/photo-1526620810753-226d9422f934?w=800&q=80"  // Soccer
+                },
+                "Health" => new[] {
+                    "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&q=80", // Steth
+                    "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=800&q=80", // Medicine
+                    "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80", // Workout
+                    "https://images.unsplash.com/photo-1584036561566-b9370001e9e3?w=800&q=80", // Lab
+                    "https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=800&q=80"  // Nurse
+                },
+                "Entertainment" => new[] {
+                    "https://images.unsplash.com/photo-1499364615650-ec38552f4f34?w=800&q=80", // Stage
+                    "https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?w=800&q=80", // Cinema
+                    "https://images.unsplash.com/photo-1514525253440-b393452e8d26?w=800&q=80", // Concert
+                    "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80", // Mic
+                    "https://images.unsplash.com/photo-1603190287605-e6ade32fa852?w=800&q=80"  // Popcorn
+                },
+                "Environment" => new[] {
+                    "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80", // Nature
+                    "https://images.unsplash.com/photo-1534274988757-9d7d6a36eb82?w=800&q=80", // Sun
+                    "https://images.unsplash.com/photo-1428908728789-d2de25dbd4e2?w=800&q=80", // Clouds
+                    "https://images.unsplash.com/photo-1520121401995-928cd50d4e27?w=800&q=80", // Lightning
+                    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80"  // Forest
+                },
+                "City" => new[] {
+                    "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&q=80", // City Generic
+                    "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800&q=80", // NY Vibe
+                    "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=800&q=80", // Urban
+                    "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80", // Skyline
+                    "https://images.unsplash.com/photo-1496568816309-51d7c20e3b21?w=800&q=80"  // Night City
+                },
+                _ => new[] {
+                    "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80", // News ppr
+                    "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&q=80", // Newspaper 2
+                    "https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=800&q=80"  // Read
+                }
+            };
+            
+            return pool[hash % pool.Length];
+        }
+
+
 
         public Task<string> GetNewsDetailAsync(string url)
         {
@@ -1078,6 +1192,35 @@ namespace TodoListApp.Services
                     ? male.GetString() ?? "Not officially defined" 
                     : "Not officially defined"
             };
+        }
+        private string GetImageByKeywords(string text)
+        {
+            text = text.ToLowerInvariant();
+            
+            // Map keywords to reliable Unsplash Images (Direct links)
+            if (text.Contains("traffic") || text.Contains("transport") || text.Contains("bus") || text.Contains("train") || text.Contains("driver"))
+                return "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=800&q=80"; // City Traffic
+                
+            if (text.Contains("market") || text.Contains("economy") || text.Contains("business") || text.Contains("finance") || text.Contains("stock") || text.Contains("money") || text.Contains("price"))
+                return "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"; // Business/Skyscrapers
+                
+            if (text.Contains("house") || text.Contains("home") || text.Contains("property") || text.Contains("estate") || text.Contains("rent") || text.Contains("housing"))
+                return "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80"; // Modern House
+                
+            if (text.Contains("police") || text.Contains("crime") || text.Contains("arrest") || text.Contains("security") || text.Contains("court") || text.Contains("law"))
+                return "https://images.unsplash.com/photo-1453873531674-2151bcd01707?auto=format&fit=crop&w=800&q=80"; // City Night/Police vibe (Abstract)
+                
+            if (text.Contains("tech") || text.Contains("data") || text.Contains("digital") || text.Contains("cyber") || text.Contains("ai") || text.Contains("online"))
+                return "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80"; // Technology/Chip
+                
+            if (text.Contains("weather") || text.Contains("storm") || text.Contains("rain") || text.Contains("flood") || text.Contains("sun") || text.Contains("climate"))
+                return "https://images.unsplash.com/photo-1561470508-fd4df1ed90b2?auto=format&fit=crop&w=800&q=80"; // Weather/Cloudy
+
+            if (text.Contains("london") || text.Contains("uk") || text.Contains("britain"))
+                return "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80"; // London Big Ben
+
+             // Default catch-all (Newspaper/Reading) - Different from the main placeholder to add variety
+            return "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80";
         }
     }
 }

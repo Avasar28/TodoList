@@ -6,20 +6,20 @@
 
 <div class="todo-container">
     <header>
-        <h1>My Tasks</h1>
-        <p class="subtitle">Stay organized, stay focused.</p>
+        <h1 data-translate="true">My Tasks</h1>
+        <p class="subtitle" data-translate="true">Stay organized, stay focused.</p>
     </header>
 
     <div class="add-task-section">
         <form asp-controller="Todo" asp-action="Create" method="post" class="add-form">
             <div class="add-form-group">
-                <input type="text" name="title" placeholder="What needs to be done?" required autocomplete="off" />
+                <input type="text" name="title" placeholder="What needs to be done?" required autocomplete="off" data-translate="true" data-translate-placeholder="true" />
                 <div class="add-form-meta">
                     <input type="date" name="dueDate" title="Select due date" />
                     <select name="priority">
-                        <option value="Low">Low</option>
-                        <option value="Medium" selected>Medium</option>
-                        <option value="High">High</option>
+                        <option value="Low" data-translate="true">Low</option>
+                        <option value="Medium" selected data-translate="true">Medium</option>
+                        <option value="High" data-translate="true">High</option>
                     </select>
                 </div>
             </div>
@@ -48,7 +48,7 @@
     @if (!string.IsNullOrEmpty(ViewData["CurrentStatus"]?.ToString()))
     {
         <div class="filter-indicator">
-            <span>Showing: <strong>@ViewData["CurrentStatus"]</strong> tasks</span>
+            <span><span data-translate="true">Showing:</span> <strong>@ViewData["CurrentStatus"]</strong> <span data-translate="true">tasks</span></span>
         </div>
     }
 
@@ -56,7 +56,7 @@
         @if (!Model.Any())
         {
             <div class="empty-state">
-                <p>No tasks yet. Add one above!</p>
+                <p data-translate="true">No tasks yet. Add one above!</p>
             </div>
         }
         else
@@ -73,7 +73,7 @@
                     </form>
                     
                     <div class="todo-content">
-                        <span class="todo-title">@item.Title</span>
+                        <span class="todo-title" data-translate="true">@item.Title</span>
                         <div class="todo-meta">
                             @if (item.DueDate.HasValue)
                             {

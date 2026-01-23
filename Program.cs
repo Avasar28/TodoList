@@ -3,6 +3,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.HttpsPort = 7130;
+});
 builder.Services.AddAuthentication("CookieAuth")
     .AddCookie("CookieAuth", options =>
     {
@@ -22,7 +26,13 @@ builder.Services.AddHttpClient<TodoListApp.Services.IExternalApiService, TodoLis
 builder.Services.AddScoped<TodoListApp.Services.ITodoService, TodoListApp.Services.JsonFileTodoService>();
 builder.Services.AddScoped<TodoListApp.Services.IUserService, TodoListApp.Services.JsonUserService>();
 builder.Services.AddScoped<TodoListApp.Services.IEmailService, TodoListApp.Services.SmtpEmailService>();
-builder.Services.AddHttpClient<TodoListApp.Services.ITranslationService, TodoListApp.Services.TranslationService>();
+builder.Services.AddHttpClient<TodoListApp.Services.ITranslationService, TodoListApp.Services.TranslationService>()
+    .ConfigureHttpClient(client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(10);
+    });
+
+
 builder.Services.AddMemoryCache();
 
 builder.Services.AddSession(options =>

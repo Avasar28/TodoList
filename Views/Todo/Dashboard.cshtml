@@ -145,26 +145,226 @@
         from { opacity: 0; transform: translateY(-10px); }
         to { opacity: 1; transform: translateY(0); }
     }
+
+    /* --- Insight Grid Layout (Text Only) --- */
+    .news-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+
+    /* --- Insight-Based News Cards (The Redesign) --- */
+    .news-item-card.insight-mode {
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        min-height: 240px; /* Consistent height for grid alignment */
+        justify-content: space-between;
+    }
+
+    .news-item-card.insight-mode:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(129, 140, 248, 0.4);
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Insight Tags & Badges */
+    .news-tags-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .insight-badge {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-category { background: rgba(129, 140, 248, 0.15); color: #a5b4fc; border: 1px solid rgba(129, 140, 248, 0.3); }
+    .badge-location { background: rgba(255, 255, 255, 0.08); color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.1); }
+    
+    /* Sentiment Indicators */
+    .badge-sentiment {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .badge-sentiment.positive { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+    .badge-sentiment.negative { color: #f87171; background: rgba(248, 113, 113, 0.1); }
+    .badge-sentiment.neutral { color: #94a3b8; background: rgba(148, 163, 184, 0.1); }
+
+    .sentiment-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .positive .sentiment-dot { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+    .negative .sentiment-dot { background: #f87171; box-shadow: 0 0 8px #f87171; }
+    .neutral .sentiment-dot { background: #94a3b8; }
+
+    .news-headline-insight {
+        font-size: 1.15rem;
+        font-weight: 700;
+        line-height: 1.4;
+        color: #f8fafc;
+        margin: 0 0 0.75rem 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .news-summary-insight {
+        font-size: 0.95rem;
+        color: #cbd5e1;
+        line-height: 1.6;
+        margin-bottom: 1.25rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .news-footer-insight {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .source-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .source-favicon-mini {
+        width: 14px;
+        height: 14px;
+        opacity: 0.8;
+    }
+
+    .source-name-mini {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+
+    .date-meta {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+    /* --- Details Panel & Overlay System --- */
+    .details-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .details-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .details-panel {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -45%) scale(0.95);
+        width: 90%;
+        max-height: 85vh;
+        background: #1e293b;
+        background: radial-gradient(circle at top right, #1e293b 0%, #0f172a 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        z-index: 1001;
+        opacity: 0;
+        visibility: hidden;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    }
+
+    .details-panel.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    .panel-header {
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .panel-header h2 { margin: 0; font-size: 1.5rem; font-weight: 700; color: #fff; }
+
+    .close-panel {
+        background: rgba(255, 255, 255, 0.05);
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1.5rem;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .close-panel:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+    .panel-content {
+        padding: 2rem;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    /* Article Reader Skin */
+    .article-header { margin-bottom: 2rem; }
+    .article-meta { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; font-size: 0.85rem; }
+    .source-badge { color: #818cf8; font-weight: 700; text-transform: uppercase; }
+    .date-text { color: rgba(255, 255, 255, 0.4); }
+    .article-header h1 { font-size: 2.5rem; line-height: 1.2; font-weight: 800; color: #fff; margin: 0; }
+    
+    .article-body { font-size: 1.15rem; line-height: 1.8; color: rgba(255, 255, 255, 0.85); max-width: 800px; }
+    .article-loading { text-align: center; padding: 4rem 0; opacity: 0.7; }
+    .article-footer { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.05); }
 </style>
 
 <div class="dashboard-container centered-view">
     <div class="dashboard-header text-center">
-        <h1>Welcome, @Model.UserName</h1>
-        <div class="header-controls">
-            <div class="format-toggle">
-                <span class="toggle-label">24H</span>
-                <label class="switch">
-                    <input type="checkbox" id="timeFormatToggle">
-                    <span class="slider round"></span>
-                </label>
-                <span class="toggle-label">12H</span>
-            </div>
-        </div>
-        <div class="local-clock-container">
-            <div id="localClockTime" class="live-clock">00:00:00</div>
-            <div id="localClockDate" class="live-date">Loading date...</div>
-            <div id="localTzLabel" class="tz-badge pulse">Detecting Timezone...</div>
-        </div>
+        <h1><span data-translate="true">Welcome</span>, @Model.UserName</h1>
     </div>
 
     <div class="realtime-grid">
@@ -173,13 +373,13 @@
             <div class="widget-preview">
                 <div class="insight-icon" id="summaryWeatherIcon">@(string.IsNullOrEmpty(Model.Weather.Icon) ? "🌡️" : Model.Weather.Icon)</div>
                 <div class="insight-info">
-                    <span class="insight-label">Local Weather</span>
+                    <span class="insight-label" data-translate="true">Local Weather</span>
                     <span class="insight-value" id="summaryWeatherTemp">@(Model.Weather.Temperature > 0 ? Model.Weather.Temperature + "°C" : "--°C")</span>
                     <span class="insight-meta" id="summaryWeatherMeta">@(string.IsNullOrEmpty(Model.Weather.City) ? Model.SelectedCity + " • Loading..." : Model.Weather.City + " • " + Model.Weather.Description)</span>
                 </div>
             </div>
             <div class="widget-action">
-                <span>View Forecast & Details</span>
+                <span data-translate="true">View Forecast & Details</span>
             </div>
         </div>
 
@@ -188,13 +388,13 @@
             <div class="widget-preview">
                 <div class="insight-icon">💱</div>
                 <div class="insight-info">
-                    <span class="insight-label">Currency Exchange</span>
+                    <span class="insight-label" data-translate="true">Currency Exchange</span>
                     <span class="insight-value" id="summaryCurrencyRate">@(Model.Currency.Rate > 0 ? Model.Currency.Rate.ToString("F4") : "--.----")</span>
                     <span class="insight-meta" id="summaryCurrencyMeta">1 @Model.FromCurrency = @(Model.Currency.Rate > 0 ? Model.Currency.Rate.ToString("F4") : "--") @Model.ToCurrency</span>
                 </div>
             </div>
             <div class="widget-action">
-                <span>View Chart & Converter</span>
+                <span data-translate="true">View Chart & Converter</span>
             </div>
         </div>
 
@@ -203,13 +403,13 @@
             <div class="widget-preview">
                 <div class="insight-icon">🌍</div>
                 <div class="insight-info">
-                    <span class="insight-label">Time Converter</span>
-                    <span class="insight-value" id="summaryTargetTime" data-offset="@Model.TimeConversion.TotalOffsetMinutes">@(string.IsNullOrEmpty(Model.TimeConversion.TargetTime) ? "--:--" : Model.TimeConversion.TargetTime)</span>
+                    <span class="insight-label" data-translate="true">Time Converter</span>
+                    <span class="insight-value" id="summaryTargetTime" data-offset="@Model.TimeConversion.TotalOffsetMinutes" data-no-translate="true">@(string.IsNullOrEmpty(Model.TimeConversion.TargetTime) ? "--:--" : Model.TimeConversion.TargetTime)</span>
                     <span class="insight-meta" id="summaryTimeMeta">@Model.TargetTimeZone</span>
                 </div>
             </div>
             <div class="widget-action">
-                <span>View World Clock</span>
+                <span data-translate="true">View World Clock</span>
             </div>
         </div>
 
@@ -218,13 +418,13 @@
             <div class="widget-preview">
                 <div class="insight-icon">📰</div>
                 <div class="insight-info">
-                    <span class="insight-label">Local & Global News</span>
+                    <span class="insight-label" data-translate="true">Local & Global News</span>
                     <span class="insight-value" id="summaryNewsCount">-- Items</span>
                     <span class="insight-meta" id="summaryNewsMeta">@Model.SelectedCity • Loading...</span>
                 </div>
             </div>
             <div class="widget-action">
-                <span>Read Latest Stories</span>
+                <span data-translate="true">Read Latest Stories</span>
             </div>
         </div>
 
@@ -233,13 +433,13 @@
             <div class="widget-preview">
                 <div class="insight-icon">🌐</div>
                 <div class="insight-info">
-                    <span class="insight-label">Country Explorer</span>
+                    <span class="insight-label" data-translate="true">Country Explorer</span>
                     <span class="insight-value" id="summaryCountryName">Search Country</span>
                     <span class="insight-meta" id="summaryCountryMeta">A-Z Global Insight</span>
                 </div>
             </div>
             <div class="widget-action">
-                <span>Explore Destinations</span>
+                <span data-translate="true">Explore Destinations</span>
             </div>
         </div>
     </div>
@@ -265,8 +465,8 @@
         <form id="weatherSearchForm" class="detail-form">
             <div class="form-group">
                 <div class="input-with-button">
-                    <input type="text" id="weatherSearchInput" name="city" value="@Model.SelectedCity" class="form-control" placeholder="Search City, State or Country..." />
-                    <button type="submit" class="btn-primary-sm" id="weatherSearchSubmit">Search</button>
+                    <input type="text" id="weatherSearchInput" name="city" value="@Model.SelectedCity" class="form-control" placeholder="Search City, State or Country..." data-translate="true" data-translate-placeholder="true" />
+                    <button type="submit" class="btn-primary-sm" id="weatherSearchSubmit" data-translate="true">Search</button>
                     <button type="button" class="btn-secondary-sm" id="geolocateBtn" title="Use my current location">📍</button>
                 </div>
             </div>
@@ -391,7 +591,7 @@
         <form id="currencyForm" class="detail-form">
             <div class="currency-converter-card">
                 <div class="form-group">
-                    <label>Amount to Convert</label>
+                    <label data-translate="true">Amount to Convert</label>
                     <input type="number" id="convertAmount" value="1" class="form-control" step="any" />
                 </div>
                 
@@ -408,7 +608,7 @@
                                     var info = TodoListApp.Services.ExternalApiService.GetCurrencyInfo(curr);
                                     <div class="option-item" data-value="@curr" data-text="@info.Flag @curr - @info.Country" data-country="@info.Country">
                                         <span class="opt-flag">@info.Flag</span>
-                                        <span class="opt-code">@curr</span>
+                                        <span class="opt-code" data-no-translate="true">@curr</span>
                                         <span class="opt-country">@info.Country</span>
                                     </div>
                                 }
@@ -435,7 +635,7 @@
                                     var info = TodoListApp.Services.ExternalApiService.GetCurrencyInfo(curr);
                                     <div class="option-item" data-value="@curr" data-text="@info.Flag @curr - @info.Country" data-country="@info.Country">
                                         <span class="opt-flag">@info.Flag</span>
-                                        <span class="opt-code">@curr</span>
+                                        <span class="opt-code" data-no-translate="true">@curr</span>
                                         <span class="opt-country">@info.Country</span>
                                     </div>
                                 }
@@ -450,7 +650,7 @@
                 </div>
 
                 <div class="result-display">
-                    <div class="result-header">Converted Amount</div>
+                    <div class="result-header" data-translate="true">Converted Amount</div>
                     <div class="conversion-result-row">
                         <div id="conversionResult" class="conversion-val">@Model.Currency.Rate</div>
                         <div id="rateMovement" class="movement-badge @(Model.Currency.IsUp == null ? "d-none" : (Model.Currency.IsUp == true ? "up" : "down"))">
@@ -465,7 +665,7 @@
 
         <div class="currency-stats">
             <div class="chart-box">
-                <h3 class="panel-subtitle">Market History (Last 7 Days)</h3>
+                <h3 class="panel-subtitle" data-translate="true">Market History (Last 7 Days)</h3>
                 <div class="chart-container-large">
                     <canvas id="currencyChartFull"></canvas>
                 </div>
@@ -477,19 +677,19 @@
 <!-- Time Details Panel -->
 <div class="details-panel" id="timeDetails">
     <div class="panel-header">
-        <h2>World Clock & Converter</h2>
+        <h2 data-translate="true">World Clock & Converter</h2>
         <button class="close-panel" onclick="closeDetails()">×</button>
     </div>
     <div class="panel-content">
         <form id="timeForm" class="detail-form">
             <div class="header-controls">
                 <div class="format-toggle">
-                    <span class="toggle-label">12H</span>
+                    <span class="toggle-label" data-translate="true">12H</span>
                     <label class="switch">
                         <input type="checkbox" id="conversionFormatToggle" onchange="handleConversionFormatChange()">
                         <span class="slider round"></span>
                     </label>
-                    <span class="toggle-label">24H</span>
+                    <span class="toggle-label" data-translate="true">24H</span>
                 </div>
             </div>
 
@@ -497,7 +697,7 @@
                 
                 <div class="currency-horizontal-row">
                     <div class="currency-btn-item">
-                        <span class="btn-mini-label">Source Zone</span>
+                        <span class="btn-mini-label" data-translate="true">Source Zone</span>
                         <div class="custom-currency-select" id="sourceTimeWrapper">
                             <div class="select-header" onclick="focusInput('sourceTimeSearch')">
                                 <span class="select-icon">📍</span>
@@ -525,7 +725,7 @@
                     <button type="button" class="central-swap-circle" id="swapTimeZones" title="Swap timezones">⇄</button>
 
                     <div class="currency-btn-item">
-                        <span class="btn-mini-label">Target Zone</span>
+                        <span class="btn-mini-label" data-translate="true">Target Zone</span>
                         <div class="custom-currency-select" id="targetTimeWrapper">
                             <div class="select-header" onclick="focusInput('targetTimeSearch')">
                                 <span class="select-icon">🌏</span>
@@ -552,38 +752,38 @@
                 </div>
 
                 <div class="result-display">
-                    <div class="result-header">Converted Time</div>
+                    <div class="result-header" data-translate="true">Converted Time</div>
                     <div class="conversion-result-row">
-                        <div id="timeResultVal" class="conversion-val">@Model.TimeConversion.TargetTime</div>
+                        <div id="timeResultVal" class="conversion-val" data-no-translate="true">@Model.TimeConversion.TargetTime</div>
                         <div id="timeAbbr" class="tz-abbr-badge">@Model.TimeConversion.TargetAbbr</div>
-                        <div id="timeDayChange" class="day-change-badge @(Model.TimeConversion.DayChange == "Same Day" ? "d-none" : "")">@Model.TimeConversion.DayChange</div>
+                        <div id="timeDayChange" class="day-change-badge @(Model.TimeConversion.DayChange == "Same Day" ? "d-none" : "")" data-translate="true">@Model.TimeConversion.DayChange</div>
                     </div>
-                    <div id="timeOffsetInfo" class="rate-info">Difference: @Model.TimeConversion.OffsetDisplay hours</div>
+                    <div id="timeOffsetInfo" class="rate-info" data-translate="true">Difference: @Model.TimeConversion.OffsetDisplay hours</div>
                 </div>
             </div>
         </form>
 
-        <h3 class="panel-subtitle">Global Overview</h3>
+        <h3 class="panel-subtitle" data-translate="true">Global Overview</h3>
         <div class="world-clock-list">
             <div class="clock-row">
-                <span class="city">New York</span>
-                <span class="time" data-tz="America/New_York">--:--</span>
+                <span class="city" data-translate="true">New York</span>
+                <span class="time" data-tz="America/New_York" data-no-translate="true">--:--</span>
             </div>
             <div class="clock-row">
-                <span class="city">London</span>
-                <span class="time" data-tz="Europe/London">--:--</span>
+                <span class="city" data-translate="true">London</span>
+                <span class="time" data-tz="Europe/London" data-no-translate="true">--:--</span>
             </div>
             <div class="clock-row">
-                <span class="city">Mumbai</span>
-                <span class="time" data-tz="Asia/Kolkata">--:--</span>
+                <span class="city" data-translate="true">Mumbai</span>
+                <span class="time" data-tz="Asia/Kolkata" data-no-translate="true">--:--</span>
             </div>
             <div class="clock-row">
-                <span class="city">Tokyo</span>
-                <span class="time" data-tz="Asia/Tokyo">--:--</span>
+                <span class="city" data-translate="true">Tokyo</span>
+                <span class="time" data-tz="Asia/Tokyo" data-no-translate="true">--:--</span>
             </div>
             <div class="clock-row">
-                 <span class="city">Dubai</span>
-                 <span class="time" data-tz="Asia/Dubai">--:--</span>
+                 <span class="city" data-translate="true">Dubai</span>
+                 <span class="time" data-tz="Asia/Dubai" data-no-translate="true">--:--</span>
             </div>
         </div>
     </div>
@@ -603,8 +803,8 @@
         <div class="news-controls">
             <div class="search-bar-row">
                 <div class="input-with-button">
-                    <input type="text" id="newsSearchInput" class="form-control" placeholder="Search news by location or keyword..." />
-                    <button type="submit" class="btn-primary-sm" onclick="event.preventDefault(); refreshNewsData();">Search</button>
+                    <input type="text" id="newsSearchInput" class="form-control" placeholder="Search news by location or keyword..." data-translate="true" data-translate-placeholder="true" />
+                    <button type="submit" class="btn-primary-sm" onclick="event.preventDefault(); refreshNewsData();" data-translate="true">Search</button>
                 </div>
                 <div class="sort-selector">
                     <select id="newsSortSelect" onchange="refreshNewsData()" class="form-select-sm">
@@ -615,14 +815,14 @@
             </div>
             
             <div class="category-pills" id="newsCategoryPills">
-                <button class="pill active" data-category="All">All</button>
-                <button class="pill" data-category="World">World</button>
-                <button class="pill" data-category="Business">Business</button>
-                <button class="pill" data-category="Technology">Technology</button>
-                <button class="pill" data-category="Health">Health</button>
-                <button class="pill" data-category="Science">Science</button>
-                <button class="pill" data-category="Sports">Sports</button>
-                <button class="pill" data-category="Entertainment">Entertainment</button>
+                <button class="pill active" data-category="All" data-translate="true">All</button>
+                <button class="pill" data-category="World" data-translate="true">World</button>
+                <button class="pill" data-category="Business" data-translate="true">Business</button>
+                <button class="pill" data-category="Technology" data-translate="true">Technology</button>
+                <button class="pill" data-category="Health" data-translate="true">Health</button>
+                <button class="pill" data-category="Science" data-translate="true">Science</button>
+                <button class="pill" data-category="Sports" data-translate="true">Sports</button>
+                <button class="pill" data-category="Entertainment" data-translate="true">Entertainment</button>
             </div>
         </div>
 
@@ -636,7 +836,7 @@
         </div>
 
         <div class="news-load-more-container" id="newsLoadMoreContainer" style="display: none; justify-content: center; padding: 2rem 0;">
-            <button class="btn-secondary-glass" onclick="loadMoreNews()">Show More Stories</button>
+            <button class="btn-secondary-glass" onclick="loadMoreNews()" data-translate="true">Show More Stories</button>
         </div>
     </div>
 </div>
@@ -649,6 +849,9 @@
     </div>
     <div class="panel-content article-reader" id="articleReaderContent">
         <div class="article-header">
+            <div class="news-tags-row mb-3" id="articleBadgeRow">
+                <!-- Badges will be injected here -->
+            </div>
             <div class="article-meta">
                 <span id="articleSource" class="source-badge">Source</span>
                 <span id="articleDate" class="date-text">Date</span>
@@ -682,7 +885,7 @@
         <div class="country-search-area">
             <div class="search-input-wrapper">
                 <i class="search-icon-glass">🔍</i>
-                <input type="text" id="countrySearchInput" class="form-control" placeholder="Search any country (e.g. Canada, Brazil)..." oninput="handleCountrySearchInput(this.value)" autocomplete="off" />
+                <input type="text" id="countrySearchInput" class="form-control" placeholder="Search any country (e.g. Canada, Brazil)..." oninput="handleCountrySearchInput(this.value)" autocomplete="off" data-translate="true" data-translate-placeholder="true" />
                 <div id="countrySearchResults" class="country-dropdown-glass" style="display: none;"></div>
             </div>
         </div>
@@ -694,8 +897,8 @@
 
         <div id="countryPlaceholder" class="placeholder-empty">
             <div class="placeholder-icon">🌏</div>
-            <h3>Discover the World</h3>
-            <p>Search for any country to view comprehensive details including flags, capitals, populations, and more.</p>
+            <h3 data-translate="true">Discover the World</h3>
+            <p data-translate="true">Search for any country to view comprehensive details including flags, capitals, populations, and more.</p>
         </div>
 
         <div id="countryDetailsContent" class="country-details-view" style="display: none;">
@@ -974,6 +1177,14 @@
             
             const cityInput = document.querySelector('input[name="city"]');
             if (cityInput) cityInput.value = data.city;
+
+            // --- LINKED LOGIC (Old Behavior) ---
+            // When weather location changes, sync News context.
+            const newsInput = document.getElementById('newsSearchInput');
+            if (newsInput) {
+                newsInput.value = data.city;
+                refreshNewsData(); 
+            }
         }
 
         // Auto-Geolocate logic moved to initDashboard to avoid redundancy
@@ -1482,28 +1693,46 @@
 
             const html = batch.map((item, index) => {
                 const globalIndex = start + index;
-                const displayImg = item.imageUrl || NEWS_PLACEHOLDER_IMG;
+                
+                // Favicon Logic
+                let faviconUrl = "";
+                if (item.sourceUrl && item.sourceUrl.length > 5) {
+                    faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(item.sourceUrl)}&sz=32`;
+                } else {
+                    const guessedDomain = item.source.toLowerCase().replace(/\s+/g, '') + (item.source.toLowerCase().includes('.') ? "" : ".com");
+                    faviconUrl = `https://www.google.com/s2/favicons?domain=${guessedDomain}&sz=32`;
+                }
+
+                // Sentiment Class mapping
+                const sentimentClass = (item.sentiment || 'Neutral').toLowerCase();
 
                 return `
-                    <div class="news-item-card" onclick="viewArticle(${globalIndex})">
-                        <div class="news-image" 
-                             style="background-image: url('${displayImg.replace(/'/g, "%27")}'), url('${NEWS_PLACEHOLDER_IMG}')"
-                             onerror="this.style.backgroundImage='url(${NEWS_PLACEHOLDER_IMG})'">
+                    <div class="news-item-card insight-mode" onclick="viewArticle(${globalIndex})">
+                        <div class="news-card-body">
+                            <div class="news-tags-row">
+                                <span class="insight-badge badge-category">${item.category}</span>
+                                <span class="insight-badge badge-location">📍 ${item.locationTag || 'Global'}</span>
+                                <span class="insight-badge badge-sentiment ${sentimentClass}">
+                                    <span class="sentiment-dot"></span>
+                                    ${item.sentiment}
+                                </span>
+                            </div>
+                            
+                            <h3 class="news-headline-insight">${item.title}</h3>
+                            <p class="news-summary-insight">${item.description}</p>
                         </div>
-                        <div class="news-content">
-                            <div class="news-source-row">
-                                <span class="news-source">${item.source}</span>
-                                <span class="news-date">${item.published}</span>
+
+                        <div class="news-footer-insight">
+                            <div class="source-meta">
+                                <img src="${faviconUrl}" class="source-favicon-mini" alt="" onerror="this.style.display='none'">
+                                <span class="source-name-mini">${item.source}</span>
                             </div>
-                            <h3 class="news-headline">${item.title}</h3>
-                            <p class="news-snippet">${item.description}</p>
-                            <div class="news-footer">
-                                <button class="btn-read-more">Read More <span class="arrow">→</span></button>
-                            </div>
+                            <span class="date-meta">${item.published}</span>
                         </div>
                     </div>
                 `;
             }).join('');
+
 
             if (append) {
                 container.insertAdjacentHTML('beforeend', html);
@@ -1513,32 +1742,77 @@
         }
 
         function viewArticle(index) {
-            window.location.href = `/Todo/NewsDetail?index=${index}`;
+            const item = allNewsItems[index];
+            if (!item) return;
+            // No image in modal if we want consistent text-only look? 
+            // Or keep image in modal for "Read More" context.
+            // User said "remove images from my news widget completely".
+            // I'll remove image from the modal HERO too for consistency.
+            openArticleDetail(item.link, item.title, item.source, item.published, "", item.description, item.category, item.locationTag, item.sentiment);
         }
 
-        async function openArticleDetail(url, title, source, date, img, description) {
+        async function openArticleDetail(url, title, source, date, img, description, category, location, sentiment) {
             const detailPanel = document.getElementById('newsArticleDetails');
             const bodyContainer = document.getElementById('articleBody');
             const overlay = document.getElementById('detailsOverlay');
+            const badgeRow = document.getElementById('articleBadgeRow');
             
-            // Ensure any other panel is closed and overlay is visible
+            // 1. Reset and Show UI
             document.querySelectorAll('.details-panel').forEach(p => p.classList.remove('active'));
-            
-            // Show panel and overlay
             detailPanel.classList.add('active');
             if (overlay) overlay.classList.add('active');
-            
-            // Set content
+            document.body.style.overflow = 'hidden';
+
+            // 2. Set Basic Info
             document.getElementById('articleTitle').textContent = title || 'Untitled';
             document.getElementById('articleSource').textContent = source || 'News Source';
             document.getElementById('articleDate').textContent = date || '';
             document.getElementById('articleSourceLink').href = url || '#';
             
-            const imgContainer = document.getElementById('articleImageContainer');
-            imgContainer.innerHTML = `<img src="${img}" alt="Featured Image" class="article-hero-img" onerror="this.src='${NEWS_PLACEHOLDER_IMG}'">`;
+            // 3. Set Badges
+            const sentimentClass = (sentiment || 'Neutral').toLowerCase();
+            badgeRow.innerHTML = `
+                <span class="insight-badge badge-category">${category || 'General'}</span>
+                <span class="insight-badge badge-location">📍 ${location || 'Global'}</span>
+                <span class="insight-badge badge-sentiment ${sentimentClass}">
+                    <span class="sentiment-dot"></span>
+                    ${sentiment || 'Neutral'}
+                </span>
+            `;
+
+            // 4. Clear Previous and Show Loading
+            bodyContainer.innerHTML = `
+                <div class="article-loading">
+                    <div class="spinner"></div>
+                    <p>Extracting article content for in-app reading...</p>
+                </div>
+            `;
             
-            // Clean and set description (extended summary)
-            bodyContainer.innerHTML = `<div class="article-content-wrapper"><p class="article-intro-text">${description || 'Detailed content not available.'}</p></div>`;
+            // 5. Async Fetch Full Content
+            try {
+                const response = await fetch(`/Todo/GetNewsDetailJson?url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+                
+                if (data && data.content && data.content.length > 50) {
+                    bodyContainer.innerHTML = `
+                        <div class="article-content-wrapper">
+                            <p class="article-intro-text">${data.content}</p>
+                        </div>
+                    `;
+                } else {
+                    bodyContainer.innerHTML = `
+                        <div class="article-content-wrapper">
+                            <p class="article-intro-text">${description || 'Detailed content not available.'}</p>
+                            <div class="article-note">
+                                <small>Full content extraction unavailable for this source. Read more on the original website below.</small>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.warn("Article extraction failed:", err);
+                bodyContainer.innerHTML = `<p>${description || 'Detailed content not available.'}</p>`;
+            }
         }
 
         function backToNewsFeed() {
@@ -1749,6 +2023,7 @@
                     document.getElementById('summaryCountryMeta').textContent = `${data.flagEmoji} ${data.capital} • ${data.region}`;
                     const card = document.querySelector('.insight-card.country');
                     if (card) card.classList.remove('loading');
+
                 } else {
                     throw new Error("Invalid country data");
                 }

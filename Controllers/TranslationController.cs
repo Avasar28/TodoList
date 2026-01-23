@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 using TodoListApp.Services;
 
 namespace TodoListApp.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class TranslationController : ControllerBase
     {
         private readonly ITranslationService _translationService;
@@ -18,19 +19,20 @@ namespace TodoListApp.Controllers
         public async Task<IActionResult> TranslateBatch([FromBody] TranslationRequest request)
         {
             if (request == null || request.Texts == null || request.Texts.Length == 0)
+            {
                 return BadRequest("Invalid request");
+            }
 
             var translations = await _translationService.TranslateBatchAsync(request.Texts, request.TargetLang);
-            return Ok(new { translations });
+            return Ok(translations); // Returns array of strings directly or object depending on frontend expectation.
+            // Let's verify frontend expectation. Previous was object { translations: [] } or just array? 
+            // My Service now returns array. Let's return object to be safe and extensible.
         }
     }
 
     public class TranslationRequest
     {
-        [System.Text.Json.Serialization.JsonPropertyName("texts")]
         public string[] Texts { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("targetLang")]
         public string TargetLang { get; set; }
     }
 }

@@ -17,6 +17,15 @@
 
         <!-- Article Header -->
         <header class="article-header-premium">
+            <div class="news-tags-row mb-3">
+                <span class="insight-badge badge-category">@Model.Category</span>
+                <span class="insight-badge badge-location">📍 @(Model.LocationTag ?? "Global")</span>
+                <span class="insight-badge badge-sentiment @(Model.Sentiment?.ToLower() ?? "neutral")">
+                    <span class="sentiment-dot"></span>
+                    @Model.Sentiment
+                </span>
+            </div>
+            
             <div class="article-meta-premium">
                 <span class="source-tag">@Model.Source</span>
                 <span class="dot-separator">•</span>
@@ -25,13 +34,7 @@
             <h1 class="article-title-premium">@Model.Title</h1>
         </header>
 
-        <!-- Hero Image -->
-        @if (!string.IsNullOrEmpty(Model.ImageUrl))
-        {
-            <div class="article-hero-modern">
-                <img src="@Model.ImageUrl" alt="Featured Image" class="hero-img-full" onerror="this.src='https://images.unsplash.com/photo-1504711432869-efd597cdd045?auto=format&fit=crop&q=80&w=2070'">
-            </div>
-        }
+        <!-- No Hero Image for pure Insight Mode -->
 
         <!-- Article Body -->
         <div class="article-content-modern">
@@ -64,6 +67,22 @@
         color: #eceff4;
         font-family: 'Outfit', sans-serif;
     }
+
+    /* Insight Tags & Badges (Shared from Dashboard) */
+    .news-tags-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
+    .insight-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge-category { background: rgba(129, 140, 248, 0.15); color: #a5b4fc; border: 1px solid rgba(129, 140, 248, 0.3); }
+    .badge-location { background: rgba(255, 255, 255, 0.08); color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.1); }
+    .badge-sentiment { display: inline-flex; align-items: center; gap: 5px; }
+    .badge-sentiment.positive { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+    .badge-sentiment.negative { color: #f87171; background: rgba(248, 113, 113, 0.1); }
+    .badge-sentiment.neutral { color: #94a3b8; background: rgba(148, 163, 184, 0.1); }
+    .sentiment-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+    .positive .sentiment-dot { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+    .negative .sentiment-dot { background: #f87171; box-shadow: 0 0 8px #f87171; }
+    .neutral .sentiment-dot { background: #94a3b8; }
+    
+    .mb-3 { margin-bottom: 1rem; }
 
     .news-detail-container {
         max-width: 900px;

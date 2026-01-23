@@ -10,4 +10,11 @@
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="DebugTool\**" />
+    <Content Remove="DebugTool\**" />
+    <EmbeddedResource Remove="DebugTool\**" />
+    <None Remove="DebugTool\**" />
+  </ItemGroup>
+
 </Project>
