@@ -363,85 +363,136 @@
 </style>
 
 <div class="dashboard-container centered-view">
-    <div class="dashboard-header text-center">
-        <h1><span data-translate="true">Welcome</span>, @Model.UserName</h1>
+<!-- Top Status Strip -->
+    <div class="dashboard-status-strip">
+        <div class="status-greeting">
+            <h2 id="dynamicGreeting">Good Evening, @Model.UserName</h2>
+            <span class="status-date" id="currentDateDisplay">@DateTime.Now.ToString("dddd, MMMM dd, yyyy")</span>
+        </div>
+        
+        <div class="status-location-group">
+            <div class="status-pill location-pill">
+                <span class="loc-icon">📍</span>
+                <span class="loc-text" id="statusLocationText">@Model.SelectedCity</span>
+            </div>
+            <div class="status-pill time-pill">
+                <span class="time-text" id="liveClock">--:--</span>
+            </div>
+        </div>
     </div>
 
-    <div class="realtime-grid">
-        <!-- Weather Widget -->
-        <div class="insight-card summary-widget weather loading" onclick="openDetails('weather')">
-            <div class="widget-preview">
-                <div class="insight-icon" id="summaryWeatherIcon">@(string.IsNullOrEmpty(Model.Weather.Icon) ? "🌡️" : Model.Weather.Icon)</div>
-                <div class="insight-info">
-                    <span class="insight-label" data-translate="true">Local Weather</span>
-                    <span class="insight-value" id="summaryWeatherTemp">@(Model.Weather.Temperature > 0 ? Model.Weather.Temperature + "°C" : "--°C")</span>
-                    <span class="insight-meta" id="summaryWeatherMeta">@(string.IsNullOrEmpty(Model.Weather.City) ? Model.SelectedCity + " • Loading..." : Model.Weather.City + " • " + Model.Weather.Description)</span>
+    <!-- Asymmetric Dashboard Grid -->
+    <div class="dashboard-grid-asymmetric">
+        
+        <!-- Area: Weather (Tall Atmosphere Card) -->
+        <div class="grid-area-weather">
+             <div class="insight-card widget-weather-live weather loading" onclick="openDetails('weather')">
+                <div class="weather-live-indicator">
+                    <span class="pulse-dot"></span> <span class="live-text">LIVE</span>
                 </div>
-            </div>
-            <div class="widget-action">
-                <span data-translate="true">View Forecast & Details</span>
+                <div class="widget-content-vertical">
+                    <div class="weather-visual">
+                         <div class="insight-icon-huge" id="summaryWeatherIcon">@(string.IsNullOrEmpty(Model.Weather.Icon) ? "🌤️" : Model.Weather.Icon)</div>
+                    </div>
+                    <div class="weather-data-primary">
+                        <span class="insight-value-huge" id="summaryWeatherTemp">@(Model.Weather.Temperature > 0 ? Model.Weather.Temperature + "°" : "--°")</span>
+                        <span class="insight-label-lg" id="summaryWeatherDesc">@Model.Weather.Description</span>
+                    </div>
+                     <div class="weather-meta-row">
+                        <span class="meta-item" id="summaryWeatherHum">💧 @Model.Weather.Humidity%</span>
+                        <span class="meta-item" id="summaryWeatherWind">💨 @Model.Weather.WindSpeed km/h</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Currency Widget -->
-        <div class="insight-card summary-widget currency loading" onclick="openDetails('currency')">
-            <div class="widget-preview">
-                <div class="insight-icon">💱</div>
-                <div class="insight-info">
-                    <span class="insight-label" data-translate="true">Currency Exchange</span>
-                    <span class="insight-value" id="summaryCurrencyRate">@(Model.Currency.Rate > 0 ? Model.Currency.Rate.ToString("F4") : "--.----")</span>
-                    <span class="insight-meta" id="summaryCurrencyMeta">1 @Model.FromCurrency = @(Model.Currency.Rate > 0 ? Model.Currency.Rate.ToString("F4") : "--") @Model.ToCurrency</span>
+        <!-- Area: Currency (Financial Card) -->
+        <div class="grid-area-currency">
+            <div class="insight-card widget-currency-live currency compact" onclick="openDetails('currency')">
+                <div class="widget-header-row">
+                    <span class="widget-title-sm">FOREX MARKET</span>
+                    <span class="market-status open">OPEN</span>
                 </div>
-            </div>
-            <div class="widget-action">
-                <span data-translate="true">View Chart & Converter</span>
+                <div class="currency-live-data">
+                    <div class="pair-display">
+                        <span class="curr-code">@Model.FromCurrency</span>
+                        <span class="arrow">→</span>
+                        <span class="curr-code">@Model.ToCurrency</span>
+                    </div>
+                    <div class="rate-large" id="summaryCurrencyRate">
+                        @(Model.Currency.Rate > 0 ? Model.Currency.Rate.ToString("F3") : "--.---")
+                    </div>
+                    <div class="trend-indicator @(Model.Currency.IsUp == true ? "up" : "down")">
+                         @(Model.Currency.IsUp == true ? "▲" : "▼") <span class="trend-val">0.05%</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- World Clock Widget -->
-        <div class="insight-card summary-widget time loading" onclick="openDetails('time')">
-            <div class="widget-preview">
-                <div class="insight-icon">🌍</div>
-                <div class="insight-info">
-                    <span class="insight-label" data-translate="true">Time Converter</span>
-                    <span class="insight-value" id="summaryTargetTime" data-offset="@Model.TimeConversion.TotalOffsetMinutes" data-no-translate="true">@(string.IsNullOrEmpty(Model.TimeConversion.TargetTime) ? "--:--" : Model.TimeConversion.TargetTime)</span>
-                    <span class="insight-meta" id="summaryTimeMeta">@Model.TargetTimeZone</span>
+        <!-- Area: Time (Digital Clock Card) -->
+        <div class="grid-area-time">
+            <div class="insight-card widget-time-live time compact" onclick="openDetails('time')">
+                 <div class="widget-header-row">
+                    <span class="widget-title-sm">WORLD CLOCK</span>
+                     <span class="zone-badge">@Model.TargetTimeZone</span>
                 </div>
-            </div>
-            <div class="widget-action">
-                <span data-translate="true">View World Clock</span>
+                <div class="time-digital-display">
+                    <span class="digital-time" id="summaryTargetTime">@(string.IsNullOrEmpty(Model.TimeConversion.TargetTime) ? "--:--" : Model.TimeConversion.TargetTime)</span>
+                    <span class="time-diff-pill">@Model.TimeConversion.OffsetDisplay HRS</span>
+                </div>
             </div>
         </div>
 
-        <!-- News Widget -->
-        <div class="insight-card summary-widget news loading" id="newsWidgetCard" onclick="openDetails('news')">
-            <div class="widget-preview">
-                <div class="insight-icon">📰</div>
-                <div class="insight-info">
-                    <span class="insight-label" data-translate="true">Local & Global News</span>
-                    <span class="insight-value" id="summaryNewsCount">-- Items</span>
-                    <span class="insight-meta" id="summaryNewsMeta">@Model.SelectedCity • Loading...</span>
+        <!-- Area: Country (Explorer Card) -->
+        <div class="grid-area-country">
+            <div class="insight-card widget-country-live country" onclick="openDetails('country')">
+                <div class="country-visual-bg">
+                    <div class="search-hint-overlay">
+                        <span class="search-icon-lg">🔍</span>
+                        <span class="search-text">Explore Global Data</span>
+                    </div>
                 </div>
-            </div>
-            <div class="widget-action">
-                <span data-translate="true">Read Latest Stories</span>
+                <div class="country-label-overlay">
+                    <span class="country-name-lg" id="summaryCountryName">Country Explorer</span>
+                    <span class="country-meta-sm" id="summaryCountryMeta" style="display:block; font-size:0.75rem; color:rgba(255,255,255,0.7);">Search to explore</span>
+                </div>
             </div>
         </div>
 
-        <!-- Country Details Widget -->
-        <div class="insight-card summary-widget country" onclick="openDetails('country')">
-            <div class="widget-preview">
-                <div class="insight-icon">🌐</div>
-                <div class="insight-info">
-                    <span class="insight-label" data-translate="true">Country Explorer</span>
-                    <span class="insight-value" id="summaryCountryName">Search Country</span>
-                    <span class="insight-meta" id="summaryCountryMeta">A-Z Global Insight</span>
+        <!-- Area: News (Timeline Feed) -->
+        <div class="grid-area-news">
+             <div class="insight-card widget-news-feed news loading" id="newsWidgetCard" onclick="openDetails('news')">
+                <div class="widget-header-feed">
+                    <span class="feed-title">Live News Feed</span>
+                    <span class="feed-live-dot"></span>
+                </div>
+                <div class="news-timeline-container">
+                    <!-- Placeholder Items for Loading -->
+                     <div class="timeline-item">
+                        <span class="time-stamp">Now</span>
+                        <div class="timeline-content">
+                            <span class="category-pill-news">Headlines</span>
+                            <span class="headline-text">Loading top stories for @Model.SelectedCity...</span>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="time-stamp">10m</span>
+                        <div class="timeline-content">
+                            <span class="category-pill-news">World</span>
+                            <span class="headline-text">Global market updates and breaking news...</span>
+                        </div>
+                    </div>
+                     <div class="timeline-item">
+                        <span class="time-stamp">1h</span>
+                        <div class="timeline-content">
+                            <span class="category-pill-news">Tech</span>
+                            <span class="headline-text">Latest technology trends and updates...</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="widget-action">
-                <span data-translate="true">Explore Destinations</span>
-            </div>
         </div>
+
     </div>
 </div>
 
@@ -1124,11 +1175,28 @@
             document.getElementById('weatherCoords').textContent = `Lat: ${data.latitude.toFixed(4)} | Lon: ${data.longitude.toFixed(4)}`;
 
             // 2. Update Summary Widget
+            // 2. Update Summary Widget (Live Refined)
             const weatherSummary = document.querySelector('.insight-card.weather');
             if (weatherSummary) {
-                weatherSummary.querySelector('.insight-icon').textContent = data.icon;
-                weatherSummary.querySelector('.insight-value').textContent = data.temperature + '°C';
-                weatherSummary.querySelector('.insight-meta').textContent = title + ' • ' + data.description;
+                // Update specific elements via IDs
+                const iconEl = document.getElementById('summaryWeatherIcon');
+                if (iconEl) iconEl.textContent = data.icon; // e.g. 🌤️
+
+                const tempEl = document.getElementById('summaryWeatherTemp');
+                if (tempEl) tempEl.textContent = data.temperature + '°'; 
+
+                const descEl = document.getElementById('summaryWeatherDesc');
+                if (descEl) descEl.textContent = data.description;
+
+                const humEl = document.getElementById('summaryWeatherHum');
+                if (humEl) humEl.textContent = `💧 ${data.humidity}%`;
+                
+                const windEl = document.getElementById('summaryWeatherWind');
+                if (windEl) windEl.textContent = `💨 ${data.windSpeed} km/h`;
+                
+                // Update Status Strip Location
+                const statusLoc = document.getElementById('statusLocationText');
+                if (statusLoc) statusLoc.textContent = data.city;
             }
 
             // 3. Update Detail Panel Hero
@@ -2301,8 +2369,15 @@
         }
 
         function initCountryMap(lat, lng, name) {
+            const mapEl = document.getElementById('countryMap');
+            if (!mapEl) {
+                console.warn("Map container 'countryMap' not found in DOM.");
+                return;
+            }
+
             if (countryMap) {
                 countryMap.remove();
+                countryMap = null;
             }
             
             // Fix Leaflet's default icon path issues by pointing to local assets
