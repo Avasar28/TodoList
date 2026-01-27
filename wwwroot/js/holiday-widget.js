@@ -1,0 +1,804 @@
+/**
+ * Holiday Calendar Widget Logic
+ * Handles country search, year selection, and fetching/rendering holidays.
+ */
+
+const HolidayWidget = {
+    allCountries: [],
+    selectedCountryCode: '',
+    selectedYear: new Date().getFullYear(),
+    selectedCountryName: '', // Cache name for header
+    currentView: 'list', // 'list' or 'calendar'
+    calendarMonth: new Date().getMonth(), // 0-indexed
+    calendarYear: new Date().getFullYear(),
+    holidaysData: null, // Cache for the current country/year
+    reminders: JSON.parse(localStorage.getItem('holidayReminders')) || [],
+    dismissedSuggestions: JSON.parse(localStorage.getItem('dismissedHolidaySuggestions')) || [],
+
+    init: function () {
+        console.log("HolidayWidget: Initializing...");
+        this.calendarMonth = new Date().getMonth();
+        this.calendarYear = new Date().getFullYear();
+        this.cacheCountries();
+        this.attachEventListeners();
+
+        // Initial sync check: if weather data is already in global scope or status bar
+        this.fetchDefaultHolidays();
+        this.startReminderLoop();
+    },
+
+    startReminderLoop: function () {
+        // Check every hour (or closer if needed, but 1h is fine for "days before")
+        setInterval(() => this.checkReminders(), 3600000);
+        this.checkReminders(); // Run once on init
+    },
+
+    checkReminders: function () {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const todayStr = now.toISOString().split('T')[0];
+
+        this.reminders.forEach(r => {
+            if (!r.reminderEnabled || r.lastAlertedDate === todayStr) return;
+
+            const hDate = new Date(r.holidayDate);
+            hDate.setHours(0, 0, 0, 0);
+
+            // Calculate difference in days
+            const diffTime = hDate.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === r.reminderOffset) {
+                this.triggerReminder(r);
+                r.lastAlertedDate = todayStr;
+                this.saveReminders();
+            }
+        });
+    },
+
+    triggerReminder: function (reminder) {
+        const title = `Holiday Reminder: ${reminder.holidayName}`;
+        const body = `${reminder.holidayName} is in ${reminder.reminderOffset} day(s)! (${reminder.holidayDate})`;
+
+        if (Notification.permission === "granted") {
+            new Notification(title, {
+                body: body,
+                icon: '/favicon.ico',
+                tag: 'holiday-reminder-' + reminder.holidayName
+            });
+        } else {
+            this.showInAppBanner(title, body);
+        }
+    },
+
+    showInAppBanner: function (title, body) {
+        const container = document.getElementById('holidayWidgetCard');
+        if (!container) return;
+
+        const banner = document.createElement('div');
+        banner.className = 'holiday-reminder-banner';
+        banner.innerHTML = `
+            <div class="banner-content">
+                <strong>🔔 ${title}</strong>
+                <p>${body}</p>
+            </div>
+            <button class="banner-close" onclick="this.parentElement.remove()">×</button>
+        `;
+        container.appendChild(banner);
+
+        // Auto remove after 10s
+        setTimeout(() => {
+            if (banner.parentElement) {
+                banner.classList.add('fade-out');
+                setTimeout(() => banner.remove(), 500);
+            }
+        }, 10000);
+    },
+
+    toggleReminder: async function (holidayName, holidayDate) {
+        const existingIdx = this.reminders.findIndex(r => r.holidayName === holidayName && r.holidayDate === holidayDate);
+
+        if (existingIdx > -1) {
+            // Remove
+            this.reminders.splice(existingIdx, 1);
+        } else {
+            // Add (default 1 day before)
+            const permission = await this.requestNotificationPermission();
+            this.reminders.push({
+                holidayName,
+                holidayDate,
+                reminderOffset: 1,
+                reminderEnabled: true,
+                lastAlertedDate: ''
+            });
+        }
+
+        this.saveReminders();
+        this.fetchHolidays(); // Re-render current list to show active state
+    },
+
+    setReminderOffset: function (holidayName, holidayDate, offset) {
+        const reminder = this.reminders.find(r => r.holidayName === holidayName && r.holidayDate === holidayDate);
+        if (reminder) {
+            reminder.reminderOffset = parseInt(offset);
+            this.saveReminders();
+        }
+    },
+
+    saveReminders: function () {
+        localStorage.setItem('holidayReminders', JSON.stringify(this.reminders));
+    },
+
+    saveDismissedSuggestions: function () {
+        localStorage.setItem('dismissedHolidaySuggestions', JSON.stringify(this.dismissedSuggestions));
+    },
+
+    requestNotificationPermission: async function () {
+        if (!("Notification" in window)) return "unsupported";
+        if (Notification.permission === "granted") return "granted";
+        if (Notification.permission !== "denied") {
+            const permission = await Notification.requestPermission();
+            return permission;
+        }
+        return "denied";
+    },
+
+    syncWithWeather: function (countryName, countryCode) {
+        if (!countryCode) return;
+
+        console.log(`HolidayWidget: Syncing with Weather -> ${countryName} (${countryCode})`);
+
+        // If we already have a selection and it's different, update it
+        if (this.selectedCountryCode !== countryCode) {
+            this.selectCountryByCode(countryCode, countryName);
+        }
+    },
+
+    selectCountryByCode: function (code, fallbackName) {
+        if (!code) return;
+
+        // Find country in our cached list for proper name/flag
+        const country = this.allCountries.find(c => c.countryCode === code);
+        if (country) {
+            this.selectCountry(country.countryCode, country.name);
+        } else if (fallbackName) {
+            this.selectCountry(code, fallbackName);
+        }
+    },
+
+    cacheCountries: async function () {
+        try {
+            const response = await fetch('/Todo/GetAvailableCountriesJson');
+            this.allCountries = await response.json();
+            this.populateCountryOptions(this.allCountries);
+        } catch (error) {
+            console.error("HolidayWidget: Error fetching countries", error);
+        }
+    },
+
+    populateCountryOptions: function (countries) {
+        const optionsContainer = document.getElementById('holidayCountryOptions');
+        const select = document.getElementById('holidayCountrySelect');
+        if (!optionsContainer || !select) return;
+
+        optionsContainer.innerHTML = '';
+        select.innerHTML = '<option value="">Select Country</option>';
+
+        countries.forEach(country => {
+            // Option for hidden select
+            const opt = document.createElement('option');
+            opt.value = country.countryCode;
+            opt.textContent = country.name;
+            select.appendChild(opt);
+
+            // Item for custom dropdown
+            const item = document.createElement('div');
+            item.className = 'option-item';
+            item.dataset.value = country.countryCode;
+            item.dataset.text = country.name;
+            item.innerHTML = `
+                <span class="opt-flag">${country.flagEmoji || '🌍'}</span>
+                <span class="opt-code">${country.countryCode}</span>
+                <span class="opt-country">${country.name}</span>
+            `;
+            item.onclick = () => this.selectCountry(country.countryCode, country.name);
+            optionsContainer.appendChild(item);
+        });
+    },
+
+    attachEventListeners: function () {
+        const searchInput = document.getElementById('holidayCountrySearch');
+        const yearSelect = document.getElementById('holidayYearSelect');
+
+        if (searchInput) {
+            searchInput.oninput = (e) => this.filterCountries(e.target.value);
+            searchInput.onfocus = () => {
+                const wrapper = searchInput.closest('.custom-currency-select');
+                if (wrapper) wrapper.classList.add('active');
+            };
+        }
+
+        if (yearSelect) {
+            yearSelect.onchange = (e) => {
+                this.selectedYear = parseInt(e.target.value);
+                if (this.selectedCountryCode) {
+                    this.fetchHolidays();
+                }
+            };
+        }
+
+        // Global click handler to close custom dropdowns
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.custom-currency-select')) {
+                document.querySelectorAll('.custom-currency-select').forEach(el => el.classList.remove('active'));
+            }
+        });
+    },
+
+    filterCountries: function (query) {
+        const q = query.toLowerCase();
+        const items = document.querySelectorAll('#holidayCountryOptions .option-item');
+        let visibleCount = 0;
+
+        items.forEach(item => {
+            const text = item.dataset.text.toLowerCase();
+            const code = item.dataset.value.toLowerCase();
+            if (text.includes(q) || code.includes(q)) {
+                item.style.display = 'flex';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Show/Hide "No Results" message in dropdown
+        let noResultsMsg = document.getElementById('holidayNoCountriesMsg');
+        if (!noResultsMsg) {
+            noResultsMsg = document.createElement('div');
+            noResultsMsg.id = 'holidayNoCountriesMsg';
+            noResultsMsg.className = 'no-results-dropdown';
+            noResultsMsg.textContent = 'No countries found matching your search.';
+            document.getElementById('holidayCountryOptions').appendChild(noResultsMsg);
+        }
+        noResultsMsg.style.display = visibleCount === 0 && q.length > 0 ? 'block' : 'none';
+    },
+
+    selectCountry: function (code, name) {
+        this.selectedCountryCode = code;
+        this.selectedCountryName = name; // Cache name for header
+        const searchInput = document.getElementById('holidayCountrySearch');
+        const select = document.getElementById('holidayCountrySelect');
+
+        if (searchInput) searchInput.value = name;
+        if (select) select.value = code;
+
+        document.querySelectorAll('.custom-currency-select').forEach(el => el.classList.remove('active'));
+        this.fetchHolidays();
+    },
+
+    setView: function (view) {
+        this.currentView = view;
+
+        // Update pills
+        const listBtn = document.getElementById('holidayListViewBtn');
+        const calBtn = document.getElementById('holidayCalendarViewBtn');
+        const nav = document.getElementById('holidayCalendarNav');
+
+        if (listBtn) listBtn.classList.toggle('active', view === 'list');
+        if (calBtn) calBtn.classList.toggle('active', view === 'calendar');
+        if (nav) nav.style.display = view === 'calendar' ? 'flex' : 'none';
+
+        if (this.holidaysData) {
+            this.renderHolidays(this.holidaysData);
+        }
+    },
+
+    previousMonth: function () {
+        this.calendarMonth--;
+        if (this.calendarMonth < 0) {
+            this.calendarMonth = 11;
+            this.calendarYear--;
+        }
+        this.updateCalendarView();
+    },
+
+    nextMonth: function () {
+        this.calendarMonth++;
+        if (this.calendarMonth > 11) {
+            this.calendarMonth = 0;
+            this.calendarYear++;
+        }
+        this.updateCalendarView();
+    },
+
+    updateCalendarView: function () {
+        if (this.currentView === 'calendar' && this.holidaysData) {
+            this.renderHolidays(this.holidaysData);
+        }
+    },
+
+    fetchHolidays: async function () {
+        if (!this.selectedCountryCode) return;
+
+        const loadingState = document.getElementById('holidayLoadingState');
+        const listContainer = document.getElementById('holidayList');
+        const card = document.getElementById('holidayWidgetCard');
+
+        if (loadingState) loadingState.style.display = 'flex';
+        if (listContainer) listContainer.style.opacity = '0.5';
+        if (card) card.classList.add('loading');
+
+        try {
+            const response = await fetch(`/Todo/GetHolidaysJson?countryCode=${this.selectedCountryCode}&year=${this.selectedYear}`);
+
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status}`);
+            }
+
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new Error("Invalid response format (not JSON)");
+            }
+
+            const data = await response.json();
+            this.holidaysData = data; // Cache
+            this.renderHolidays(data);
+            this.updateSummaryCard(data);
+        } catch (error) {
+            console.error("HolidayWidget: Error fetching holidays", error);
+            if (listContainer) {
+                listContainer.innerHTML = `
+                    <div class="initial-search-state">
+                        <div class="search-icon-placeholder">⚠️</div>
+                        <p>Error loading holiday data. Please try again later.</p>
+                    </div>
+                `;
+            }
+        } finally {
+            if (loadingState) loadingState.style.display = 'none';
+            if (listContainer) listContainer.style.opacity = '1';
+            if (card) card.classList.remove('loading');
+        }
+    },
+
+    renderHolidays: function (data) {
+        const container = document.getElementById('holidayList');
+        if (!container) return;
+
+        if (!data.holidays || data.holidays.length === 0) {
+            container.innerHTML = `
+                <div class="initial-search-state">
+                    <div class="search-icon-placeholder">📅</div>
+                    <p>No holiday data available for ${this.selectedCountryName || data.countryCode} in ${data.year}.</p>
+                    <div class="api-tip" style="margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 0.85rem; color: rgba(255,255,255,0.7);">
+                        <p style="margin:0;">💡 <strong>Pro Tip:</strong> Using free data source (~100 countries). To unlock 230+ countries (including India), add a free <a href="https://calendarific.com/signup" target="_blank" style="color: #00d2ff; text-decoration: underline;">Calendarific API Key</a> to <code>appsettings.json</code>.</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        if (this.currentView === 'calendar') {
+            this.renderCalendarView(data);
+            return;
+        }
+
+        // Analyze for AI Suggestions
+        this.analyzeHolidaysForSuggestions(data);
+
+        // 1. Calculate relative time and categorize
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        const holidaysWithMeta = data.holidays.map(h => {
+            const hDate = new Date(h.date);
+            hDate.setHours(0, 0, 0, 0);
+            const diffTime = hDate.getTime() - now.getTime();
+            const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            let category = 'future';
+            if (daysUntil < 0) category = 'past';
+            else if (daysUntil <= 30) category = 'upcoming';
+
+            return { ...h, daysUntil, category };
+        });
+
+        // 2. Separate Upcoming for the top section
+        const upcomingHolidays = holidaysWithMeta
+            .filter(h => h.category === 'upcoming')
+            .sort((a, b) => a.daysUntil - b.daysUntil);
+
+        // 3. Group the rest by Month for the full calendar
+        const sortedHolidays = [...holidaysWithMeta].sort((a, b) => new Date(a.date) - new Date(b.date));
+        const monthGrouped = {};
+        sortedHolidays.forEach(h => {
+            const m = new Date(h.date).toLocaleString('default', { month: 'long' });
+            if (!monthGrouped[m]) monthGrouped[m] = [];
+            monthGrouped[m].push(h);
+        });
+
+        // 4. Build HTML
+        let html = `
+            <div class="holiday-results-header">
+                <h3>${this.selectedCountryName || data.countryCode} - ${data.year}</h3>
+                <span class="holiday-total-badge">${data.totalCount} Total Holidays</span>
+            </div>
+        `;
+
+        // Render Upcoming Highlights if any
+        if (upcomingHolidays.length > 0) {
+            html += `
+                <div class="upcoming-highlights-section">
+                    <h4 class="section-divider-title">✨ Upcoming Highlights</h4>
+                    <div class="month-holidays">
+                        ${upcomingHolidays.map(h => this.renderHolidayCard(h, true)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        html += `<h4 class="section-divider-title">📅 Full Calendar</h4>`;
+
+        for (const month in monthGrouped) {
+            html += `
+                <div class="holiday-month-group">
+                    <h4 class="month-name">${month}</h4>
+                    <div class="month-holidays">
+                        ${monthGrouped[month].map(h => this.renderHolidayCard(h)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+    },
+
+    renderHolidayCard: function (h, isHighlight = false) {
+        const dt = new Date(h.date);
+        const day = dt.getDate();
+        const monthShort = dt.toLocaleString('default', { month: 'short' });
+        const reminder = this.reminders.find(r => r.holidayName === h.name && r.holidayDate === h.date);
+        const isActive = !!reminder;
+
+        let cardClass = `holiday-item-card`;
+        if (isActive) cardClass += ' has-reminder';
+        if (h.category === 'upcoming') cardClass += ' is-upcoming';
+        if (h.category === 'past') cardClass += ' is-past';
+        if (isHighlight) cardClass += ' highlight-card';
+
+        const badgeHtml = this.getHolidayBadge(h.daysUntil);
+
+        return `
+            <div class="${cardClass}">
+                <div class="holiday-info">
+                    <div class="h-name-row">
+                        <span class="holiday-name">${h.name}</span>
+                        <button class="reminder-toggle-btn ${isActive ? 'active' : ''}" 
+                                onclick="HolidayWidget.toggleReminder('${h.name.replace(/'/g, "\\'")}', '${h.date}')"
+                                title="${isActive ? 'Disable Reminder' : 'Set Reminder'}">
+                            ${isActive ? '🔔' : '🔕'}
+                        </button>
+                    </div>
+                    <span class="holiday-local-name">${h.localName}</span>
+                    
+                    ${badgeHtml ? `<div class="holiday-timing-badge">${badgeHtml}</div>` : ''}
+
+                    ${isActive ? `
+                        <div class="reminder-config">
+                            <label>Remind me:</label>
+                            <select onchange="HolidayWidget.setReminderOffset('${h.name.replace(/'/g, "\\'")}', '${h.date}', this.value)">
+                                <option value="1" ${reminder.reminderOffset === 1 ? 'selected' : ''}>1 day before</option>
+                                <option value="3" ${reminder.reminderOffset === 3 ? 'selected' : ''}>3 days before</option>
+                                <option value="7" ${reminder.reminderOffset === 7 ? 'selected' : ''}>1 week before</option>
+                            </select>
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="holiday-date-badge">
+                    <span class="h-day">${day}</span>
+                    <span class="h-month">${monthShort}</span>
+                    <span class="h-dow">${h.dayOfWeek}</span>
+                </div>
+            </div>
+        `;
+    },
+
+    getHolidayBadge: function (daysUntil) {
+        if (daysUntil < 0) return null;
+        if (daysUntil === 0) return `<span class="h-badge today">Today</span>`;
+        if (daysUntil === 1) return `<span class="h-badge tomorrow">Tomorrow</span>`;
+        if (daysUntil <= 7) return `<span class="h-badge this-week">In ${daysUntil} days</span>`;
+        if (daysUntil <= 30) return `<span class="h-badge upcoming">In ${daysUntil} days</span>`;
+        return null;
+    },
+
+    renderCalendarView: function (data) {
+        const container = document.getElementById('holidayList');
+        const monthYearLabel = document.getElementById('holidayCalendarMonthYear');
+
+        // Update label
+        const monthName = new Date(this.calendarYear, this.calendarMonth).toLocaleString('default', { month: 'long' });
+        if (monthYearLabel) monthYearLabel.textContent = `${monthName} ${this.calendarYear}`;
+
+        // Get holidays for this specific month
+        const currentMonthHolidays = data.holidays.filter(h => {
+            const d = new Date(h.date);
+            return d.getMonth() === this.calendarMonth && d.getFullYear() === this.calendarYear;
+        });
+
+        // Generate grid
+        const firstDay = new Date(this.calendarYear, this.calendarMonth, 1).getDay(); // 0 is Sunday
+        const daysInMonth = new Date(this.calendarYear, this.calendarMonth + 1, 0).getDate();
+
+        let html = `
+            <div class="calendar-view-container">
+                <div class="calendar-grid-header">
+                    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                </div>
+                <div class="calendar-grid-body">
+        `;
+
+        // Empty cells for first week
+        for (let i = 0; i < firstDay; i++) {
+            html += `<div class="calendar-day empty"></div>`;
+        }
+
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateObj = new Date(this.calendarYear, this.calendarMonth, d);
+            dateObj.setHours(0, 0, 0, 0);
+
+            const isToday = dateObj.getTime() === now.getTime();
+            const isPast = dateObj.getTime() < now.getTime();
+
+            // Find holidays on this date
+            // Format to YYYY-MM-DD manually to avoid timezone shifts
+            const monthStr = (this.calendarMonth + 1).toString().padStart(2, '0');
+            const dayStr = d.toString().padStart(2, '0');
+            const targetDate = `${this.calendarYear}-${monthStr}-${dayStr}`;
+
+            const holidaysToday = currentMonthHolidays.filter(h => h.date === targetDate);
+            const hasHoliday = holidaysToday.length > 0;
+
+            html += `
+                <div class="calendar-day ${isToday ? 'today' : ''} ${isPast ? 'past' : ''} ${hasHoliday ? 'has-holiday' : ''}"
+                     ${hasHoliday ? `data-holidays='${JSON.stringify(holidaysToday).replace(/'/g, "&apos;")}' onclick="HolidayWidget.showHolidayTooltip(this)"` : ''}>
+                    <span class="day-number">${d}</span>
+                    ${hasHoliday ? `
+                        <div class="holiday-markers">
+                            <span class="holiday-dot"></span>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        html += `</div></div>`;
+        container.innerHTML = html;
+    },
+
+    showHolidayTooltip: function (element) {
+        const holidays = JSON.parse(element.getAttribute('data-holidays'));
+
+        // Remove existing tooltips
+        this.hideHolidayTooltip();
+
+        const tooltip = document.createElement('div');
+        tooltip.id = 'holidayCalendarTooltip';
+        tooltip.className = 'holiday-tooltip-panel';
+
+        let hHtml = holidays.map(h => `
+            <div class="tooltip-holiday-item">
+                <div class="t-name">${h.name}</div>
+                <div class="t-local">${h.localName}</div>
+                <div class="t-type">${h.type || 'Public Holiday'}</div>
+            </div>
+        `).join('<hr class="tooltip-hr" />');
+
+        const dt = new Date(holidays[0].date);
+        const dateStr = dt.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
+
+        tooltip.innerHTML = `
+            <div class="tooltip-header">${dateStr}</div>
+            <div class="tooltip-body">${hHtml}</div>
+            <div class="tooltip-arrow"></div>
+        `;
+
+        document.body.appendChild(tooltip);
+
+        // Position tooltip
+        const rect = element.getBoundingClientRect();
+        tooltip.style.left = `${rect.left + rect.width / 2 - tooltip.offsetWidth / 2}px`;
+        tooltip.style.top = `${rect.top - tooltip.offsetHeight - 10}px`;
+
+        // Close on click outside
+        const closeHandler = (e) => {
+            if (!tooltip.contains(e.target) && e.target !== element) {
+                this.hideHolidayTooltip();
+                document.removeEventListener('click', closeHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeHandler), 10);
+    },
+
+    hideHolidayTooltip: function () {
+        const existing = document.getElementById('holidayCalendarTooltip');
+        if (existing) existing.remove();
+    },
+
+    analyzeHolidaysForSuggestions: function (data) {
+        if (!data.holidays || data.holidays.length === 0) return;
+
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const sixtyDaysFromNow = new Date(now.getTime() + (60 * 24 * 60 * 60 * 1000));
+
+        const suggestions = [];
+
+        // 1. Long Weekend Detection (Fri/Mon)
+        data.holidays.forEach(h => {
+            const hDate = new Date(h.date);
+            if (hDate < now || hDate > sixtyDaysFromNow) return;
+
+            const dayOfWeek = hDate.getDay(); // 0: Sun, 1: Mon, ..., 5: Fri, 6: Sat
+            const suggestionId = `long-weekend-${h.name}-${h.date}`;
+
+            if (this.dismissedSuggestions.includes(suggestionId)) return;
+
+            if (dayOfWeek === 5) { // Friday
+                suggestions.push({
+                    id: suggestionId,
+                    type: 'travel',
+                    text: `Looks like a 3-day weekend for <strong>${h.name}</strong> (Friday)! Perfect for a short getaway.`
+                });
+            } else if (dayOfWeek === 1) { // Monday
+                suggestions.push({
+                    id: suggestionId,
+                    type: 'travel',
+                    text: `Enjoy a 3-day weekend with <strong>${h.name}</strong> (Monday)! Ideal for a quick trip.`
+                });
+            }
+        });
+
+        // 2. Mid-week Break Detection (Tue/Wed/Thu)
+        data.holidays.forEach(h => {
+            const hDate = new Date(h.date);
+            if (hDate < now || hDate > sixtyDaysFromNow) return;
+
+            const dayOfWeek = hDate.getDay();
+            const suggestionId = `midweek-${h.name}-${h.date}`;
+
+            if (this.dismissedSuggestions.includes(suggestionId)) return;
+
+            if (dayOfWeek >= 2 && dayOfWeek <= 4) {
+                suggestions.push({
+                    id: suggestionId,
+                    type: 'rest',
+                    text: `Mid-week break on <strong>${h.name}</strong> (${hDate.toLocaleDateString('default', { weekday: 'long' })})! A good chance for some mid-week rest.`
+                });
+            }
+        });
+
+        // 3. Holiday Cluster Detection (2+ holidays in 7 days)
+        // Sort holidays first
+        const sortedHolidays = [...data.holidays].sort((a, b) => new Date(a.date) - new Date(b.date));
+        for (let i = 0; i < sortedHolidays.length - 1; i++) {
+            const h1 = sortedHolidays[i];
+            const h2 = sortedHolidays[i + 1];
+            const d1 = new Date(h1.date);
+            const d2 = new Date(h2.date);
+
+            if (d1 < now || d1 > sixtyDaysFromNow) continue;
+
+            const diffDays = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+            if (diffDays > 0 && diffDays <= 7) {
+                const suggestionId = `cluster-${h1.name}-${h2.name}`;
+                if (this.dismissedSuggestions.includes(suggestionId)) continue;
+
+                suggestions.push({
+                    id: suggestionId,
+                    type: 'family',
+                    text: `A festive cluster! <strong>${h1.name}</strong> and <strong>${h2.name}</strong> are just days apart. Great time for family activities.`
+                });
+                break; // Only show one cluster suggestion to avoid spam
+            }
+        }
+
+        this.renderAISuggestions(suggestions.slice(0, 3)); // Show max 3
+    },
+
+    renderAISuggestions: function (suggestions) {
+        const container = document.getElementById('aiHolidaySuggestions');
+        if (!container) return;
+
+        if (suggestions.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+
+        container.style.display = 'block';
+        container.innerHTML = `
+            <div class="ai-suggestions-header">
+                <span class="ai-sparkle">✨</span>
+                <h4>AI Planning Suggestions</h4>
+            </div>
+            <div class="ai-suggestions-list">
+                ${suggestions.map(s => `
+                    <div class="ai-suggestion-card" data-id="${s.id}">
+                        <div class="s-content">
+                            <span class="s-icon">${s.type === 'travel' ? '✈️' : s.type === 'rest' ? '🛋️' : '👨‍👩‍👧‍👦'}</span>
+                            <p>${s.text}</p>
+                        </div>
+                        <button class="s-dismiss" onclick="HolidayWidget.dismissSuggestion('${s.id}')" title="Dismiss">×</button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    },
+
+    dismissSuggestion: function (suggestionId) {
+        if (!this.dismissedSuggestions.includes(suggestionId)) {
+            this.dismissedSuggestions.push(suggestionId);
+            this.saveDismissedSuggestions();
+        }
+
+        const card = document.querySelector(`.ai-suggestion-card[data-id="${suggestionId}"]`);
+        if (card) {
+            card.classList.add('dismissing');
+            setTimeout(() => {
+                if (this.holidaysData) {
+                    this.analyzeHolidaysForSuggestions(this.holidaysData);
+                }
+            }, 300);
+        }
+    },
+
+    updateSummaryCard: function (data) {
+        const countEl = document.getElementById('summaryHolidayCount');
+        const labelEl = document.getElementById('summaryHolidayLabel');
+        const badgeEl = document.getElementById('nextHolidayBadge');
+
+        if (countEl) countEl.textContent = data.totalCount;
+        if (labelEl) labelEl.textContent = `${data.year} Holidays in ${data.countryCode}`;
+
+        if (badgeEl) {
+            const next = this.findNextHoliday(data.holidays);
+            if (next) {
+                badgeEl.textContent = `Next: ${next.name} (${this.formatDateSimple(next.date)})`;
+            } else {
+                badgeEl.textContent = 'Year Complete';
+            }
+        }
+    },
+
+    findNextHoliday: function (holidays) {
+        if (!holidays) return null;
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        return holidays.find(h => new Date(h.date) >= now);
+    },
+
+    formatDateSimple: function (dateStr) {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('default', { month: 'short', day: 'numeric' });
+    },
+
+    fetchDefaultHolidays: function () {
+        // Try to sync with status bar location on load if available
+        const statusLoc = document.getElementById('statusLocationText');
+        if (statusLoc && statusLoc.textContent && statusLoc.textContent !== 'London') {
+            // We don't have the code here easily, so we'll rely on the weather update trigger
+            // but let's see if we can trigger a check
+            console.log("HolidayWidget: Checking for initial sync...");
+        }
+    }
+};
+
+// Initialize when ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => HolidayWidget.init());
+} else {
+    HolidayWidget.init();
+}

@@ -18,6 +18,8 @@ namespace TodoListApp.Services
         List<ViewModels.NewsItem> GetCachedNews();
         Task<List<CountryData>> SearchCountriesAsync(string query);
         Task<CountryData?> GetCountryDetailsAsync(string name);
+        Task<List<ViewModels.HolidayCountry>> GetAvailableCountriesAsync();
+        Task<ViewModels.HolidayData> GetPublicHolidaysAsync(string countryCode, int year);
     }
 
     public class WeatherData
@@ -28,6 +30,7 @@ namespace TodoListApp.Services
         public string LocalArea { get; set; } = string.Empty;
         public string State { get; set; } = string.Empty;
         public string Country { get; set; } = string.Empty;
+        public string CountryCode { get; set; } = string.Empty; // ISO-2
         public double Latitude { get; set; }
         public double Longitude { get; set; }
 

@@ -184,6 +184,20 @@ namespace TodoListApp.Controllers
             return Json(data);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAvailableCountriesJson()
+        {
+            var data = await _externalApiService.GetAvailableCountriesAsync();
+            return Json(data);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetHolidaysJson(string countryCode, int year)
+        {
+            var data = await _externalApiService.GetPublicHolidaysAsync(countryCode, year);
+            return Json(data);
+        }
+
         private int GetUserId()
         {
             var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);

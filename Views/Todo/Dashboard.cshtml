@@ -443,6 +443,20 @@
             </div>
         </div>
 
+        <!-- Area: Holiday (Calendar Card) -->
+        <div class="grid-area-holiday">
+            <div class="insight-card widget-holiday-live holiday loading" id="holidayWidgetCard" onclick="openDetails('holiday')">
+                <div class="widget-header-row">
+                    <span class="widget-title-sm">PUBLIC HOLIDAYS</span>
+                    <span class="holiday-next-pill" id="nextHolidayBadge">Loading...</span>
+                </div>
+                <div class="holiday-summary-content">
+                    <div class="holiday-count-large" id="summaryHolidayCount">--</div>
+                    <span class="holiday-label-sm" id="summaryHolidayLabel">Fetching @DateTime.Now.Year Holidays</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Area: Country (Explorer Card) -->
         <div class="grid-area-country">
             <div class="insight-card widget-country-live country" onclick="openDetails('country')">
@@ -567,6 +581,70 @@
             <span>Start small. Add your first habit above!</span>
         </div>
 
+    </div>
+</div>
+
+<!-- Holiday Details Panel -->
+<div class="details-panel" id="holidayDetails" style="max-width: 800px;">
+    <div class="panel-header">
+        <div class="header-info">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <h2>Holiday Calendar</h2>
+                <div class="view-toggle-pills">
+                    <button class="view-pill active" id="holidayListViewBtn" onclick="HolidayWidget.setView('list')" title="List View">📋</button>
+                    <button class="view-pill" id="holidayCalendarViewBtn" onclick="HolidayWidget.setView('calendar')" title="Calendar View">📅</button>
+                </div>
+            </div>
+            <p class="text-muted small">Explore public holidays worldwide</p>
+        </div>
+        <div class="calendar-nav-controls" id="holidayCalendarNav" style="display: none; align-items: center; gap: 0.75rem;">
+            <button class="nav-btn-glass" onclick="HolidayWidget.previousMonth()">‹</button>
+            <span class="current-month-year" id="holidayCalendarMonthYear" style="min-width: 140px; text-align: center; font-weight: 600; color: #a5b4fc;">January 2026</span>
+            <button class="nav-btn-glass" onclick="HolidayWidget.nextMonth()">›</button>
+        </div>
+        <button class="close-panel" onclick="closeDetails()">×</button>
+    </div>
+    <div class="panel-content holiday-expanded-container">
+        <div class="holiday-search-section">
+            <div class="input-with-button">
+                 <div class="custom-currency-select" style="width: 100%;">
+                    <div class="select-header" onclick="focusInput('holidayCountrySearch')">
+                        <span class="select-icon">🌍</span>
+                        <input type="text" class="btn-search-input" id="holidayCountrySearch" placeholder="Search country..." autocomplete="off" />
+                    </div>
+                    <div class="custom-options" id="holidayCountryOptions">
+                        <!-- Populated via JS -->
+                    </div>
+                    <select id="holidayCountrySelect" style="display: none;"></select>
+                </div>
+            </div>
+            <div class="year-selector">
+                <select id="holidayYearSelect" class="form-control">
+                    @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year + 5; y++)
+                    {
+                        <option value="@y" selected="@(y == DateTime.Now.Year)">@y</option>
+                    }
+                </select>
+            </div>
+        </div>
+        
+        <!-- AI Suggestions Section -->
+        <div id="aiHolidaySuggestions" class="ai-suggestions-container" style="display: none;">
+            <!-- Injected via JS -->
+        </div>
+
+        <div id="holidayLoadingState" class="news-loading-state" style="display: none;">
+            <div class="spinner"></div>
+            <p>Fetching holiday data...</p>
+        </div>
+
+        <div id="holidayList" class="holiday-list-grid">
+            <!-- Items injected via JS -->
+            <div class="initial-search-state">
+                <div class="search-icon-placeholder">📅</div>
+                <p>Select a country to view its public holidays</p>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1336,6 +1414,11 @@
             
             const cityInput = document.querySelector('input[name="city"]');
             if (cityInput) cityInput.value = data.city;
+
+            // Sync Holiday Widget
+            if (typeof HolidayWidget !== 'undefined' && HolidayWidget.syncWithWeather) {
+                HolidayWidget.syncWithWeather(data.country, data.countryCode);
+            }
 
             // --- LINKED LOGIC (Old Behavior) ---
             // When weather location changes, sync News context.
@@ -2521,5 +2604,6 @@
         }
     </script>
     <script src="~/js/habit-tracker.js"></script>
-<script src="~/js/emergency-widget.js"></script>
+    <script src="~/js/emergency-widget.js"></script>
+    <script src="~/js/holiday-widget.js"></script>
 }

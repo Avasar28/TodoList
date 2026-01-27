@@ -43,6 +43,7 @@ namespace TodoListApp.ViewModels
         public CurrencyConversionData Currency { get; set; } = new CurrencyConversionData();
         public TimeData TimeConversion { get; set; } = new TimeData();
         public NewsData News { get; set; } = new NewsData();
+        public HolidayData Holiday { get; set; } = new HolidayData();
 
         // Interactive Inputs
         public string SelectedCity { get; set; } = "";
@@ -50,6 +51,8 @@ namespace TodoListApp.ViewModels
         public string ToCurrency { get; set; } = "EUR";
         public string SourceTimeZone { get; set; } = ""; // Start empty
         public string TargetTimeZone { get; set; } = ""; // Start empty
+
+        public List<HolidayCountry> AvailableCountries { get; set; } = new List<HolidayCountry>();
 
         public static List<string> StaticAvailableCurrencies { get; set; } = new List<string> { 
             "USD", "EUR", "GBP", "JPY", "INR", "AUD", "CAD", "CHF", "CNY", "HKD", 

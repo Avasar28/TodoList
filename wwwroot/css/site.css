@@ -2867,7 +2867,6 @@ input:checked+.slider:before {
 
 
 /* --- Asymmetric Grid Layout --- */
-/* --- Asymmetric Grid Layout --- */
 .dashboard-grid-asymmetric {
   display: grid;
   /* Columns: 2fr (40%) and 3x 1fr (20%) with overflow protection */
@@ -2876,9 +2875,9 @@ input:checked+.slider:before {
   grid-template-rows: 220px minmax(300px, auto) auto;
   gap: 1.5rem;
   grid-template-areas:
-    "weather currency time country"
-    "weather news news emergency"
-    "habit habit habit habit";
+    "weather currency time holiday"
+    "weather news news country"
+    "emergency habit habit habit";
 
   /* Safety: Ensure container handles overflow */
   width: 100%;
@@ -2928,6 +2927,22 @@ input:checked+.slider:before {
   border-radius: 20px;
 }
 
+.grid-area-holiday {
+  grid-area: holiday;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.grid-area-emergency {
+  grid-area: emergency;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
 .grid-area-habit {
   grid-area: habit;
   min-width: 0;
@@ -2936,16 +2951,702 @@ input:checked+.slider:before {
   border-radius: 20px;
 }
 
+/* --- Holiday Widget Styles --- */
+.widget-holiday-live {
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.1) 0%, rgba(251, 146, 60, 0.05) 100%) !important;
+}
+
+.holiday-summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.holiday-count-large {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fb923c;
+}
+
+.holiday-label-sm {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.holiday-next-pill {
+  background: rgba(251, 146, 60, 0.15);
+  color: #fb923c;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+/* Holiday Expanded View */
+.holiday-expanded-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.holiday-search-section {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1.25rem;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+}
+
+.no-results-dropdown {
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.holiday-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(251, 146, 60, 0.1);
+  border-radius: 16px;
+  border: 1px solid rgba(251, 146, 60, 0.2);
+  margin-bottom: 0.5rem;
+}
+
+.holiday-results-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #fb923c;
+  font-weight: 700;
+}
+
+.holiday-total-badge {
+  background: #fb923c;
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.holiday-month-group {
+  margin-top: 1rem;
+}
+
+.month-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-left: 0.5rem;
+  border-left: 3px solid #fb923c;
+  margin-bottom: 1rem;
+}
+
+.holiday-list-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.month-holidays {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.holiday-item-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.holiday-item-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  transform: translateY(-2px);
+  border-color: rgba(251, 146, 60, 0.3);
+}
+
+.holiday-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.holiday-name {
+  font-weight: 600;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.holiday-local-name {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.holiday-date-badge {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+}
+
+.h-day {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fb923c;
+}
+
+.h-month {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.h-dow {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Holiday Reminders */
+.h-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reminder-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+
+.reminder-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.reminder-toggle-btn.active {
+  opacity: 1;
+  filter: grayscale(0);
+  text-shadow: 0 0 10px rgba(251, 146, 60, 0.4);
+}
+
+.holiday-item-card.has-reminder {
+  border-color: rgba(251, 146, 60, 0.4);
+  background: rgba(251, 146, 60, 0.05);
+}
+
+.reminder-config {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.reminder-config select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.holiday-reminder-banner {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.95), rgba(234, 88, 12, 0.95));
+  color: white;
+  padding: 1rem;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 10px 25px rgba(251, 146, 60, 0.3);
+  animation: bannerSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes bannerSlideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.holiday-reminder-banner.fade-out {
+  animation: bannerFadeOut 0.5s forwards;
+}
+
+@keyframes bannerFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+.banner-content p {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.banner-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 5px;
+  opacity: 0.7;
+}
+
+.banner-close:hover {
+  opacity: 1;
+}
+
+/* Upcoming Highlights */
+.section-divider-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  opacity: 0.8;
+  margin: 1.5rem 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.section-divider-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(129, 140, 248, 0.3), transparent);
+}
+
+.holiday-item-card.is-upcoming {
+  border-color: rgba(129, 140, 248, 0.4);
+}
+
+.holiday-item-card.highlight-card {
+  background: rgba(129, 140, 248, 0.08);
+  border-color: var(--accent-primary);
+  box-shadow: 0 4px 15px rgba(129, 140, 248, 0.15);
+}
+
+.holiday-item-card.is-past {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+  pointer-events: none;
+  /* Make past holidays non-interactive to reduce clutter */
+}
+
+.holiday-timing-badge {
+  margin-top: 0.5rem;
+}
+
+.h-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+.h-badge.today {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+}
+
+.h-badge.tomorrow {
+  background: rgba(251, 146, 60, 0.2);
+  color: #fb923c;
+  border: 1px solid rgba(251, 146, 60, 0.3);
+}
+
+.h-badge.this-week {
+  background: rgba(129, 140, 248, 0.2);
+  color: #a5b4fc;
+  border: 1px solid rgba(129, 140, 248, 0.3);
+}
+
+.h-badge.upcoming {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+/* Monthly Calendar View */
+.view-toggle-pills {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.view-pill {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 4px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-pill.active {
+  background: var(--accent-primary);
+  color: white;
+  box-shadow: 0 4px 10px rgba(129, 140, 248, 0.3);
+}
+
+.nav-btn-glass {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.2s;
+}
+
+.nav-btn-glass:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-primary);
+}
+
+.calendar-view-container {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.calendar-grid-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.calendar-grid-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
+}
+
+.calendar-day:hover:not(.empty) {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+  z-index: 2;
+}
+
+.calendar-day.empty {
+  background: none;
+  cursor: default;
+}
+
+.calendar-day.today {
+  background: rgba(129, 140, 248, 0.15);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  font-weight: 700;
+}
+
+.calendar-day.past {
+  opacity: 0.4;
+}
+
+.calendar-day.has-holiday {
+  border-color: rgba(251, 146, 60, 0.4);
+}
+
+.holiday-dot {
+  width: 5px;
+  height: 5px;
+  background: #fb923c;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 6px;
+  box-shadow: 0 0 5px #fb923c;
+}
+
+/* Tooltip Panel */
+.holiday-tooltip-panel {
+  position: fixed;
+  z-index: 2000;
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  width: 240px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  animation: tooltipZoom 0.2s ease-out;
+}
+
+@keyframes tooltipZoom {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tooltip-header {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 4px;
+}
+
+.tooltip-holiday-item {
+  margin-bottom: 0.5rem;
+}
+
+.tooltip-holiday-item:last-child {
+  margin-bottom: 0;
+}
+
+.t-name {
+  font-weight: 600;
+  color: white;
+  font-size: 0.9rem;
+}
+
+.t-local {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+.t-type {
+  font-size: 0.7rem;
+  color: #fb923c;
+  margin-top: 2px;
+}
+
+.tooltip-hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  margin: 0.5rem 0;
+}
+
+.tooltip-arrow {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(15, 23, 42, 0.9);
+}
+
+/* AI Holiday Suggestions */
+.ai-suggestions-container {
+  margin-bottom: 2rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.1), rgba(168, 85, 247, 0.05));
+  border-radius: 16px;
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  animation: fadeIn 0.5s ease-out;
+}
+
+.ai-suggestions-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.ai-suggestions-header h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #a5b4fc;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.ai-sparkle {
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 5px rgba(129, 140, 248, 0.6));
+}
+
+.ai-suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ai-suggestion-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-suggestion-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(129, 140, 248, 0.3);
+  transform: translateX(4px);
+}
+
+.ai-suggestion-card.dismissing {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.s-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.s-icon {
+  font-size: 1.25rem;
+  opacity: 0.9;
+}
+
+.ai-suggestion-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ai-suggestion-card p strong {
+  color: #a5b4fc;
+  font-weight: 600;
+}
+
+.s-dismiss {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.s-dismiss:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f87171;
+}
+
 /* Responsive Grid */
 @media (max-width: 1400px) {
   .dashboard-grid-asymmetric {
     grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: 240px 240px auto auto;
+    grid-template-rows: auto;
     grid-template-areas:
       "weather weather currency"
-      "country time time"
-      "news news news"
-      "habit habit habit";
+      "time holiday holiday"
+      "news news country"
+      "emergency habit habit";
   }
 }
 
@@ -2956,8 +3657,9 @@ input:checked+.slider:before {
     grid-template-areas:
       "weather weather"
       "currency time"
-      "country country"
+      "holiday country"
       "news news"
+      "emergency emergency"
       "habit habit";
   }
 }
@@ -2971,8 +3673,10 @@ input:checked+.slider:before {
       "weather"
       "currency"
       "time"
+      "holiday"
       "country"
       "news"
+      "emergency"
       "habit";
   }
 

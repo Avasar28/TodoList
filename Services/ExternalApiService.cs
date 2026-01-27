@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Microsoft.Extensions.Configuration;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using TodoListApp.ViewModels;
@@ -13,12 +14,14 @@ namespace TodoListApp.Services
     public class ExternalApiService : IExternalApiService
     {
         private readonly HttpClient _httpClient;
+        private readonly IConfiguration _config;
         private static List<NewsItem> _newsCache = new List<NewsItem>();
         private static JsonDocument? _tempCache;
 
-        public ExternalApiService(HttpClient httpClient)
+        public ExternalApiService(HttpClient httpClient, IConfiguration config)
         {
             _httpClient = httpClient;
+            _config = config;
         }
 
         public List<NewsItem> GetCachedNews() => _newsCache;
@@ -56,6 +59,7 @@ namespace TodoListApp.Services
                 data.District = admin2 ?? "";
                 data.State = admin1 ?? "";
                 data.Country = country ?? "";
+                data.CountryCode = result.TryGetProperty("country_code", out var cc) ? cc.GetString() ?? "" : "";
                 
                 // If name is a PIN/Number, use district/state as City
                 if (int.TryParse(name, out _)) {
@@ -77,6 +81,7 @@ namespace TodoListApp.Services
             string country = "";
             string localArea = "";
             string district = "";
+            string countryCode = "";
             
             try
             {
@@ -92,6 +97,7 @@ namespace TodoListApp.Services
                     cityName = root.TryGetProperty("city", out var c) ? c.GetString() ?? "" : "";
                     state = root.TryGetProperty("principalSubdivision", out var s) ? s.GetString() ?? "" : "";
                     country = root.TryGetProperty("countryName", out var cn) ? cn.GetString() ?? "" : "";
+                    countryCode = root.TryGetProperty("countryCode", out var cc) ? cc.GetString() ?? "" : "";
 
                     // Extract District from localityInfo if possible
                     if (root.TryGetProperty("localityInfo", out var info) && info.TryGetProperty("administrative", out var admin)) {
@@ -114,6 +120,7 @@ namespace TodoListApp.Services
                 data.District = district ?? "";
                 data.State = state ?? "";
                 data.Country = country ?? "";
+                data.CountryCode = countryCode ?? "";
                 
                 return data;
             }
@@ -1193,6 +1200,251 @@ namespace TodoListApp.Services
                     : "Not officially defined"
             };
         }
+        public async Task<List<ViewModels.HolidayCountry>> GetAvailableCountriesAsync()
+        {
+            try
+            {
+                // Fetch all countries from RestCountries to ensure a comprehensive list
+                var response = await _httpClient.GetAsync("https://restcountries.com/v3.1/all?fields=name,cca2,flag");
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(json);
+                    var countries = new List<ViewModels.HolidayCountry>();
+
+                    if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var el in doc.RootElement.EnumerateArray())
+                        {
+                            var nameObj = el.GetProperty("name");
+                            countries.Add(new ViewModels.HolidayCountry
+                            {
+                                CountryCode = el.GetProperty("cca2").GetString() ?? "",
+                                Name = nameObj.GetProperty("common").GetString() ?? "",
+                                FlagEmoji = el.GetProperty("flag").GetString() ?? ""
+                            });
+                        }
+                    }
+                    return countries.OrderBy(c => c.Name).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching comprehensive country list: {ex.Message}");
+            }
+
+            // Fallback to Nager.Date if RestCountries fails (though it has fewer countries)
+            try
+            {
+                var response = await _httpClient.GetAsync("https://date.nager.at/api/v3/AvailableCountries");
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    return JsonSerializer.Deserialize<List<ViewModels.HolidayCountry>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<ViewModels.HolidayCountry>();
+                }
+            }
+            catch { }
+
+            return new List<ViewModels.HolidayCountry>();
+        }
+
+        public async Task<ViewModels.HolidayData> GetPublicHolidaysAsync(string countryCode, int year)
+        {
+            var data = new ViewModels.HolidayData { CountryCode = countryCode, Year = year };
+            var apiKey = _config["HolidaySettings:ApiKey"];
+
+            try
+            {
+                // 1. Try Calendarific if API Key is provided (Covers 230+ countries)
+                if (!string.IsNullOrWhiteSpace(apiKey))
+                {
+                    var calendarificHolidays = await FetchFromCalendarificAsync(countryCode, year, apiKey);
+                    if (calendarificHolidays.Any())
+                    {
+                        data.Holidays = calendarificHolidays;
+                        data.TotalCount = calendarificHolidays.Count;
+                        return data;
+                    }
+                }
+
+                // 2. Try Nager.Date (Free, covers ~100 countries)
+                var nagerHolidays = await FetchFromNagerDateAsync(countryCode, year);
+                if (nagerHolidays.Any())
+                {
+                    data.Holidays = nagerHolidays;
+                    data.TotalCount = nagerHolidays.Count;
+                    return data;
+                }
+
+                // 3. Fallback to Google Calendar Public ICS (Zero-key, broad coverage)
+                var googleHolidays = await FetchFromGoogleCalendarAsync(countryCode, year);
+                data.Holidays = googleHolidays;
+                data.TotalCount = googleHolidays.Count;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error processing holidays for {countryCode}: {ex.Message}");
+            }
+            return data;
+        }
+
+        private async Task<List<ViewModels.HolidayItem>> FetchFromGoogleCalendarAsync(string countryCode, int year)
+        {
+            var holidays = new List<ViewModels.HolidayItem>();
+            try
+            {
+                // Mapping some common exceptions for Google Calendar IDs
+                var googleId = countryCode.ToUpper() switch
+                {
+                    "IN" => "indian",
+                    "US" => "usa",
+                    "GB" => "uk",
+                    "AU" => "australian",
+                    "CA" => "canadian",
+                    "DE" => "german",
+                    "FR" => "french",
+                    "IT" => "italian",
+                    "ES" => "spain",
+                    "JP" => "japanese",
+                    "CN" => "china",
+                    "RU" => "russian",
+                    "BR" => "brazilian",
+                    "MX" => "mexican",
+                    _ => countryCode.ToLower() // Most others Use iso2
+                };
+
+                var url = $"https://calendar.google.com/calendar/ical/en.{googleId}%23holiday%40group.v.calendar.google.com/public/basic.ics";
+                var response = await _httpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    
+                    // Simple ICS Parsing (Extracting SUMMARY and DTSTART)
+                    var events = content.Split(new[] { "BEGIN:VEVENT" }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var ev in events)
+                    {
+                        if (!ev.Contains("END:VEVENT")) continue;
+
+                        string summary = string.Empty;
+                        string dateStr = string.Empty;
+
+                        var lines = ev.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                        foreach (var line in lines)
+                        {
+                            if (line.StartsWith("SUMMARY:")) 
+                                summary = line.Substring(8).Replace("\\,", ",");
+                            else if (line.StartsWith("DTSTART;VALUE=DATE:")) 
+                                dateStr = line.Substring(19).Trim();
+                            else if (line.StartsWith("DTSTART:")) 
+                                dateStr = line.Substring(8).Trim();
+                        }
+
+                        if (!string.IsNullOrEmpty(summary) && !string.IsNullOrEmpty(dateStr) && dateStr.StartsWith(year.ToString()))
+                        {
+                            // Parse date from YYYYMMDD
+                            if (dateStr.Length >= 8)
+                            {
+                                var formattedDate = $"{dateStr.Substring(0, 4)}-{dateStr.Substring(4, 2)}-{dateStr.Substring(6, 2)}";
+                                if (DateTime.TryParse(formattedDate, out var dt))
+                                {
+                                    holidays.Add(new ViewModels.HolidayItem
+                                    {
+                                        Name = summary,
+                                        LocalName = summary,
+                                        Date = formattedDate,
+                                        DayOfWeek = dt.DayOfWeek.ToString(),
+                                        Types = summary.ToLower().Contains("observance") ? new List<string> { "Observance" } : new List<string> { "Public" }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Google Calendar Fetch Error: {ex.Message}");
+            }
+            return holidays.OrderBy(h => h.Date).ToList();
+        }
+
+        private async Task<List<ViewModels.HolidayItem>> FetchFromCalendarificAsync(string countryCode, int year, string apiKey)
+        {
+            var holidays = new List<ViewModels.HolidayItem>();
+            try
+            {
+                var url = $"https://calendarific.com/api/v2/holidays?&api_key={apiKey}&country={countryCode}&year={year}";
+                var response = await _httpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(content);
+                    if (doc.RootElement.TryGetProperty("response", out var resp) && resp.TryGetProperty("holidays", out var hlist) && hlist.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var el in hlist.EnumerateArray())
+                        {
+                            var hDate = el.GetProperty("date").GetProperty("iso").GetString() ?? "";
+                            var hItem = new ViewModels.HolidayItem
+                            {
+                                Name = el.GetProperty("name").GetString() ?? "",
+                                LocalName = el.GetProperty("name").GetString() ?? "",
+                                Date = hDate.Contains("T") ? hDate.Split('T')[0] : hDate,
+                                Types = new List<string>()
+                            };
+
+                            if (el.TryGetProperty("type", out var tArray) && tArray.ValueKind == JsonValueKind.Array)
+                            {
+                                hItem.Types = tArray.EnumerateArray().Select(t => t.GetString() ?? "").ToList();
+                            }
+
+                            if (DateTime.TryParse(hItem.Date, out var dt))
+                            {
+                                hItem.DayOfWeek = dt.DayOfWeek.ToString();
+                            }
+                            holidays.Add(hItem);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Calendarific API Error: {ex.Message}");
+            }
+            return holidays;
+        }
+
+        private async Task<List<ViewModels.HolidayItem>> FetchFromNagerDateAsync(string countryCode, int year)
+        {
+            var holidays = new List<ViewModels.HolidayItem>();
+            try
+            {
+                var response = await _httpClient.GetAsync($"https://date.nager.at/api/v3/PublicHolidays/{year}/{countryCode}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    if (string.IsNullOrWhiteSpace(content)) return holidays;
+
+                    var trimmed = content.TrimStart();
+                    if (!trimmed.StartsWith("[")) return holidays;
+
+                    holidays = JsonSerializer.Deserialize<List<ViewModels.HolidayItem>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<ViewModels.HolidayItem>();
+                    
+                    foreach (var h in holidays)
+                    {
+                        if (DateTime.TryParse(h.Date, out var dt))
+                        {
+                            h.DayOfWeek = dt.DayOfWeek.ToString();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Nager.Date API Error: {ex.Message}");
+            }
+            return holidays;
+        }
+
         private string GetImageByKeywords(string text)
         {
             text = text.ToLowerInvariant();
