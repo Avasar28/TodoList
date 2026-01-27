@@ -493,6 +493,62 @@
             </div>
         </div>
 
+        <!-- Area: Habit Tracker (Summary Widget) -->
+        <div class="grid-area-habit">
+             <div class="insight-card widget-habit-tracker habit" id="habitWidget" onclick="openDetails('habit')">
+                <div class="habit-summary-content">
+                    <div class="habit-summary-header">
+                        <span class="widget-title-sm">DAILY HABITS</span>
+                        <div class="summary-badges">
+                            <span class="badge-pill" id="habitSummaryCount">0 Active</span>
+                        </div>
+                    </div>
+                    
+                    <div class="habit-summary-hero">
+                        <div class="hero-left">
+                            <span class="hero-stat-label">Best Streak</span>
+                            <span class="hero-stat-val" id="habitSummaryBest">0</span>
+                        </div>
+                         <div class="hero-right">
+                             <span class="hero-stat-label">Today's Progress</span>
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" id="habitSummaryProgress" style="width: 0%"></div>
+                            </div>
+                         </div>
+                    </div>
+
+                    <div class="habit-summary-footer">
+                        <span class="click-hint">Click to manage habits & streaks →</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Habit Tracker Details Panel -->
+<div class="details-panel" id="habitDetails" style="max-width: 600px;">
+    <div class="panel-header">
+        <h2>My Habits</h2>
+        <button class="close-panel" onclick="closeDetails()">×</button>
+    </div>
+    <div class="panel-content">
+        
+        <div class="habit-controls-panel">
+            <input type="text" id="newHabitInput" placeholder="Add a new habit..." class="form-control" />
+            <button id="addHabitBtn" class="btn-primary">Add</button>
+        </div>
+
+        <div class="habit-list-container" id="habitList" style="margin-top: 1.5rem;">
+            <!-- Items go here -->
+        </div>
+
+        <div id="habitEmptyState" class="empty-state" style="display:none; padding: 3rem 1rem;">
+             <div class="empty-icon">🌱</div>
+            <span>Start small. Add your first habit above!</span>
+        </div>
+
     </div>
 </div>
 
@@ -2419,4 +2475,5 @@
             initializeAll();
         }
     </script>
+    <script src="~/js/habit-tracker.js"></script>
 }

@@ -2872,12 +2872,13 @@ input:checked+.slider:before {
   display: grid;
   /* Columns: 2fr (40%) and 3x 1fr (20%) with overflow protection */
   grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
-  /* Rows: Fixed height (220px), Min-Height (300px) */
-  grid-template-rows: 220px minmax(300px, auto);
+  /* Rows: Fixed height (220px), Min-Height (300px), Auto for Habit */
+  grid-template-rows: 220px minmax(300px, auto) auto;
   gap: 1.5rem;
   grid-template-areas:
     "weather currency time country"
-    "weather news news news";
+    "weather news news news"
+    "habit habit habit habit";
 
   /* Safety: Ensure container handles overflow */
   width: 100%;
@@ -2927,17 +2928,24 @@ input:checked+.slider:before {
   border-radius: 20px;
 }
 
-
+.grid-area-habit {
+  grid-area: habit;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 20px;
+}
 
 /* Responsive Grid */
 @media (max-width: 1400px) {
   .dashboard-grid-asymmetric {
     grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: 240px 240px auto;
+    grid-template-rows: 240px 240px auto auto;
     grid-template-areas:
       "weather weather currency"
       "country time time"
-      "news news news";
+      "news news news"
+      "habit habit habit";
   }
 }
 
@@ -2949,7 +2957,8 @@ input:checked+.slider:before {
       "weather weather"
       "currency time"
       "country country"
-      "news news";
+      "news news"
+      "habit habit";
   }
 }
 
@@ -2963,7 +2972,8 @@ input:checked+.slider:before {
       "currency"
       "time"
       "country"
-      "news";
+      "news"
+      "habit";
   }
 
   .dashboard-status-strip {
@@ -3512,4 +3522,346 @@ input:checked+.slider:before {
 
 .btn-primary:hover {
   filter: brightness(1.1);
+}
+
+/* 6. HABIT TRACKER WIDGET */
+.widget-habit-tracker {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  padding: 1.5rem;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  /* Important for summary card layout */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: background 0.3s ease, border-color 0.3s ease;
+  cursor: pointer;
+  /* Clickable */
+}
+
+/* Summary Card Styling */
+.habit-summary-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.habit-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.habit-summary-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+}
+
+.hero-left,
+.hero-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hero-right {
+  align-items: flex-end;
+  width: 60%;
+}
+
+.hero-stat-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.hero-stat-val {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fbbf24;
+  /* Gold for streak */
+  text-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+}
+
+.mini-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.mini-progress-fill {
+  height: 100%;
+  background: var(--success-color);
+  border-radius: 3px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.habit-summary-footer {
+  border-top: 1px solid var(--glass-border);
+  padding-top: 1rem;
+  text-align: center;
+}
+
+.click-hint {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.widget-habit-tracker:hover .click-hint {
+  color: var(--accent-color);
+}
+
+
+/* Detailed Panel Controls */
+.habit-controls-panel {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.habit-controls-panel input {
+  flex: 1;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.05);
+  /* Slightly lighter in modal */
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.habit-controls-panel input:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 4px var(--accent-glow);
+  outline: none;
+}
+
+.habit-controls-panel button {
+  padding: 0 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+/* Reusing existing .habit-list-container, .habit-item etc. from previous step */
+.habit-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 60vh;
+  /* Taller in modal */
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  /* Space for scrollbar */
+}
+
+.habit-item {
+  background: rgba(255, 255, 255, 0.03);
+  /* Subtle overlay works on both if low opacity */
+  /* For light theme, we might want it slightly darker or standard glass */
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+  animation: slideUp 0.3s ease-out;
+}
+
+.habit-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  /* Fallback */
+  border-color: var(--accent-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.habit-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.habit-check-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-secondary);
+  /* Checkmark color when unchecked/hovered */
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.habit-check-btn:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.habit-item.completed .habit-check-btn {
+  background: var(--success-color);
+  border-color: var(--success-color);
+  color: white;
+  /* Always white on success bg */
+}
+
+/* Pause State styling update */
+.habit-item.paused {
+  opacity: 0.6;
+  background: rgba(0, 0, 0, 0.05);
+  border-style: dashed;
+}
+
+.habit-item.paused .habit-check-btn {
+  cursor: not-allowed;
+  opacity: 0.5;
+  border-color: var(--glass-border);
+}
+
+.habit-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.habit-name {
+  font-weight: 500;
+  font-size: 1rem;
+  color: var(--text-primary);
+  transition: color 0.3s;
+}
+
+.habit-item.completed .habit-name {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.habit-stats {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.streak-pill {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.streak-pill.active {
+  color: #fbbf24;
+  /* Keep Gold for active streak fire */
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.best-pill {
+  color: var(--text-secondary);
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.best-pill::before {
+  content: "💪";
+  /* Or Tropy */
+  font-size: 0.8rem;
+}
+
+.habit-meta {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.weekly-progress {
+  display: flex;
+  gap: 5px;
+}
+
+.progress-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--glass-border);
+  transition: all 0.3s;
+}
+
+.progress-dot.done {
+  background: var(--success-color);
+  box-shadow: 0 0 6px var(--success-color);
+  transform: scale(1.2);
+}
+
+.habit-actions {
+  display: flex;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.habit-item:hover .habit-actions {
+  opacity: 1;
+}
+
+.action-icon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-icon:hover {
+  color: var(--text-primary);
+  transform: scale(1.1);
+}
+
+.action-icon.delete:hover {
+  color: var(--danger-color);
+  filter: drop-shadow(0 0 5px rgba(248, 113, 113, 0.4));
+}
+
+/* Header Text Color Inheritance */
+.habit-stats-header {
+  color: var(--text-secondary) !important;
+  /* Force override inline style if needed, though inline should be removed in js/html ideally */
 }
