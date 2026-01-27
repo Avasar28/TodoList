@@ -27,7 +27,11 @@
                     <option value="ja">🇯🇵 Japanese</option>
                     <option value="ru">🇷🇺 Russian</option>
                     <option value="ar">🇸🇦 Arabic</option>
+                    <option value="ja">🇯🇵 Japanese</option>
+                    <option value="ru">🇷🇺 Russian</option>
+                    <option value="ar">🇸🇦 Arabic</option>
                 </select>
+                <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Theme">🌙</button>
                 <a href="/Account/Logout" class="logout-link" data-translate="true">Logout</a>
             </div>
         </div>
@@ -39,6 +43,7 @@
         </main>
     </div>
     <script src="~/js/translation-system.js" asp-append-version="true"></script>
+    <script src="~/js/theme-toggle.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

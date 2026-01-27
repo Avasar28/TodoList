@@ -1,24 +1,94 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.06);
-  --text-primary: #eceff4;
-  --text-secondary: rgba(236, 239, 244, 0.6);
-  --accent-color: #818cf8;
-  /* Soft Indigo */
-  --accent-glow: rgba(99, 102, 241, 0.15);
-  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+  /* --- Global Variables (Dark Theme Default) --- */
+
+  /* Brand Colors */
+  --bg-base: #036564;
+  /* Deep Teal */
+  --bg-gradient-start: #036564;
+  --bg-gradient-end: #023e3e;
+  /* Darker teal for gradient */
+
+  /* Surfaces - Rule: glass surface based on #036564 */
+  --neutral-surface: #036564;
+  --glass-bg: rgba(3, 101, 100, 0.6);
+  /* Translucent Deep Teal */
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Text */
+  --text-primary: #EAF4F3;
+  /* Soft White/Teal */
+  --text-secondary: rgba(234, 244, 243, 0.6);
+
+  /* Buttons & Accents */
+  /* Primary Buttons */
+  --btn-primary-bg: #4FB3AE;
+  --btn-primary-text: #033F3D;
+
+  /* Secondary/Outline Button Vars */
+  --btn-secondary-border: rgba(3, 101, 100, 0.4);
+  --btn-secondary-hover: rgba(3, 101, 100, 0.08);
+
+  /* Accent Elements (Icons, Badges) */
+  --accent-color: #6ECBC6;
+  --accent-glow: rgba(110, 203, 198, 0.35);
+  --accent-gradient: linear-gradient(135deg, #4FB3AE 0%, #6ECBC6 100%);
+
+  /* Toggle Glow (Golden/Yellow for Dark Theme) */
+  --toggle-glow: rgba(251, 191, 36, 0.5);
+
   --danger-color: #f87171;
   --success-color: #34d399;
-  --border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Light Theme Override */
+/* Light Theme Override */
+[data-theme="light"] {
+  /* Brand Colors */
+  --bg-base: #F5E8D8;
+  /* Warm Beige */
+  --bg-gradient-start: #F5E8D8;
+  --bg-gradient-end: #e8dbcb;
+  /* Slightly darker beige */
+
+  /* Surfaces */
+  --neutral-surface: #FBF7F2;
+  /* Cream/Off-white */
+  --glass-bg: rgba(251, 247, 242, 0.6);
+  /* Translucent Cream */
+  --glass-border: rgba(3, 101, 100, 0.12);
+  /* Teal border */
+
+  /* Text */
+  --text-primary: #1F3A3A;
+  /* Dark Teal */
+  --text-secondary: rgba(31, 58, 58, 0.75);
+
+  /* Buttons & Accents */
+  /* Primary Buttons (Inverted for Light Theme) */
+  --btn-primary-bg: #036564;
+  --btn-primary-text: #F5E8D8;
+
+  /* Accents */
+  --accent-color: #036564;
+  /* Keep text accent readable (Dark Teal) */
+  --accent-glow: rgba(3, 101, 100, 0.15);
+  /* Secondary Links */
+  --link-color: #024b4a;
+
+  --accent-gradient: linear-gradient(135deg, #036564 0%, #047877 100%);
+
+  /* Toggle Glow (Blueish for Light Theme) */
+  --toggle-glow: rgba(56, 189, 248, 0.5);
 }
 
 body {
-  background-color: #0f172a;
-  background: radial-gradient(circle at top center, #1e293b 0%, #0f172a 100%);
+  background-color: var(--bg-base);
+  background: radial-gradient(circle at top center, var(--bg-gradient-end) 0%, var(--bg-base) 100%);
   background-attachment: fixed;
   color: var(--text-primary);
+  /* Use variable for body text */
   font-family: 'Outfit', sans-serif;
   margin: 0;
   min-height: 100vh;
@@ -28,6 +98,9 @@ body {
   padding-top: 5vh;
   letter-spacing: 0.01em;
   /* Slight airiness */
+
+  /* Global Smooth Transition for Theme Switch */
+  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .container {
@@ -79,7 +152,9 @@ header {
   background: transparent;
   border: none;
   padding: 0.75rem 0;
+  padding: 0.75rem 0;
   color: var(--text-primary);
+  /* Use variable */
   outline: none;
   font-size: 0.95rem;
 }
@@ -137,7 +212,8 @@ h1 {
 }
 
 .todo-container {
-  background: rgba(30, 41, 59, 0.4);
+  background: var(--glass-bg);
+  /* Use theme variable */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 24px;
@@ -173,11 +249,11 @@ h1 {
 
 .add-form-meta input,
 .add-form-meta select {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-size: 0.85rem;
   outline: none;
 }
@@ -407,11 +483,11 @@ h1 {
 
 .form-control {
   width: 100%;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   padding: 1rem;
-  color: white;
+  color: var(--text-primary);
   font-size: 1rem;
   font-family: inherit;
   transition: border-color 0.2s;
@@ -432,7 +508,8 @@ h1 {
 }
 
 .auth-card {
-  background: rgba(30, 41, 59, 0.4);
+  background: var(--glass-bg);
+  /* Use theme variable */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   padding: 2.5rem;
@@ -483,9 +560,9 @@ h1 {
 .country-explorer .form-control {
   padding-left: 2.8rem;
   height: 3.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
   font-size: 1.1rem;
 }
 
@@ -722,11 +799,11 @@ h1 {
 }
 
 .btn-auth {
-  background: var(--accent-gradient);
+  background: var(--btn-primary-bg);
   border: none;
   padding: 1rem;
   border-radius: 12px;
-  color: white;
+  color: var(--btn-primary-text);
   font-weight: 600;
   cursor: pointer;
   margin-top: 1rem;
@@ -746,7 +823,7 @@ h1 {
 }
 
 .auth-footer a {
-  color: var(--accent-color);
+  color: var(--link-color, var(--accent-color));
   text-decoration: none;
   font-weight: 500;
 }
@@ -763,7 +840,7 @@ h1 {
 
 .forgot-link {
   font-size: 0.8rem;
-  color: var(--accent-color);
+  color: var(--link-color, var(--accent-color));
   text-decoration: none;
 }
 
@@ -800,12 +877,12 @@ h1 {
   display: flex;
   gap: 2rem;
   align-items: center;
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--glass-bg);
   padding: 0.75rem 2rem;
   border-radius: 50px;
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
   z-index: 1000;
   width: fit-content;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
@@ -814,7 +891,7 @@ h1 {
 .nav-links {
   display: flex;
   gap: 1.5rem;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid var(--glass-border);
   padding-right: 1.5rem;
 }
 
@@ -902,7 +979,8 @@ h1 {
 }
 
 .dashboard-section {
-  background: rgba(30, 41, 59, 0.4);
+  background: var(--glass-bg);
+  /* Use theme variable */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 24px;
@@ -1179,9 +1257,9 @@ h1 {
 }
 
 .btn-primary-sm {
-  background: var(--accent-gradient);
+  background: var(--btn-primary-bg);
   border: none;
-  color: white;
+  color: var(--btn-primary-text);
   padding: 0 1.25rem;
   border-radius: 12px;
   font-weight: 600;
@@ -1191,9 +1269,9 @@ h1 {
 }
 
 .btn-secondary-sm {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
-  color: white;
+  background: transparent;
+  border: 1px solid var(--btn-secondary-border);
+  color: var(--text-primary);
   padding: 0 0.75rem;
   border-radius: 12px;
   cursor: pointer;
@@ -1205,7 +1283,7 @@ h1 {
 }
 
 .btn-secondary-sm:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--btn-secondary-hover);
   border-color: var(--accent-color);
 }
 
@@ -1242,7 +1320,7 @@ h1 {
 .location-header h3 {
   margin: 0;
   font-size: 1.8rem;
-  color: white;
+  color: var(--text-primary);
 }
 
 .location-header p {
@@ -1284,7 +1362,7 @@ h1 {
 .metric-card .m-value {
   font-size: 1.25rem;
   font-weight: 600;
-  color: white;
+  color: var(--text-primary);
 }
 
 .metric-card .m-sub {
@@ -1324,8 +1402,8 @@ h1 {
 .aqi-level,
 .uv-risk {
   font-size: 0.9rem;
-  color: white;
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  background: var(--glass-bg);
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
 }
@@ -1348,7 +1426,7 @@ h1 {
 
 .astro-item strong {
   font-size: 1rem;
-  color: white;
+  color: var(--text-primary);
 }
 
 .glass-hr {
@@ -1374,7 +1452,7 @@ h1 {
 }
 
 .moon-text strong {
-  color: white;
+  color: var(--text-primary);
   font-size: 0.9rem;
 }
 
@@ -1440,7 +1518,7 @@ h1 {
 }
 
 .forecast-item {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--glass-bg);
   padding: 1rem;
   border-radius: 16px;
   text-align: center;
@@ -1528,8 +1606,8 @@ h1 {
 }
 
 .btn-secondary-glass {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
+  background: transparent;
+  border: 1px solid var(--btn-secondary-border);
   color: var(--text-secondary);
   padding: 0.6rem 1.25rem;
   border-radius: 50px;
@@ -1542,9 +1620,9 @@ h1 {
 }
 
 .btn-secondary-glass:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--btn-secondary-hover);
+  color: var(--text-primary);
+  border-color: var(--accent-color);
 }
 
 .flex-1 {
@@ -1624,7 +1702,7 @@ h1 {
 }
 
 .currency-rates span {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg);
   padding: 2px 8px;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1652,11 +1730,11 @@ h1 {
 .widget-input,
 .widget-select {
   width: 100%;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-bg);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
-  color: white;
+  color: var(--text-primary);
   font-size: 0.9rem;
   outline: none;
   transition: all 0.2s;
@@ -1756,8 +1834,8 @@ h1 {
 }
 
 .btn-secondary-glass {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid var(--glass-border);
+  background: transparent;
+  border: 1px solid var(--btn-secondary-border);
   color: var(--text-secondary);
   padding: 0.5rem 1rem;
   border-radius: 8px;
@@ -1766,7 +1844,7 @@ h1 {
 }
 
 .btn-secondary-glass:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--btn-secondary-hover);
   color: var(--text-primary);
 }
 
@@ -1782,7 +1860,7 @@ h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg);
   padding: 0.5rem;
   border-radius: 10px;
 }
@@ -1891,7 +1969,7 @@ h1 {
   top: calc(100% + 10px);
   left: 0;
   right: 0;
-  background: #111827;
+  background: var(--bg-base);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   max-height: 280px;
@@ -2907,9 +2985,9 @@ input:checked+.slider:before {
 /* Global Widget Enhancements */
 /* Global Widget Enhancements */
 .insight-card {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
   /* Slightly crisper border */
-  background: rgba(15, 23, 42, 0.85);
+  background: var(--glass-bg);
   /* Darker, more opaque base */
   backdrop-filter: blur(8px);
   /* Subtle blur */
@@ -2946,7 +3024,7 @@ input:checked+.slider:before {
 
 /* 1. WEATHER WIDGET (Atmospheric) */
 .widget-weather-live {
-  background: radial-gradient(circle at top right, #4f46e5 0%, #1e1b4b 100%);
+  background: var(--glass-bg);
   display: flex;
   flex-direction: column;
   border-radius: 20px;
@@ -3356,4 +3434,82 @@ input:checked+.slider:before {
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+/* --- Theme Toggle Button --- */
+.theme-toggle-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 0.5rem;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(15deg) scale(1.1);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 15px var(--toggle-glow);
+}
+
+/* --- Table Styles (Theme Aware) --- */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--text-primary);
+}
+
+.table th {
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 1rem 0;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table td {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--glass-border);
+  vertical-align: middle;
+  font-size: 0.95rem;
+}
+
+/* Helper Classes */
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.cell-truncate {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Bootstrap Override */
+.btn-primary {
+  background-color: var(--btn-primary-bg) !important;
+  border-color: var(--btn-primary-bg) !important;
+  color: var(--btn-primary-text) !important;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
 }
