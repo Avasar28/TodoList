@@ -460,6 +460,7 @@
         </div>
 
         <!-- Area: News (Timeline Feed) -->
+
         <div class="grid-area-news">
              <div class="insight-card widget-news-feed news loading" id="newsWidgetCard" onclick="openDetails('news')">
                 <div class="widget-header-feed">
@@ -489,6 +490,23 @@
                             <span class="headline-text">Latest technology trends and updates...</span>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Area: Emergency (SOS Widget) -->
+        <div class="grid-area-emergency">
+            <div class="insight-card widget-emergency emergency" onclick="openDetails('emergency')">
+                <div class="widget-header-row">
+                    <span class="widget-title-sm" style="color: #f87171;">EMERGENCY SOS</span>
+                    <span class="pulse-dot"></span>
+                </div>
+                <div class="emergency-visual">
+                    <div class="sos-icon">🆘</div>
+                    <span class="sos-label">Help Center</span>
+                </div>
+                <div class="emergency-action-hint">
+                    Tap for Numbers
                 </div>
             </div>
         </div>
@@ -777,6 +795,23 @@
                     <canvas id="currencyChartFull"></canvas>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Emergency Details Panel -->
+<div class="details-panel" id="emergencyDetails">
+    <div class="panel-header">
+        <h2 style="color: #f87171;">Emergency Numbers</h2>
+        <button class="close-panel" onclick="closeDetails()">×</button>
+    </div>
+    <div class="panel-content">
+        <div class="emergency-search-hero">
+            <input type="text" id="emergencySearchInput" placeholder="Type country name..." class="form-control" autocomplete="off" />
+        </div>
+        
+        <div class="emergency-results-grid" id="emergencyResults">
+            <!-- Results populate here -->
         </div>
     </div>
 </div>
@@ -1309,6 +1344,16 @@
                 newsInput.value = data.city;
                 refreshNewsData(); 
             }
+
+            // --- GLOBAL SIGNAL ---
+            // Notify other widgets (Emergency, etc.) about location update
+            window.dispatchEvent(new CustomEvent('weather-location-updated', { 
+                detail: { 
+                    city: data.city, 
+                    country: data.country,
+                    countryCode: data.countryCode // Might be undefined, but helpful if present
+                } 
+            }));
         }
 
         // Auto-Geolocate logic moved to initDashboard to avoid redundancy
@@ -2476,4 +2521,5 @@
         }
     </script>
     <script src="~/js/habit-tracker.js"></script>
+<script src="~/js/emergency-widget.js"></script>
 }

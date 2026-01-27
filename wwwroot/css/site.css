@@ -2877,7 +2877,7 @@ input:checked+.slider:before {
   gap: 1.5rem;
   grid-template-areas:
     "weather currency time country"
-    "weather news news news"
+    "weather news news emergency"
     "habit habit habit habit";
 
   /* Safety: Ensure container handles overflow */
@@ -3864,4 +3864,542 @@ input:checked+.slider:before {
 .habit-stats-header {
   color: var(--text-secondary) !important;
   /* Force override inline style if needed, though inline should be removed in js/html ideally */
+}
+
+/* --- EMERGENCY WIDGET STYLES (Theme Aware) --- */
+.grid-area-emergency {
+  grid-area: emergency;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.widget-emergency {
+  /* Base Glass - Matches Dashboard */
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+
+  /* Subtle Red Tint via Gradient Overlay */
+  background-image: linear-gradient(135deg, rgba(248, 113, 113, 0.1) 0%, transparent 100%);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.widget-emergency:hover {
+  border-color: #f87171;
+  box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.3);
+  transform: translateY(-2px);
+}
+
+.emergency-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sos-icon {
+  font-size: 3.5rem;
+  margin-bottom: 0.5rem;
+  animation: pulse 2s infinite;
+  filter: drop-shadow(0 0 10px rgba(248, 113, 113, 0.4));
+}
+
+.sos-label {
+  font-size: 1rem;
+  color: #fca5a5;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Light Theme overrides for Widget Card */
+[data-theme="light"] .sos-label {
+  color: #dc2626;
+}
+
+[data-theme="light"] .widget-emergency:hover {
+  box-shadow: 0 10px 25px -5px rgba(220, 38, 38, 0.2);
+}
+
+.emergency-action-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: auto;
+}
+
+/* Emergency Details Panel */
+.emergency-search-hero {
+  margin-bottom: 2rem;
+}
+
+.emergency-search-hero input {
+  font-size: 1.2rem;
+  padding: 1rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+}
+
+.emergency-search-hero input:focus {
+  border-color: #f87171;
+  box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.15);
+  outline: none;
+}
+
+/* Common Item Styles (Glass Cards) */
+.emergency-item,
+.suggestion-item {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.suggestion-item {
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.suggestion-item:hover {
+  background: var(--btn-secondary-hover);
+  /* Reuse existing hover var */
+  border-color: #f87171;
+  transform: translateX(5px);
+}
+
+/* Light Theme Item overrides */
+[data-theme="light"] .emergency-item,
+[data-theme="light"] .suggestion-item {
+  background: rgba(255, 255, 255, 0.6);
+  /* Slightly more opaque on light */
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .suggestion-item:hover {
+  background: white;
+}
+
+.emergency-country-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 1rem;
+}
+
+.flag-lg {
+  font-size: 2.5rem;
+}
+
+.country-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.emergency-numbers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.emergency-number-box {
+  background: rgba(0, 0, 0, 0.2);
+  /* Fallback Dark */
+  padding: 1rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid var(--glass-border);
+  transition: all 0.2s;
+}
+
+/* Theme Specific Box backgrounds */
+.emergency-number-box {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="light"] .emergency-number-box {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.emergency-number-box:hover {
+  transform: translateY(-3px);
+}
+
+/* Service Colors */
+.emergency-number-box.police {
+  border-top: 4px solid #60a5fa;
+}
+
+.emergency-number-box.fire {
+  border-top: 4px solid #f87171;
+}
+
+.emergency-number-box.ambulance {
+  border-top: 4px solid #34d399;
+}
+
+/* Extended Types */
+.emergency-number-box.alert {
+  border-top: 4px solid #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.emergency-number-box.helpline {
+  border-top: 4px solid #a855f7;
+}
+
+.emergency-number-box.disaster {
+  border-top: 4px solid #f97316;
+}
+
+.emergency-number-box.coast {
+  border-top: 4px solid #38bdf8;
+}
+
+/* Light Theme Adjustments for Alert Background */
+[data-theme="light"] .emergency-number-box.alert {
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.service-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.service-name {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.service-num {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.service-num:hover {
+  color: #f87171;
+  text-decoration: underline;
+}
+
+/* Typography & Helpers */
+.empty-state-small,
+.empty-state-friendly {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 2rem;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.initial-search-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  opacity: 0.6;
+  color: var(--text-secondary);
+}
+
+.search-icon-placeholder {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.common-flags {
+  margin-top: 1rem;
+  font-size: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  opacity: 0.5;
+}
+
+/* Action Buttons for Emergency Widget */
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.action-row.mobile {
+  justify-content: space-between;
+}
+
+.action-row.desktop {
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.btn-action {
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+/* Call Button (Mobile Primary) */
+.btn-action.call {
+  background: #34d399;
+  /* Green */
+  color: #064e3b;
+  flex: 1;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(52, 211, 153, 0.3);
+}
+
+.btn-action.call:hover {
+  background: #10b981;
+  transform: translateY(-1px);
+}
+
+/* Copy Button (Desktop Primary) */
+.btn-action.copy {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+  width: 100%;
+}
+
+.btn-action.copy:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Copy Icon Only (Mobile Secondary) */
+.btn-action.copy-icon-only {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  width: 40px;
+  padding: 0;
+  flex: 0 0 40px;
+  /* Fixed width */
+}
+
+/* Copied State */
+.btn-action.copied {
+  background: #10b981 !important;
+  /* Green regardless of theme */
+  color: white !important;
+}
+
+/* Large Number Text (Desktop) */
+.number-text-large {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+}
+
+/* Light Theme Overrides */
+[data-theme="light"] .btn-action.copy {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .btn-action.copy:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Suggestions List */
+.emergency-suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  animation: fadeIn 0.3s;
+}
+
+.sugg-flag {
+  font-size: 1.5rem;
+}
+
+.sugg-name {
+  flex: 1;
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.sugg-code {
+  font-family: monospace;
+  opacity: 0.5;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.sugg-arrow {
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.2s;
+  color: #f87171;
+}
+
+.suggestion-item:hover .sugg-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Result Header */
+.result-header-large {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 1rem;
+}
+
+.back-link {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.back-link:hover {
+  color: var(--text-primary);
+}
+
+.rh-main {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.rh-flag {
+  font-size: 3.5rem;
+}
+
+.rh-text h3 {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.service-count-badge {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+/* Copy Button */
+.number-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.copy-btn {
+  background: var(--glass-border);
+  border: none;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-secondary);
+}
+
+.copy-btn:hover {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  transform: scale(1.1);
+}
+
+.copy-btn.copied {
+  background: var(--success-color);
+  color: white;
+}
+
+/* Friendly Empty State */
+.empty-state-friendly h4 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-friendly p {
+  color: var(--text-secondary);
+}
+
+/* Animations */
+.animation-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.animation-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+.empty-state-small {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 2rem;
+}
+
+.initial-search-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  opacity: 0.6;
+}
+
+.search-icon-placeholder {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.common-flags {
+  margin-top: 1rem;
+  font-size: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  opacity: 0.5;
 }
