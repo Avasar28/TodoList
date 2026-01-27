@@ -2727,7 +2727,7 @@ input:checked+.slider:before {
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 20px;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   animation: fadeInSlide 0.5s ease-out;
 }
@@ -2792,51 +2792,73 @@ input:checked+.slider:before {
 /* --- Asymmetric Grid Layout --- */
 .dashboard-grid-asymmetric {
   display: grid;
-  /* Columns: Weather (Wide 1.5fr), Currency (1fr), Time (1fr), Country (1fr) */
-  grid-template-columns: 1.5fr 1fr 1fr 1fr;
-  /* Rows: 200px Fixed for Widgets, Auto for News */
-  grid-template-rows: 200px auto;
+  /* Columns: 2fr (40%) and 3x 1fr (20%) with overflow protection */
+  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
+  /* Rows: Fixed height (220px), Min-Height (300px) */
+  grid-template-rows: 220px minmax(300px, auto);
   gap: 1.5rem;
   grid-template-areas:
     "weather currency time country"
-    "news news news news";
+    "weather news news news";
 
   /* Safety: Ensure container handles overflow */
+  width: 100%;
   max-width: 100%;
   box-sizing: border-box;
 }
 
 /* Grid Area Assignments */
+/* Grid Area Assignments with Overflow Protection */
 .grid-area-weather {
   grid-area: weather;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 20px;
 }
 
 .grid-area-currency {
   grid-area: currency;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 20px;
 }
 
 .grid-area-time {
   grid-area: time;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 20px;
 }
 
 .grid-area-country {
   grid-area: country;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 20px;
 }
 
 .grid-area-news {
   grid-area: news;
-  margin-top: 0.5rem;
-  /* Slight separation from widgets */
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 20px;
 }
+
+
 
 /* Responsive Grid */
 @media (max-width: 1400px) {
   .dashboard-grid-asymmetric {
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 200px 200px auto;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 240px 240px auto;
     grid-template-areas:
-      "weather weather weather"
-      "currency time country"
+      "weather weather currency"
+      "country time time"
       "news news news";
   }
 }
@@ -2857,6 +2879,7 @@ input:checked+.slider:before {
   .dashboard-grid-asymmetric {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
+    gap: 1.5rem;
     grid-template-areas:
       "weather"
       "currency"
@@ -3200,10 +3223,12 @@ input:checked+.slider:before {
   /* News Header needs full width, inner container has padding */
   display: flex;
   flex-direction: column;
-  /* Grounded Background */
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* Grounded Background - Lighter Glass */
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .widget-header-feed {
