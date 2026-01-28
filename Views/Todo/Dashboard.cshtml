@@ -457,6 +457,26 @@
             </div>
         </div>
 
+        <!-- Area: Translator (Summary Widget) -->
+        <div class="grid-area-translator">
+            <div class="insight-card widget-translator-summary translator" onclick="openDetails('translator')">
+                <div class="widget-header-row">
+                    <span class="widget-title-sm">TRANSLATOR</span>
+                    <span class="pulse-dot" style="background:#10b981; box-shadow:0 0 10px #10b981;"></span>
+                </div>
+                <div class="translator-summary-hero">
+                    <div class="trans-icon-hero">🈂️</div>
+                    <div class="trans-hero-text">
+                        <span class="hero-main">Quick Translate</span>
+                        <span class="hero-sub">100+ Languages</span>
+                    </div>
+                </div>
+                <div class="trans-action-hint">
+                    Click to start translating →
+                </div>
+            </div>
+        </div>
+
         <!-- Area: Country (Explorer Card) -->
         <div class="grid-area-country">
             <div class="insight-card widget-country-live country" onclick="openDetails('country')">
@@ -1089,6 +1109,81 @@
         <div class="article-footer">
             <a id="articleSourceLink" href="#" target="_blank" class="btn-secondary-sm">Read Full Story on Source Website</a>
         </div>
+    </div>
+</div>
+
+<!-- Translator Details Panel -->
+<div class="details-panel" id="translatorDetails" style="max-width: 900px;">
+    <div class="panel-header">
+        <div class="header-info">
+             <h2>Language Translator</h2>
+             <p class="text-muted small">AI-powered multi-language translation</p>
+        </div>
+        <button class="close-panel" onclick="closeDetails()">×</button>
+    </div>
+    <div class="panel-content translator-expanded-view">
+         <div class="translator-expanded-body">
+             <!-- Source Side -->
+             <div class="trans-side source-side">
+                  <div class="details-control-row">
+                      <label>From:</label>
+                      <div class="custom-select-wrapper" id="sourceLangWrapper">
+                            <div class="custom-select-trigger" tabindex="0">
+                                <span class="selected-text" id="sourceLangLabel">Auto Detect</span>
+                                <i class="arrow-icon">▼</i>
+                            </div>
+                            <div class="custom-options">
+                                <div class="search-container">
+                                    <input type="text" class="dropdown-search" placeholder="Search..." id="sourceSearch">
+                                </div>
+                                <div class="options-list" id="sourceOptionsList"></div>
+                            </div>
+                            <input type="hidden" id="transSourceLang" value="auto">
+                      </div>
+                  </div>
+                  <div class="textarea-wrapper-expanded">
+                      <textarea id="transSourceText" class="trans-textarea" placeholder="Enter text..." spellcheck="false"></textarea>
+                      <button id="transMicBtn" class="tool-btn mic-btn" title="Voice Input">🎤</button>
+                      <div class="trans-footer-row">
+                          <span id="transDetectedLang" class="trans-detected"></span>
+                          <button id="transActionBtn" class="btn-primary-sm">Translate</button>
+                      </div>
+                  </div>
+             </div>
+
+             <!-- Swap Column (Middle) -->
+             <div class="trans-middle-control">
+                  <button id="transSwapBtn" class="trans-swap-btn" title="Swap Languages">⇄</button>
+                  <span id="transStatus" class="trans-status-dot"></span>
+             </div>
+
+             <!-- Target Side -->
+             <div class="trans-side target-side">
+                  <div class="details-control-row">
+                      <label>To:</label>
+                      <div class="custom-select-wrapper" id="targetLangWrapper">
+                            <div class="custom-select-trigger" tabindex="0">
+                                <span class="selected-text" id="targetLangLabel">English</span>
+                                <i class="arrow-icon">▼</i>
+                            </div>
+                            <div class="custom-options">
+                                <div class="search-container">
+                                    <input type="text" class="dropdown-search" placeholder="Search..." id="targetSearch">
+                                </div>
+                                <div class="options-list" id="targetOptionsList"></div>
+                            </div>
+                            <input type="hidden" id="transTargetLang" value="en">
+                      </div>
+                  </div>
+                  <div class="textarea-wrapper-expanded">
+                      <textarea id="transTargetText" class="trans-textarea readonly" placeholder="Translation..." readonly></textarea>
+                      <div class="trans-tools">
+                          <button id="transCopyBtn" class="tool-btn" title="Copy">📋</button>
+                          <button id="transSpeakBtn" class="tool-btn" title="Listen">🔊</button>
+                      </div>
+                  </div>
+             </div>
+         </div>
     </div>
 </div>
 
@@ -2116,7 +2211,8 @@
                     } catch (err) {
                         console.info("Dev Mode: Browser geolocation unavailable (Localhost), trying IP fallback...");
                         try {
-                            const ipRes = await fetch('https://ipapi.co/json/');
+                            // Use backend endpoint to avoid mixed content/rate-limit issues on client
+                            const ipRes = await fetch('/Todo/GetLocationJson'); 
                             const ipData = await ipRes.json();
                             if (ipData.city) {
                                 console.log("IP Fallback successful:", ipData.city);
@@ -2126,7 +2222,7 @@
                                 city = data.city;
                             }
                         } catch (e) {
-                            console.warn("All location detections failed, using default.");
+                            console.warn("Location detection failed, using default (London).");
                         }
                     }
                 }
@@ -2606,4 +2702,5 @@
     <script src="~/js/habit-tracker.js"></script>
     <script src="~/js/emergency-widget.js"></script>
     <script src="~/js/holiday-widget.js"></script>
+<script src="~/js/translator-widget.js"></script>
 }

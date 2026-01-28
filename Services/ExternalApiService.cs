@@ -513,30 +513,40 @@ namespace TodoListApp.Services
             try
             {
                 // 1. Resolve Location (Geocoding fallback)
-                var geoUrl = $"https://geocoding-api.open-meteo.com/v1/search?name={Uri.EscapeDataString(location)}&count=1&language=en&format=json";
-                var geoRes = await _httpClient.GetAsync(geoUrl);
-                var geoJson = await geoRes.Content.ReadAsStringAsync();
-                
                 string resolvedName = location;
                 string countryCode = "US";
-                
-                using (var doc = JsonDocument.Parse(geoJson))
+
+                try 
                 {
-                    if (doc.RootElement.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                    var geoUrl = $"https://geocoding-api.open-meteo.com/v1/search?name={Uri.EscapeDataString(location)}&count=1&language=en&format=json";
+                    // Short timeout for geocoding as it's optional
+                    using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(3));
+                    var geoRes = await _httpClient.GetAsync(geoUrl, cts.Token);
+                    
+                    if (geoRes.IsSuccessStatusCode)
                     {
-                        var res = results[0];
-                        var city = res.TryGetProperty("admin3", out var a3) ? a3.GetString() : "";
-                        var district = res.TryGetProperty("admin2", out var a2) ? a2.GetString() : "";
-                        var country = res.TryGetProperty("country_code", out var cc) ? cc.GetString() : "US";
-                        
-                        resolvedName = !string.IsNullOrEmpty(city) ? city : (!string.IsNullOrEmpty(district) ? district : res.GetProperty("name").GetString() ?? location);
-                        countryCode = country ?? "US";
+                        var geoJson = await geoRes.Content.ReadAsStringAsync();
+                        using var doc = JsonDocument.Parse(geoJson);
+                        if (doc.RootElement.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                        {
+                            var res = results[0];
+                            var city = res.TryGetProperty("admin3", out var a3) ? a3.GetString() : "";
+                            var district = res.TryGetProperty("admin2", out var a2) ? a2.GetString() : "";
+                            var country = res.TryGetProperty("country_code", out var cc) ? cc.GetString() : "US";
+                            
+                            resolvedName = !string.IsNullOrEmpty(city) ? city : (!string.IsNullOrEmpty(district) ? district : res.GetProperty("name").GetString() ?? location);
+                            countryCode = country ?? "US";
+                        }
                     }
+                }
+                catch 
+                {
+                    // If geocoding fails (DNS, Timeout, etc.), just use the original location string.
+                    // This ensures the news search still proceeds even if we can't pretty-print the location name.
+                    Console.WriteLine($"[News] Geocoding failed for '{location}', falling back to raw query.");
                 }
 
                 // 2. Build Query
-                // CRITICAL: Use the raw 'location' provided by user for the query. 
-                // Resolved names (from geocoding) are used ONLY for the UI label and market context (gl).
                 var queryBuilder = new System.Text.StringBuilder($"{location}"); 
                 
                 if (!string.IsNullOrEmpty(category) && category != "All")
@@ -614,7 +624,19 @@ namespace TodoListApp.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"News Error: {ex.Message}");
-                return new NewsData { ResolvedLocation = location, Items = new List<NewsItem>() };
+                // Return a single error item so the UI isn't empty
+                var errorItem = new NewsItem {
+                    Title = "Service Unavailable",
+                    Description = "We are unable to connect to the news service at this time. Please check your internet connection or try again later.",
+                    Source = "System",
+                    SourceUrl = "#",
+                    Published = DateTime.Now.ToString("MMM dd, yyyy HH:mm"),
+                    Link = "#",
+                    Sentiment = "Neutral",
+                    LocationTag = "System",
+                    Category = "Error"
+                };
+                return new NewsData { ResolvedLocation = location, Items = new List<NewsItem> { errorItem } };
             }
         }
 
@@ -751,6 +773,9 @@ namespace TodoListApp.Services
                     "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=800&q=80", // Urban
                     "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80", // Skyline
                     "https://images.unsplash.com/photo-1496568816309-51d7c20e3b21?w=800&q=80"  // Night City
+                },
+                "Error" => new[] {
+                    "https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=800&q=80" // Storm/Warning visual
                 },
                 _ => new[] {
                     "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80", // News ppr

@@ -23,7 +23,7 @@ namespace TodoListApp.Controllers
                 return BadRequest("Invalid request");
             }
 
-            var translations = await _translationService.TranslateBatchAsync(request.Texts, request.TargetLang);
+            var translations = await _translationService.TranslateBatchAsync(request.Texts, request.TargetLang, request.SourceLang);
             return Ok(translations); // Returns array of strings directly or object depending on frontend expectation.
             // Let's verify frontend expectation. Previous was object { translations: [] } or just array? 
             // My Service now returns array. Let's return object to be safe and extensible.
@@ -34,5 +34,6 @@ namespace TodoListApp.Controllers
     {
         public string[] Texts { get; set; }
         public string TargetLang { get; set; }
+        public string SourceLang { get; set; } = "auto";
     }
 }
