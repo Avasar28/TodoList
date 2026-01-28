@@ -484,68 +484,126 @@ const TranslatorWidget = (function () {
 
         recognition.onstart = () => {
             isRecording = true;
-            if (micBtn) {
-                micBtn.classList.add('recording');
-                micBtn.classList.remove('error');
-                micBtn.setAttribute('aria-label', 'Stop listening');
+            state.isRecording = true;
+
+            if (state.mode === 'conversation') {
+                const btn = document.getElementById(`convMicBtn${state.activeSpeaker}`);
+                if (btn) {
+                    btn.classList.add('listening');
+                    btn.querySelector('.mic-status').textContent = 'Listening...';
+                }
+            } else {
+                if (micBtn) micBtn.classList.add('recording');
+                const sourceText = document.getElementById('transSourceText');
+                if (sourceText) {
+                    sourceText.classList.add('listening');
+                    sourceText.placeholder = 'Listening...';
+                }
             }
-            sourceInput.placeholder = "Listening...";
-            sourceInput.classList.add('listening');
         };
 
         recognition.onend = () => {
             isRecording = false;
-            if (micBtn) {
-                micBtn.classList.remove('recording');
-                micBtn.setAttribute('aria-label', 'Start listening');
-            }
-            sourceInput.placeholder = "Enter text...";
-            sourceInput.classList.remove('listening');
+            state.isRecording = false;
 
-            // Only trigger if we have text
-            if (sourceInput.value.trim().length > 0) {
+            if (state.mode === 'conversation') {
+                const btn = document.getElementById(`convMicBtn${state.activeSpeaker}`);
+                if (btn) {
+                    btn.classList.remove('listening');
+                    btn.querySelector('.mic-status').textContent = 'Tap to Speak';
+                }
+                // Process conversation result if text exists
+                processConversationInput();
+            } else {
+                if (micBtn) micBtn.classList.remove('recording');
+                const sourceText = document.getElementById('transSourceText');
+                if (sourceText) {
+                    sourceText.classList.remove('listening');
+                    sourceText.placeholder = 'Enter text...';
+                }
                 triggerTranslation();
             }
         };
 
         recognition.onresult = (event) => {
-            let transcript = '';
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                transcript += event.results[i][0].transcript;
+            const transcript = Array.from(event.results)
+                .map(result => result[0])
+                .map(result => result.transcript)
+                .join('');
+
+            if (state.mode === 'conversation') {
+                state.tempTranscript = transcript;
+
+                // Live Preview Logic
+                const chatArea = document.getElementById(`convChat${state.activeSpeaker}`);
+                let previewBubble = chatArea.querySelector('.chat-bubble.preview');
+
+                if (!previewBubble) {
+                    previewBubble = document.createElement('div');
+                    previewBubble.className = 'chat-bubble local preview';
+                    previewBubble.style.opacity = '0.7';
+                    chatArea.appendChild(previewBubble);
+
+                    // Hide placeholder
+                    const placeholder = chatArea.querySelector('.conv-placeholder');
+                    if (placeholder) placeholder.style.display = 'none';
+                }
+
+                previewBubble.textContent = transcript + '...';
+                chatArea.scrollTop = chatArea.scrollHeight;
+
+            } else {
+                const sourceText = document.getElementById('transSourceText');
+                if (sourceText) sourceText.value = transcript;
             }
-            sourceInput.value = transcript;
         };
 
         recognition.onerror = (event) => {
-            console.error("Speech Recognition Error", event.error);
+            if (event.error === 'no-speech') {
+                console.info("Speech Recognition: No speech detected (Silence).");
+            } else {
+                console.error("Speech Recognition Error", event.error);
+            }
+
             isRecording = false;
+            state.isRecording = false; // Sync state
 
-            if (micBtn) {
-                micBtn.classList.remove('recording');
-                micBtn.classList.add('error');
-                micBtn.setAttribute('aria-label', 'Error. Try again.');
+            if (state.mode === 'conversation') {
+                // Clear preview if error
+                const chatArea = document.getElementById(`convChat${state.activeSpeaker}`);
+                const previewBubble = chatArea ? chatArea.querySelector('.chat-bubble.preview') : null;
+                if (previewBubble) previewBubble.remove();
 
-                // Clear error animation after a bit
-                setTimeout(() => micBtn.classList.remove('error'), 1000);
+                const btn = document.getElementById(`convMicBtn${state.activeSpeaker}`);
+                if (btn) {
+                    btn.classList.remove('listening');
+                    btn.querySelector('.mic-status').textContent = 'Tap to Speak';
+
+                    // Only show error state if NOT no-speech
+                    if (event.error !== 'no-speech') {
+                        btn.classList.add('error');
+                        setTimeout(() => btn.classList.remove('error'), 1000);
+                    }
+                }
+            } else {
+                if (micBtn) {
+                    micBtn.classList.remove('recording');
+                    if (event.error !== 'no-speech') {
+                        micBtn.classList.add('error');
+                        micBtn.setAttribute('aria-label', 'Error. Try again.');
+                        setTimeout(() => micBtn.classList.remove('error'), 1000);
+                    } else {
+                        micBtn.setAttribute('aria-label', 'Start listening');
+                    }
+                }
+                const sourceText = document.getElementById('transSourceText');
+                if (sourceText) {
+                    sourceText.classList.remove('listening');
+                    sourceText.placeholder = event.error === 'no-speech' ? "No speech detected." : "Enter text...";
+                }
             }
 
-            sourceInput.classList.remove('listening');
-
-            // User-friendly feedback
-            switch (event.error) {
-                case 'not-allowed':
-                    sourceInput.placeholder = "Mic permission denied.";
-                    alert("Please allow microphone access to use voice input.");
-                    break;
-                case 'no-speech':
-                    sourceInput.placeholder = "No speech detected. Try again.";
-                    break;
-                case 'network':
-                    sourceInput.placeholder = "Network error.";
-                    break;
-                default:
-                    sourceInput.placeholder = "Error listening.";
-            }
+            // Allow retry
         };
 
         if (micBtn) {
@@ -572,18 +630,315 @@ const TranslatorWidget = (function () {
         }
     }
 
-    return {
-        init: () => {
-            init(); // Existing init
-            setupSpeechRecognition(); // New Voice Init
 
-            // Preload voices (Chrome sometimes loads them asynchronously)
-            if (window.speechSynthesis) {
-                window.speechSynthesis.onvoiceschanged = () => {
-                    console.log("Voices loaded:", window.speechSynthesis.getVoices().length);
-                };
+    // --- Conversation Mode Logic ---
+    function toggleMode() {
+        const toggle = document.getElementById('transModeToggle');
+        setMode(toggle.checked ? 'conversation' : 'text');
+    }
+
+    function setMode(mode) {
+        state.mode = mode;
+        const toggle = document.getElementById('transModeToggle');
+        const textView = document.getElementById('transTextView');
+        const convView = document.getElementById('transConvView');
+        const labelText = document.getElementById('modeTextLabel');
+        const labelConv = document.getElementById('modeConvLabel');
+
+        // Update UI
+        if (mode === 'conversation') {
+            textView.style.display = 'none';
+            convView.style.display = 'flex'; // Flex for split view
+            toggle.checked = true;
+            labelText.classList.remove('active');
+            labelConv.classList.add('active');
+
+            // Sync languages if needed (first time)
+            if (!state.convInitialized) {
+                initConversationDropdowns();
+                state.convInitialized = true;
+            }
+        } else {
+            textView.style.display = 'block';
+            convView.style.display = 'none';
+            toggle.checked = false;
+            labelText.classList.add('active');
+            labelConv.classList.remove('active');
+        }
+    }
+
+    function initConversationDropdowns() {
+        const langList = languages.filter(l => l.code !== 'auto');
+        setupConversationDropdown('A', langList);
+        setupConversationDropdown('B', langList);
+
+        // Listeners for Mics
+        document.getElementById('convMicBtnA').addEventListener('click', () => toggleConversationMic('A'));
+        document.getElementById('convMicBtnB').addEventListener('click', () => toggleConversationMic('B'));
+    }
+
+    function setupConversationDropdown(side, langList) {
+        const wrapper = document.getElementById(`convLang${side}Wrapper`);
+        const searchInput = document.getElementById(`convSearch${side}`);
+        const optionsList = document.getElementById(`convOptionsList${side}`);
+        const label = document.getElementById(`convLang${side}Label`);
+        const hiddenInput = document.getElementById(`convLang${side}`);
+
+        if (!wrapper || !optionsList) return;
+
+        // Render Options
+        renderOptions(optionsList, langList, hiddenInput.value);
+
+        // Event: Toggle
+        wrapper.querySelector('.custom-select-trigger').addEventListener('click', (e) => {
+            closeAllDropdowns(wrapper); // Close others
+            wrapper.classList.toggle('open');
+            if (wrapper.classList.contains('open')) {
+                searchInput.focus();
+                searchInput.value = '';
+                filterOptions(optionsList, langList, ''); // Reset filter
+            }
+        });
+
+        // Event: Search
+        searchInput.addEventListener('input', (e) => {
+            filterOptions(optionsList, langList, e.target.value);
+        });
+
+        // Event: Option Click (Delegated)
+        optionsList.addEventListener('click', (e) => {
+            const option = e.target.closest('.custom-option');
+            if (!option) return;
+
+            const value = option.dataset.value;
+            const name = option.dataset.name;
+
+            // Update UI
+            hiddenInput.value = value;
+            label.textContent = name;
+            wrapper.classList.remove('open');
+
+            // Update selected class
+            Array.from(optionsList.children).forEach(c => c.classList.remove('selected'));
+            option.classList.add('selected');
+        });
+    }
+
+    function toggleMute() {
+        state.isMuted = !state.isMuted;
+        const icon = document.getElementById('convMuteIcon');
+        icon.textContent = state.isMuted ? '🔇' : '🔊';
+        window.speechSynthesis.cancel();
+    }
+
+    function clearChat() {
+        document.getElementById('convChatA').innerHTML = '<div class="conv-placeholder">Tap mic to speak...</div>';
+        document.getElementById('convChatB').innerHTML = '<div class="conv-placeholder">Tap mic to speak...</div>';
+    }
+
+    function toggleConversationMic(person) {
+        if (!recognition) return;
+
+        // If already recording same person -> Stop
+        if (state.isRecording && state.activeSpeaker === person) {
+            recognition.stop();
+            return;
+        }
+
+        // If recording other person -> Stop then Start
+        if (state.isRecording) {
+            recognition.stop();
+            // Wait for stop event or just force restart logic in onend?
+            // Simple approach: stop, wait small delay, start new.
+            setTimeout(() => startConversationMic(person), 300);
+            return;
+        }
+
+        startConversationMic(person);
+    }
+
+    function startConversationMic(person) {
+        const langInputId = person === 'A' ? 'convLangA' : 'convLangB';
+        let langCode = document.getElementById(langInputId).value;
+
+        // Auto-Detect Handling: Fallback to browser lang if 'auto'
+        if (langCode === 'auto') {
+            langCode = navigator.language;
+            // Optional: visual indicator that we're using "en-US" (or whatever)?
+            // For now, just using it silently is the standard behavior.
+        }
+
+        state.activeSpeaker = person;
+
+        recognition.lang = langCode;
+        try {
+            recognition.start();
+        } catch (e) { console.error(e); }
+    }
+
+    async function processConversationInput() {
+        const text = state.tempTranscript;
+
+        // Remove preview bubble if exists
+        const speaker = state.activeSpeaker;
+        const chatArea = document.getElementById(`convChat${speaker}`);
+        const previewBubble = chatArea.querySelector('.chat-bubble.preview');
+        if (previewBubble) previewBubble.remove();
+
+        if (!text) return;
+        state.tempTranscript = ''; // Clear buffer
+
+        const listener = speaker === 'A' ? 'B' : 'A';
+
+        const langInputId = `convLang${speaker}`;
+        const targetLangInputId = `convLang${listener}`;
+
+        const sourceLang = document.getElementById(langInputId).value;
+        const targetLang = document.getElementById(targetLangInputId).value;
+
+        // 1. Add Source Bubble (Finalized)
+        addChatBubble(speaker, text, 'local');
+
+        // 2. Translate
+        try {
+            // Show typing/loading indicator? (For now, just wait)
+            const response = await fetch(CONFIG.API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    texts: [text],
+                    sourceLang: sourceLang,
+                    targetLang: targetLang
+                })
+            });
+
+            if (response.ok) {
+                const results = await response.json();
+                if (results && results[0]) {
+                    const translatedText = results[0].translatedText;
+
+                    // 3. Add Target Bubble (Remote) on the OTHER side?
+                    // Actually, usually conversation view shows history in one flow or local view.
+                    // Let's mirror: A's chat shows A(Right) and B(Left).
+                    // But we have split screen. 
+                    // A's side shows A's text. B's side shows B's text (Translated).
+                    // Let's add the translated text to the LISTENER'S side as a 'remote' bubble.
+
+                    addChatBubble(listener, translatedText, 'remote', text); // Pass original as subtext?
+
+                    // 4. Speak Output in Target Language
+                    speakText(translatedText, targetLang);
+                }
+            }
+        } catch (e) {
+            console.error("Conversation Translation Error", e);
+        }
+    }
+
+    function addChatBubble(side, text, type, subtext = null) {
+        const chatArea = document.getElementById(`convChat${side}`);
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${type}`;
+        bubble.textContent = text;
+
+        if (subtext) {
+            const sub = document.createElement('div');
+            sub.className = 'translation-sub';
+            sub.textContent = subtext;
+            bubble.appendChild(sub);
+        }
+
+        chatArea.appendChild(bubble);
+        chatArea.scrollTop = chatArea.scrollHeight;
+
+        // Hide placeholder
+        const placeholder = chatArea.querySelector('.conv-placeholder');
+        if (placeholder) placeholder.style.display = 'none';
+    }
+
+    function speakText(text, lang) {
+        if (state.isMuted) return;
+
+        // Reuse the robust logic from Speak Button but parameterized
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang;
+
+        const voices = window.speechSynthesis.getVoices();
+        let selectedVoice = voices.find(v => v.lang === lang);
+        if (!selectedVoice) selectedVoice = voices.find(v => v.lang.startsWith(lang));
+        // Name match fallback
+        if (!selectedVoice) {
+            const langObj = languages.find(l => l.code === lang);
+            if (langObj) {
+                selectedVoice = voices.find(v => v.name.toLowerCase().includes(langObj.name.toLowerCase()));
             }
         }
+
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+            window.speechSynthesis.speak(utterance);
+        } else {
+            // Fallback Google TTS
+            try {
+                const audio = new Audio(`https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${lang}&client=tw-ob`);
+                audio.play();
+            } catch (e) { console.error(e); }
+        }
+    }
+    // We need to modify setupSpeechRecognition to handle UI updates for Conversation Mode
+
+    // ... Inside setupSpeechRecognition ...
+    // Update onstart:
+    /*
+    recognition.onstart = () => {
+        isRecording = true;
+        state.isRecording = true;
+        if (state.mode === 'conversation') {
+            const btn = document.getElementById(`convMicBtn${state.activeSpeaker}`);
+            if (btn) btn.classList.add('listening');
+        } else {
+            const micBtn = document.getElementById('transMicBtn');
+            if (micBtn) micBtn.classList.add('recording');
+            const sourceText = document.getElementById('transSourceText');
+            if (sourceText) {
+                sourceText.classList.add('listening');
+                sourceText.placeholder = 'Listening...';
+            }
+        }
+    };
+
+    recognition.onend = () => {
+        isRecording = false;
+        state.isRecording = false;
+        if (state.mode === 'conversation') {
+             const btn = document.getElementById(`convMicBtn${state.activeSpeaker}`);
+             if (btn) btn.classList.remove('listening');
+             // Trigger Translation logic for Chat Bubble
+             handleConversationResult();
+        } else {
+            // ... existing text mode logic ...
+            const micBtn = document.getElementById('transMicBtn');
+            if (micBtn) micBtn.classList.remove('recording');
+            // ...
+            triggerTranslation();
+        }
+    };
+    */
+
+    // Need to expose these to global object
+    return {
+        init: () => {
+            init();
+            setupSpeechRecognition();
+            if (window.speechSynthesis) {
+                window.speechSynthesis.onvoiceschanged = () => { };
+            }
+        },
+        toggleMode: toggleMode,
+        setMode: setMode,
+        toggleMute: toggleMute,
+        clearChat: clearChat
     };
 })();
 

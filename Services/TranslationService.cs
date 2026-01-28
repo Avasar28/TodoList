@@ -155,9 +155,13 @@ namespace TodoListApp.Services
                                      detected = langVal.GetString();
                                  }
                              }
-                             else 
+                             
+                             // CRITICAL: If source was auto and we didn't get detection, DO NOT Accept this result.
+                             // Fallback to Google which implies detection.
+                             if (sourceLang == "auto" && detected == "auto")
                              {
-                                  Console.WriteLine("[LibreTranslate] No 'detectedLanguage' property found.");
+                                  Console.WriteLine("[LibreTranslate] Source is auto but no language detected. Falling back to Google.");
+                                  continue; // Try next mirror or fallback
                              }
 
                              results[missingIndices[0]].TranslatedText = val;

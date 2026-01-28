@@ -1119,9 +1119,19 @@
              <h2>Language Translator</h2>
              <p class="text-muted small">AI-powered multi-language translation</p>
         </div>
+        <div class="trans-mode-toggle">
+            <span class="mode-label active" id="modeTextLabel" onclick="TranslatorWidget.setMode('text')">Text</span>
+            <label class="switch">
+                <input type="checkbox" id="transModeToggle" onchange="TranslatorWidget.toggleMode()">
+                <span class="slider round"></span>
+            </label>
+            <span class="mode-label" id="modeConvLabel" onclick="TranslatorWidget.setMode('conversation')">Conversation</span>
+        </div>
         <button class="close-panel" onclick="closeDetails()">×</button>
     </div>
-    <div class="panel-content translator-expanded-view">
+    
+    <!-- Standard Text Mode -->
+    <div class="panel-content translator-expanded-view" id="transTextView">
          <div class="translator-expanded-body">
              <!-- Source Side -->
              <div class="trans-side source-side">
@@ -1184,6 +1194,85 @@
                   </div>
              </div>
          </div>
+    </div>
+
+    <!-- Conversation Mode -->
+    <div class="panel-content conversation-view" id="transConvView" style="display: none;">
+        <!-- Global Conversation Controls -->
+        <div class="conv-global-controls">
+            <button class="icon-btn-sm" id="convMuteBtn" title="Mute Audio" onclick="TranslatorWidget.toggleMute()">
+                <span id="convMuteIcon">🔊</span>
+            </button>
+            <span class="divider-v"></span>
+            <button class="icon-btn-sm" id="convClearBtn" title="Clear History" onclick="TranslatorWidget.clearChat()">
+                🗑️
+            </button>
+        </div>
+
+        <div class="conv-split-container">
+            <!-- Person A (Left) -->
+            <div class="conv-side" id="convSideA">
+                <div class="conv-header">
+                    <div class="custom-select-wrapper" id="convLangAWrapper">
+                        <div class="custom-select-trigger" tabindex="0">
+                            <span class="selected-text" id="convLangALabel">English</span>
+                            <i class="arrow-icon">▼</i>
+                        </div>
+                        <div class="custom-options">
+                            <div class="search-container">
+                                <input type="text" class="dropdown-search" placeholder="Search..." id="convSearchA">
+                            </div>
+                            <div class="options-list" id="convOptionsListA"></div>
+                        </div>
+                        <input type="hidden" id="convLangA" value="en">
+                    </div>
+                </div>
+                
+                <div class="conv-chat-area" id="convChatA">
+                    <div class="conv-placeholder">Tap mic to speak...</div>
+                </div>
+
+                <div class="conv-controls">
+                    <button class="conv-mic-btn" id="convMicBtnA">
+                        <span class="mic-icon">🎤</span>
+                        <span class="mic-status">Tap to Speak</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="conv-divider"></div>
+
+            <!-- Person B (Right) -->
+            <div class="conv-side" id="convSideB">
+                <div class="conv-header">
+                    <div class="custom-select-wrapper" id="convLangBWrapper">
+                        <div class="custom-select-trigger" tabindex="0">
+                            <span class="selected-text" id="convLangBLabel">Spanish</span>
+                            <i class="arrow-icon">▼</i>
+                        </div>
+                        <div class="custom-options">
+                            <div class="search-container">
+                                <input type="text" class="dropdown-search" placeholder="Search..." id="convSearchB">
+                            </div>
+                            <div class="options-list" id="convOptionsListB"></div>
+                        </div>
+                        <input type="hidden" id="convLangB" value="es">
+                    </div>
+                </div>
+
+                <div class="conv-chat-area" id="convChatB">
+                    <div class="conv-placeholder">Tap mic to speak...</div>
+                </div>
+
+                <div class="conv-controls">
+                    <button class="conv-mic-btn" id="convMicBtnB">
+                        <span class="mic-icon">🎤</span>
+                        <span class="mic-status">Tap to Speak</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
