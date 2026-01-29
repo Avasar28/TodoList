@@ -13,7 +13,8 @@
         <div class="nav-bar">
             <div class="nav-links">
                 <a asp-controller="Todo" asp-action="Dashboard" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" data-translate="true">Dashboard</a>
-                <a asp-controller="Todo" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" data-translate="true">My Tasks</a>
+                <a asp-controller="Todo" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "Todo" ? "active" : "")" data-translate="true">My Tasks</a>
+                <a asp-controller="TimeTracker" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "TimeTracker" ? "active" : "")" data-translate="true">Time Tracker</a>
                 <a asp-controller="Todo" asp-action="UserList" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "UserList" ? "active" : "")" data-translate="true">User List</a>
             </div>
             <div class="user-info">

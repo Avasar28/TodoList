@@ -1,0 +1,502 @@
+@{
+    ViewData["Title"] = "Daily Time Tracker";
+}
+
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --accent-color: #6366f1;
+        --danger-color: #ef4444;
+        --success-color: #10b981;
+    }
+
+    /* Override based on site.css logic if needed, but these variables 
+       often match the dark mode. Light mode might need overrides if not fully global. 
+       Assuming site.css handles body/root variables, we use them. */
+
+    .time-tracker-container {
+        padding: 2rem 0;
+        max-width: 95%; /* Fluid width to ensure no overlapping on any screen */
+        margin: 0 auto;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .tracker-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .tracker-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .tracker-date {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        font-weight: 300;
+    }
+
+    /* Summary Card */
+    .summary-card-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .summary-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 2rem 3rem;
+        text-align: center;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
+        min-width: 300px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .summary-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 4px;
+        background: linear-gradient(90deg, var(--accent-color), #a855f7);
+    }
+
+    .summary-label {
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .summary-value {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        font-family: 'Courier New', monospace; /* Digital clock vibe */
+        letter-spacing: -2px;
+        text-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Table & Form */
+    .tracker-panel {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        border-radius: 24px;
+        border: 1px solid var(--glass-border);
+        padding: 1.5rem;
+        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
+    }
+
+    .tracker-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.5rem;
+        table-layout: fixed; /* Enforces column widths */
+    }
+
+    .tracker-table th {
+        text-align: left;
+        color: var(--text-secondary);
+        font-weight: 600;
+        padding: 1rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .tracker-table td {
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text-primary);
+        vertical-align: middle;
+        border-top: 1px solid rgba(255,255,255,0.02);
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+        
+        /* Text wrapping fix */
+        white-space: normal;
+        word-wrap: break-word; 
+        overflow-wrap: break-word;
+    }
+    
+    .tracker-table tr td:first-child {
+        border-top-left-radius: 12px;
+        border-bottom-left-radius: 12px;
+        border-left: 1px solid rgba(255,255,255,0.02);
+    }
+    
+    .tracker-table tr td:last-child {
+        border-top-right-radius: 12px;
+        border-bottom-right-radius: 12px;
+        border-right: 1px solid rgba(255,255,255,0.02);
+    }
+    
+    /* Input Row Styles */
+    .input-row td {
+        background: rgba(99, 102, 241, 0.05) !important;
+        border-color: rgba(99, 102, 241, 0.1) !important;
+    }
+
+    .form-control-Glass {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+        padding: 0.6rem 1rem;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+    }
+
+    .form-control-Glass:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        background: rgba(0, 0, 0, 0.3);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+    
+    .form-control-Glass::placeholder {
+        color: rgba(255,255,255,0.3);
+    }
+    
+    /* Buttons */
+    .btn-icon {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: background 0.2s;
+        font-size: 1.1rem;
+    }
+    
+    .btn-icon:hover {
+        background: rgba(255,255,255,0.1);
+    }
+    
+    .btn-add-entry {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    
+    .btn-add-entry:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        filter: brightness(110%);
+    }
+
+    .actions-cell {
+        white-space: nowrap;
+        text-align: right;
+    }
+    
+    [data-theme="light"] {
+         --text-primary: #1e293b;
+         --text-secondary: #64748b;
+         --glass-bg: rgba(255, 255, 255, 0.6);
+         --glass-border: rgba(0, 0, 0, 0.05);
+    }
+    
+    [data-theme="light"] .tracker-title {
+        background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    [data-theme="light"] .tracker-table td {
+        background: rgba(255, 255, 255, 0.5);
+        border-color: rgba(0,0,0,0.03);
+    }
+    
+    [data-theme="light"] .form-control-Glass {
+        background: rgba(255, 255, 255, 0.8);
+        color: #1e293b;
+    }
+    
+     [data-theme="light"] .form-control-Glass::placeholder {
+        color: #94a3b8;
+    }
+
+    /* --- Smart Features UI --- */
+    .smart-stats-row {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .stat-badge {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .stat-badge strong {
+        color: var(--text-primary);
+        font-weight: 700;
+    }
+
+    .progress-container {
+        width: 100%;
+        max-width: 300px;
+        background: rgba(255, 255, 255, 0.1);
+        height: 8px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 1rem;
+        position: relative;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981, #34d399);
+        width: 0%;
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 10px;
+    }
+
+    /* --- Validation UI --- */
+    .input-error {
+        border-color: var(--danger-color) !important;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+    }
+
+    .error-tooltip {
+        position: absolute;
+        background: var(--danger-color);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        bottom: 110%;
+        left: 0;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.2s;
+        pointer-events: none;
+    }
+    
+    .input-wrapper {
+        position: relative;
+    }
+
+    .input-wrapper:hover .error-tooltip.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* --- New Input Panel Layout --- */
+    /* --- New Input Panel Layout --- */
+    .add-entry-grid {
+        display: grid;
+        /* Reduced gap to save horizontal space, Adjusted ratios:
+           Description: 2.5fr (gives roughly 25-30%)
+           Time: 1.2fr each (enough for HH:mm + icon)
+           Duration: 1fr
+           Button: Auto
+        */
+        grid-template-columns: 2.5fr 1.25fr 1.25fr 1fr auto; 
+        gap: 0.75rem; /* Tighter gap */
+        align-items: end;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .tracker-input-group {
+        min-width: 0; 
+        display: block; 
+    }
+    
+    .tracker-input-group label {
+        display: block;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        margin-bottom: 0.4rem;
+        font-weight: 500;
+        white-space: nowrap; /* Prevent label wrap */
+    }
+
+    .form-control-Glass {
+        box-sizing: border-box; 
+        height: 42px; 
+        /* Reduce padding to fit more text */
+        padding: 0.6rem 0.5rem; 
+        width: 100%; /* Ensure full width of cell */
+    }
+
+    /* --- Mobile Responsiveness --- */
+    @@media (max-width: 992px) {
+        .add-entry-grid {
+            grid-template-columns: 1fr 1fr; 
+            gap: 1rem;
+        }
+        .add-entry-grid .tracker-input-group:first-child {
+            grid-column: 1 / -1; /* Description takes full width */
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .add-entry-grid {
+            grid-template-columns: 1fr; /* Stack vertically on mobile */
+            gap: 1rem;
+        }
+        
+        .tracker-table, .tracker-table thead, .tracker-table tbody, .tracker-table th, .tracker-table td, .tracker-table tr { 
+            display: block; 
+        }
+
+        .tracker-table thead { display: none; }
+
+        .tracker-table tr { 
+            margin-bottom: 1rem; 
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .tracker-table td { 
+            border: none;
+            padding: 0.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tracker-table td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-right: 1rem;
+        }
+
+        .tracker-table tr.input-row {
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .tracker-table tr.input-row td {
+            display: block;
+            margin-bottom: 0.75rem;
+        }
+        
+        .btn-add-entry {
+            width: 100%;
+        }
+        
+        .tracker-table tr td:first-child,
+        .tracker-table tr td:last-child {
+            border-radius: 0;
+            border: none;
+        }
+    }
+
+    }
+
+</style>
+
+<div class="time-tracker-container">
+    
+    <div class="tracker-header">
+        <h1 class="tracker-title">Daily Time Tracker</h1>
+        <div class="tracker-date" id="trackerDateDisplay">Loading Date...</div>
+    </div>
+
+    <div class="summary-card-container">
+        <div class="summary-card">
+            <span class="summary-label">Total Work Time Today</span>
+            <div class="summary-value" id="dailyTotalTime">00 : 00</div>
+            
+            <div class="progress-container" title="Daily Goal: 8 Hours">
+                <div class="progress-bar" id="dailyProgressBar"></div>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">Daily Goal: 8 hours</div>
+        </div>
+    </div>
+
+    <div class="smart-stats-row">
+        <div class="stat-badge">
+            <span>✅ Tasks Completed:</span>
+            <strong id="totalTasksCount">0</strong>
+        </div>
+    </div>
+
+    <div class="tracker-panel input-panel" style="margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Add New Entry</h3>
+        <div class="add-entry-grid">
+            <div class="tracker-input-group">
+                <label>Description</label>
+                <input type="text" id="newDesc" class="form-control-Glass" placeholder="Project or Task Name" autocomplete="off" />
+            </div>
+            <div class="tracker-input-group">
+                <label>Start Time</label>
+                <input type="time" id="newStart" class="form-control-Glass" />
+            </div>
+            <div class="tracker-input-group">
+                <label>End Time</label>
+                <div class="input-wrapper">
+                    <input type="time" id="newEnd" class="form-control-Glass" />
+                    <span class="error-tooltip" id="endTimeError">End time must be after start time</span>
+                </div>
+            </div>
+            <div class="tracker-input-group">
+                <label>Duration</label>
+                <input type="text" id="newDuration" class="form-control-Glass" placeholder="-- h -- m" readonly style="opacity: 0.7; cursor: default; background: rgba(0,0,0,0.1);" />
+            </div>
+            <div class="tracker-input-group" style="display: flex; align-items: flex-end;">
+                <button id="addEntryBtn" class="btn-add-entry" style="width: 100%; height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                     <span>➕</span> Add Entry
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tracker-panel">
+        <table class="tracker-table">
+            <thead>
+                <tr>
+                    <th style="width: 40%">Work Description</th>
+                    <th style="width: 15%">Start</th>
+                    <th style="width: 15%">End</th>
+                    <th style="width: 15%">Duration</th>
+                    <th style="width: 15%; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="timeTrackerBody">
+                <!-- Entries will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/js/time-tracker.js" asp-append-version="true"></script>
+}

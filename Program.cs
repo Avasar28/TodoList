@@ -26,6 +26,7 @@ builder.Services.AddHttpClient<TodoListApp.Services.IExternalApiService, TodoLis
 builder.Services.AddScoped<TodoListApp.Services.ITodoService, TodoListApp.Services.JsonFileTodoService>();
 builder.Services.AddScoped<TodoListApp.Services.IUserService, TodoListApp.Services.JsonUserService>();
 builder.Services.AddScoped<TodoListApp.Services.IEmailService, TodoListApp.Services.SmtpEmailService>();
+builder.Services.AddScoped<TodoListApp.Services.ITimeTrackerService, TodoListApp.Services.JsonTimeTrackerService>();
 builder.Services.AddHttpClient<TodoListApp.Services.ITranslationService, TodoListApp.Services.TranslationService>()
     .ConfigureHttpClient(client =>
     {
