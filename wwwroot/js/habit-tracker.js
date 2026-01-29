@@ -15,19 +15,38 @@ class HabitTracker {
     }
 
     init() {
+        this.migrateData();
         this.render();
         this.attachEventListeners();
-        // Request persistent permissions if any reminder is already active
-        if (this.habits.some(h => h.reminderEnabled)) {
+        // Request persistent permissions if any habit has reminders
+        if (this.habits.some(h => h.reminders && h.reminders.length > 0)) {
             this.requestNotificationPermission();
         }
     }
 
+    migrateData() {
+        // Upgrade old data format to support multiple reminders
+        let changed = false;
+        this.habits.forEach(h => {
+            if (!h.reminders) {
+                h.reminders = [];
+                // Migrate legacy single reminder if enabled
+                if (h.reminderEnabled && h.reminderTime) {
+                    h.reminders.push({
+                        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                        type: 'daily',
+                        time: h.reminderTime,
+                        lastFired: h.lastReminderDate || ''
+                    });
+                }
+                changed = true;
+            }
+        });
+        if (changed) this.saveHabits();
+    }
+
     async requestNotificationPermission() {
-        if (!("Notification" in window)) {
-            console.warn("This browser does not support desktop notification");
-            return false;
-        }
+        if (!("Notification" in window)) return false;
         if (Notification.permission === "granted") return true;
         if (Notification.permission !== "denied") {
             const permission = await Notification.requestPermission();
@@ -37,52 +56,102 @@ class HabitTracker {
     }
 
     startReminderLoop() {
-        // Check every minute
-        setInterval(() => this.checkReminders(), 60000);
+        setInterval(() => this.checkReminders(), 10000); // Check 10s
     }
 
     checkReminders() {
-        // Run regardless of permission, we will decide delivery method inside
         const now = new Date();
         const currentHours = String(now.getHours()).padStart(2, '0');
         const currentMinutes = String(now.getMinutes()).padStart(2, '0');
         const currentTime = `${currentHours}:${currentMinutes}`;
-        const todayStr = now.toISOString().split('T')[0];
+        const todayStr = now.toLocaleDateString('en-CA');
+
+        let soundNeeded = false;
 
         this.habits.forEach(h => {
-            if (h.reminderEnabled && !h.isPaused && h.reminderTime === currentTime) {
-                // Prevent duplicate alerts for the same day
-                if (h.lastReminderDate !== todayStr) {
-                    if (Notification.permission === "granted") {
-                        this.triggerNotification(h);
-                    } else {
-                        this.triggerInAppAlert(h);
+            if (h.isPaused) return;
+
+            if (!h.reminders) return; // Prevention: Skip if reminders array is missing
+            h.reminders.forEach(rem => {
+                let shouldFire = false;
+
+                if (rem.type === 'daily') {
+                    // Daily Trigger: Match time & check not fired today
+                    if (rem.time === currentTime && rem.lastFired !== todayStr) {
+                        shouldFire = true;
+                        rem.lastFired = todayStr;
                     }
-                    h.lastReminderDate = todayStr;
+                } else if (rem.type === 'one_time') {
+                    // One Time Trigger: Match exact date & time
+                    const scheduledTime = new Date(rem.dateTime);
+                    // Check if now is equal or passed the time (within 1 min tolerance)
+                    const diff = now - scheduledTime;
+                    if (diff >= 0 && diff < 60000 && !rem.fired) {
+                        shouldFire = true;
+                        rem.fired = true;
+                    }
+                }
+
+                if (shouldFire) {
+                    if (Notification.permission === "granted") {
+                        this.triggerNotification(h, rem);
+                    } else {
+                        this.triggerInAppAlert(h, rem);
+                    }
+                    soundNeeded = true;
                     this.saveHabits();
                 }
+            });
+        });
+
+        if (soundNeeded) this.playNotificationSound();
+    }
+
+    playNotificationSound() {
+        // Simple distinct 'ping' sound
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        // Using a reliable public domain/CC0 beep sound source or placeholder
+        // Fallback or user configured? For now basic beep.
+        // Since external links might fail, let's create a simple oscillator beep if possible or use a local asset if available. 
+        // For simplicity in this environment, I'll assume we can't reliably load external assets without user setup.
+        // Instead, valid approach: Simple Audio Context beep
+
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                const ctx = new AudioContext();
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                o.type = "sine";
+                o.connect(g);
+                g.connect(ctx.destination);
+                o.frequency.value = 880; // High pitch A5
+                g.gain.value = 0.1;
+                o.start();
+
+                // Beep sequence: High - Low
+                setTimeout(() => o.frequency.value = 587, 100);
+                setTimeout(() => o.stop(), 300);
             }
-        });
+        } catch (e) { console.error('Audio play failed', e); }
     }
 
-    triggerNotification(habit) {
-        // Browser Notification
-        new Notification("Habit Reminder 🔔", {
+    triggerNotification(habit, reminder) {
+        const title = reminder.type === 'one_time' ? `📅 Scheduled: ${habit.name}` : `Habit Reminder 🔔`;
+        new Notification(title, {
             body: `Time to work on: ${habit.name}!`,
-            icon: '/favicon.ico', // fallback
-            tag: 'habit-reminder'
+            icon: '/favicon.ico',
+            tag: `habit-${habit.id}-${reminder.id}`
         });
     }
 
-    triggerInAppAlert(habit) {
+    triggerInAppAlert(habit, reminder) {
         const widget = document.getElementById('habitWidget');
         if (widget) {
             const toast = document.createElement('div');
             toast.className = 'habit-alert-toast';
             toast.innerHTML = `<span>🔔 ${habit.name}</span>`;
             widget.appendChild(toast);
-
-            // Remove after 5 seconds
             setTimeout(() => {
                 toast.classList.add('fade-out');
                 setTimeout(() => toast.remove(), 500);
@@ -90,20 +159,48 @@ class HabitTracker {
         }
     }
 
-    loadHabits() {
-        // Habits are loaded in the constructor now
-        // This method is kept for consistency but might be redundant
-        const stored = localStorage.getItem(HABIT_STORAGE_KEY);
-        if (stored) {
-            this.habits = JSON.parse(stored);
-        } else {
-            this.habits = [];
+    // --- CRUD for Reminders ---
+    addDailyReminder(habitId, time) {
+        if (!time) return;
+        const habit = this.habits.find(h => h.id === habitId);
+        if (habit) {
+            habit.reminders.push({
+                id: Date.now().toString(),
+                type: 'daily',
+                time: time,
+                lastFired: ''
+            });
+            this.requestNotificationPermission(); // Ensure perms
+            this.saveHabits();
+        }
+    }
+
+    addOneTimeReminder(habitId, dateTime) {
+        if (!dateTime) return;
+        const habit = this.habits.find(h => h.id === habitId);
+        if (habit) {
+            habit.reminders.push({
+                id: Date.now().toString(),
+                type: 'one_time',
+                dateTime: dateTime,
+                fired: false
+            });
+            this.requestNotificationPermission();
+            this.saveHabits();
+        }
+    }
+
+    deleteReminder(habitId, reminderId) {
+        const habit = this.habits.find(h => h.id === habitId);
+        if (habit) {
+            habit.reminders = habit.reminders.filter(r => r.id !== reminderId);
+            this.saveHabits();
         }
     }
 
     saveHabits() {
         localStorage.setItem(HABIT_STORAGE_KEY, JSON.stringify(this.habits));
-        this.render(); // Re-render after saving
+        this.render();
     }
 
     // --- AI Suggestion Logic ---
@@ -331,9 +428,10 @@ class HabitTracker {
             isCompletedToday: false,
             currentStreak: 0,
             bestStreak: 0,
-            reminderEnabled: false,
-            reminderTime: "09:00", // Default
-            lastReminderDate: ""
+            reminderEnabled: false, // Legacy
+            reminderTime: "09:00", // Legacy
+            lastReminderDate: "", // Legacy
+            reminders: [] // NEW: Array for multiple reminders
         };
         this.habits.push(newHabit);
         this.saveHabits();
@@ -370,8 +468,24 @@ class HabitTracker {
         const habit = this.habits.find(h => h.id === id);
         if (habit) {
             habit.reminderTime = time;
+            // CRITICAL FIX: Reset the lock so user can test immediate new times
+            habit.lastReminderDate = '';
             this.saveHabits();
-            // Don't need full re-render for this input change usually
+        }
+    }
+
+    async triggerTestNotification(id) {
+        const habit = this.habits.find(h => h.id === id);
+        if (!habit) return;
+
+        const granted = await this.requestNotificationPermission();
+        if (granted) {
+            new Notification("Test Reminder ✅", {
+                body: `Great! Notifications are working for: ${habit.name}`,
+                icon: '/favicon.ico'
+            });
+        } else {
+            alert("⚠️ API Permission Denied. Please enable notifications in your browser settings for this site.");
         }
     }
 
@@ -630,21 +744,49 @@ class HabitTracker {
                             </div>
                         </div>
                         
-                        <!-- Reminder Settings Row -->
+                        <!-- Advanced Reminder Settings Row -->
                         <div class="habit-settings-row ${this.openSettings.has(habit.id) ? 'open' : ''}" id="settings-${habit.id}">
-                            <div class="setting-group">
-                                <span class="setting-label">Enable Notification</span>
-                                <label class="switch-toggle">
-                                    <input type="checkbox" ${habit.reminderEnabled ? 'checked' : ''} onchange="habitTracker.toggleReminder('${habit.id}')">
-                                    <span class="slider"></span>
-                                </label>
+                            <div class="reminders-header">
+                                <span class="setting-label">Notifications & Schedule</span>
+                                <button class="sugg-btn add" onclick="habitTracker.triggerTestNotification('${habit.id}')" title="Test Notification">⚡</button>
                             </div>
-                            ${habit.reminderEnabled ? `
-                                <div class="setting-group animate-slide-in">
-                                    <span class="setting-label">Notify at:</span>
-                                    <input type="time" class="time-picker-glass" value="${habit.reminderTime}" onchange="habitTracker.updateReminderTime('${habit.id}', this.value)">
+
+                            <div class="reminders-list">
+                                ${habit.reminders.length === 0 ? '<div class="empty-reminders">No reminders set</div>' : ''}
+                                ${habit.reminders.map(rem => `
+                                    <div class="reminder-item">
+                                        <div class="reminder-info">
+                                            <span class="reminder-icon">${rem.type === 'daily' ? '⏰' : '📅'}</span>
+                                            <span class="reminder-time">
+                                                ${rem.type === 'daily'
+                            ? `Daily at ${rem.time}`
+                            : `${new Date(rem.dateTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`}
+                                            </span>
+                                        </div>
+                                        <button class="sugg-btn dismiss" onclick="habitTracker.deleteReminder('${habit.id}', '${rem.id}')" title="Remove">&times;</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+
+                            <div class="add-reminder-controls">
+                                <div class="add-group">
+                                    <input type="time" class="time-picker-glass small" id="new-daily-${habit.id}">
+                                    <button class="btn-action-small" onclick="habitTracker.addDailyReminder('${habit.id}', document.getElementById('new-daily-${habit.id}').value)">
+                                        + Daily
+                                    </button>
                                 </div>
-                            ` : ''}
+                                <div class="separator-text">or</div>
+                                <div class="add-group">
+                                    <input type="datetime-local" class="time-picker-glass small" id="new-date-${habit.id}">
+                                    <button class="btn-action-small" onclick="habitTracker.addOneTimeReminder('${habit.id}', document.getElementById('new-date-${habit.id}').value)">
+                                        + Schedule
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 8px; text-align: center; opacity: 0.7;">
+                                * Alerts play sound if app is open
+                            </div>
                         </div>
                     `;
                     container.appendChild(el);
