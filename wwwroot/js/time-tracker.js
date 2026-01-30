@@ -2,29 +2,73 @@
 const TimeTracker = {
     init: function () {
         this.cacheDOM();
+        this.initializeDate(); // Set default date
+        this.initializeWeek(); // Set default week
         this.bindEvents();
         this.loadEntries();
         this.updateDateDisplay();
     },
 
     cacheDOM: function () {
+        // Daily View
+        this.dailyView = document.getElementById('daily-view');
         this.tableBody = document.getElementById('timeTrackerBody');
         this.totalTimeDisplay = document.getElementById('dailyTotalTime');
         this.dateDisplay = document.getElementById('trackerDateDisplay');
+        this.historyDate = document.getElementById('historyDate');
         this.addBtn = document.getElementById('addEntryBtn');
 
-        // Add Form Inputs
+        // Inputs
         this.newDesc = document.getElementById('newDesc');
         this.newStart = document.getElementById('newStart');
         this.newEnd = document.getElementById('newEnd');
         this.newDuration = document.getElementById('newDuration');
-
-        // Smart Stats
         this.totalTasksCount = document.getElementById('totalTasksCount');
         this.dailyProgressBar = document.getElementById('dailyProgressBar');
-
-        // Validation UI
         this.endTimeError = document.getElementById('endTimeError');
+
+        // Weekly View
+        this.weeklyView = document.getElementById('weekly-view');
+        this.weeklyReportBody = document.getElementById('weeklyReportBody');
+        this.weekRangeDisplay = document.getElementById('weekRangeDisplay');
+        this.prevWeekBtn = document.getElementById('prevWeekBtn');
+        this.nextWeekBtn = document.getElementById('nextWeekBtn');
+
+        // Weekly Stats
+        this.weekTotalTime = document.getElementById('weekTotalTime');
+        this.weekTotalTasks = document.getElementById('weekTotalTasks');
+        this.weekAvgTime = document.getElementById('weekAvgTime');
+        this.weekBestDay = document.getElementById('weekBestDay');
+        this.weeklyBarChart = document.getElementById('weeklyBarChart'); // Chart Container
+
+        // Modal Elements
+        this.detailModal = document.getElementById('detailModal');
+        this.modalDateTitle = document.getElementById('modalDateTitle');
+        this.modalBodyContent = document.getElementById('modalBodyContent');
+        this.modalEmptyState = document.getElementById('modalEmptyState');
+        this.closeModalBtn = document.getElementById('closeModalBtn');
+
+        // Tabs
+        this.tabDaily = document.getElementById('tabDaily');
+        this.tabWeekly = document.getElementById('tabWeekly');
+    },
+
+    initializeDate: function () {
+        // Set picker to today by default using local time
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        this.historyDate.value = `${year}-${month}-${day}`;
+    },
+
+    initializeWeek: function () {
+        // Set current week start (Monday)
+        const now = new Date();
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is sunday
+        this.currentWeekStart = new Date(now.setDate(diff));
+        this.currentWeekStart.setHours(0, 0, 0, 0);
     },
 
     bindEvents: function () {
@@ -34,6 +78,31 @@ const TimeTracker = {
         this.newStart.addEventListener('change', this.calculateNewDuration.bind(this));
         this.newEnd.addEventListener('change', this.calculateNewDuration.bind(this));
 
+        // Date Picker Change
+        this.historyDate.addEventListener('change', () => {
+            this.updateDateDisplay();
+            this.loadEntries();
+        });
+
+        // Tabs
+        this.tabDaily.addEventListener('click', () => this.switchView('daily'));
+        this.tabWeekly.addEventListener('click', () => this.switchView('weekly'));
+
+        // Week Nav
+        this.prevWeekBtn.addEventListener('click', () => this.changeWeek(-1));
+        this.nextWeekBtn.addEventListener('click', () => this.changeWeek(1));
+
+        // Modal Events
+        this.closeModalBtn.addEventListener('click', this.closeModal.bind(this));
+        this.detailModal.addEventListener('click', (e) => {
+            if (e.target === this.detailModal) this.closeModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.detailModal.classList.contains('active')) {
+                this.closeModal();
+            }
+        });
+
         // Event delegation for table actions
         this.tableBody.addEventListener('click', (e) => {
             if (e.target.closest('.btn-delete')) {
@@ -41,14 +110,6 @@ const TimeTracker = {
                 this.deleteEntry(id);
             }
             if (e.target.closest('.btn-edit')) {
-                // Implement inline edit or modal? 
-                // For simplicity given specifications, lets toggle a row to edit mode or just load into form?
-                // "Actions (Save / Edit / Delete)" implies inline or replacing the row. 
-                // Let's go with loading into the main form for "Edit" as a simple approach, 
-                // OR better, create an inline edit experience which is cleaner.
-                // Let's stick to "Delete" first, and maybe "Edit" loads it up.
-                // Actually, let's try a simple inline edit if time permits, otherwise a prompt/modal.
-                // Given the constraints and requested "Delete / Edit" buttons:
                 const id = e.target.closest('.btn-edit').dataset.id;
                 this.enableEditMode(e.target.closest('tr'), id);
             }
@@ -58,7 +119,15 @@ const TimeTracker = {
                 this.saveEdit(tr, id);
             }
             if (e.target.closest('.btn-cancel-edit')) {
-                this.loadEntries(); // refetch to reset
+                this.loadEntries();
+            }
+        });
+
+        // Weekly Report Actions (View Details)
+        this.weeklyReportBody.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-view-details')) {
+                const dateStr = e.target.closest('.btn-view-details').dataset.date;
+                this.openModal(dateStr);
             }
         });
 
@@ -71,20 +140,46 @@ const TimeTracker = {
         });
     },
 
+    switchView: function (view) {
+        if (view === 'daily') {
+            this.dailyView.style.display = 'block';
+            this.weeklyView.style.display = 'none';
+            this.tabDaily.classList.add('active');
+            this.tabWeekly.classList.remove('active');
+            // Hide History Date Picker in weekly view optionally? Use logic to show it only in daily
+            this.historyDate.parentElement.style.display = 'block';
+        } else {
+            this.dailyView.style.display = 'none';
+            this.weeklyView.style.display = 'block';
+            this.tabDaily.classList.remove('active');
+            this.tabWeekly.classList.add('active');
+            this.historyDate.parentElement.style.display = 'none';
+            this.loadWeeklyReport();
+        }
+    },
+
+    changeWeek: function (offset) {
+        this.currentWeekStart.setDate(this.currentWeekStart.getDate() + (offset * 7));
+        this.loadWeeklyReport();
+    },
+
+    // Daily View Methods
     updateDateDisplay: function () {
+        // Update the text display based on the picked date
+        if (!this.historyDate.value) return;
+
+        const dateParts = this.historyDate.value.split('-');
+        const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        this.dateDisplay.textContent = new Date().toLocaleDateString('en-US', options);
+        this.dateDisplay.textContent = dateObj.toLocaleDateString('en-US', options);
     },
 
     loadEntries: function () {
-        // Use local date YYYY-MM-DD
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const today = `${year}-${month}-${day}`;
+        const selectedDate = this.historyDate.value;
+        if (!selectedDate) return;
 
-        fetch(`/TimeTracker/GetEntries?date=${today}`)
+        fetch(`/TimeTracker/GetEntries?date=${selectedDate}`)
             .then(res => res.json())
             .then(data => {
                 this.renderTable(data);
@@ -98,7 +193,7 @@ const TimeTracker = {
         entries.forEach(entry => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td data-label="Description">${this.escapeHtml(entry.description)}</td>
+            <td data-label="Description">${this.escapeHtml(entry.description)}</td>
                 <td data-label="Start">${this.formatTime(entry.startTime)}</td>
                 <td data-label="End">${this.formatTime(entry.endTime)}</td>
                 <td data-label="Duration">${this.formatDuration(entry.startTime, entry.endTime)}</td>
@@ -106,13 +201,185 @@ const TimeTracker = {
                     <button class="btn-icon btn-edit" data-id="${entry.id}" title="Edit">✏️</button>
                     <button class="btn-icon btn-delete" data-id="${entry.id}" title="Delete">🗑️</button>
                 </td>
-            `;
+`;
             this.tableBody.appendChild(tr);
         });
 
         if (entries.length === 0) {
-            this.tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; opacity:0.6; padding: 2rem;">No work tracked today. Start adding your tasks.</td></tr>';
+            this.tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; opacity:0.6; padding: 2rem;">No work tracked for this date.</td></tr>';
         }
+    },
+
+    // Weekly View Methods
+    loadWeeklyReport: function () {
+        const start = new Date(this.currentWeekStart);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 6);
+
+        // Format for Display
+        const options = { day: 'numeric', month: 'short' };
+        this.weekRangeDisplay.textContent = `${start.toLocaleDateString('en-US', options)} – ${end.toLocaleDateString('en-US', options)}`;
+
+        // Convert to YYYY-MM-DD for API
+        const startStr = this.formatDateForApi(start);
+        const endStr = this.formatDateForApi(end);
+
+        fetch(`/TimeTracker/GetWeeklyEntries?startDate=${startStr}&endDate=${endStr}`)
+            .then(res => res.json())
+            .then(data => {
+                this.currentWeeklyEntries = data; // Store for modal
+                this.renderWeeklyStats(data, start);
+            })
+            .catch(err => console.error(err));
+    },
+
+    renderWeeklyStats: function (entries, weekStart) {
+        // Group by Date
+        const daysMap = {};
+
+        // Initialize all 7 days
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(weekStart);
+            d.setDate(d.getDate() + i);
+            const dateKey = this.formatDateForApi(d);
+            daysMap[dateKey] = { date: d, count: 0, minutes: 0 };
+        }
+
+        // Aggregate Data
+        entries.forEach(e => {
+            const dateKey = e.date.split('T')[0];
+            if (daysMap[dateKey]) {
+                daysMap[dateKey].count++;
+                daysMap[dateKey].minutes += this.getDurationInMinutes(e.startTime, e.endTime);
+            }
+        });
+
+        // Calculate Totals
+        let totalWeekMinutes = 0;
+        let totalWeekTasks = 0;
+        let activeDays = 0;
+        let maxMinutes = 0; // For Chart scaling
+        let bestDay = '-';
+
+        const rows = [];
+        const chartData = []; // Prepped for renderChart
+
+        Object.values(daysMap).forEach(dayStat => {
+            totalWeekMinutes += dayStat.minutes;
+            totalWeekTasks += dayStat.count;
+            if (dayStat.minutes > 0) activeDays++;
+
+            if (dayStat.minutes > maxMinutes) maxMinutes = dayStat.minutes; // Find max for scaling
+
+            if (dayStat.minutes > 0 && dayStat.minutes === maxMinutes) {
+                bestDay = dayStat.date.toLocaleDateString('en-US', { weekday: 'long' });
+            }
+
+            rows.push(`
+                <tr>
+                    <td data-label="Date">
+                        <strong>${dayStat.date.toLocaleDateString('en-US', { weekday: 'short' })}</strong> 
+                        ${dayStat.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </td>
+                    <td data-label="Total Tasks">${dayStat.count}</td>
+                    <td data-label="Total Work Time">${this.formatMinutesToHHMM(dayStat.minutes)}</td>
+                    <td data-label="Details" style="text-align: right;">
+                        <button class="btn-icon btn-view-details" data-date="${this.formatDateForApi(dayStat.date)}" title="View Daily Details">👁️</button>
+                    </td>
+                </tr>
+            `);
+
+            // Push to chart data
+            chartData.push({
+                label: dayStat.date.toLocaleDateString('en-US', { weekday: 'short' }),
+                fullDate: dayStat.date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }),
+                minutes: dayStat.minutes
+            });
+        });
+
+        this.weeklyReportBody.innerHTML = rows.join('');
+
+        // Update Cards
+        this.weekTotalTime.textContent = this.formatMinutesToHHMM(totalWeekMinutes);
+        this.weekTotalTasks.textContent = totalWeekTasks;
+
+        const avgMinutes = activeDays > 0 ? Math.round(totalWeekMinutes / activeDays) : 0;
+        this.weekAvgTime.textContent = this.formatMinutesToHHMM(avgMinutes);
+        this.weekBestDay.textContent = bestDay;
+
+        // Render Chart
+        this.renderChart(chartData, maxMinutes);
+    },
+
+    renderChart: function (data, maxMinutes) {
+        // Ensure maxMinutes is at least 60 (1 hour) for scale
+        const scaleMax = Math.max(maxMinutes, 60);
+
+        this.weeklyBarChart.innerHTML = '';
+        data.forEach(item => {
+            const heightPercent = (item.minutes / scaleMax) * 100;
+            const hourText = this.formatMinutesToHHMM(item.minutes);
+
+            const col = document.createElement('div');
+            col.className = 'chart-col';
+            col.innerHTML = `
+                <div class="chart-bar" style="height: ${heightPercent}%;">
+                    <div class="chart-bar-tooltip">${item.fullDate}: ${hourText}</div>
+                </div>
+    <div class="chart-label">${item.label}</div>
+`;
+            this.weeklyBarChart.appendChild(col);
+        });
+    },
+
+    openModal: function (dateStr) {
+        // Find entries for this date
+        const dailyEntries = this.currentWeeklyEntries.filter(e => e.date.startsWith(dateStr));
+
+        // Update Modal Title
+        const dateObj = new Date(dateStr);
+        this.modalDateTitle.textContent = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+        // Populate Table
+        this.modalBodyContent.innerHTML = '';
+        if (dailyEntries && dailyEntries.length > 0) {
+            this.modalEmptyState.style.display = 'none';
+            dailyEntries.forEach(entry => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${this.escapeHtml(entry.description)}</td>
+                    <td style="white-space:nowrap; font-size: 0.9em; opacity: 0.8;">
+                        ${this.formatTime(entry.startTime)} - ${this.formatTime(entry.endTime)}
+                    </td>
+                    <td style="text-align: right; font-weight: 500;">
+                        ${this.formatDuration(entry.startTime, entry.endTime)}
+                    </td>
+`;
+                this.modalBodyContent.appendChild(tr);
+            });
+        } else {
+            this.modalEmptyState.style.display = 'block';
+        }
+
+        // Show Modal
+        this.detailModal.classList.add('active');
+    },
+
+    closeModal: function () {
+        this.detailModal.classList.remove('active');
+    },
+
+    formatDateForApi: function (date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    },
+
+    formatMinutesToHHMM: function (totalMinutes) {
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+        return `${h}h ${m}m`;
     },
 
     calculateTotal: function (entries) {
@@ -123,7 +390,7 @@ const TimeTracker = {
 
         const hours = Math.floor(totalMinutes / 60);
         const minutes = totalMinutes % 60;
-        this.totalTimeDisplay.textContent = `${String(hours).padStart(2, '0')} : ${String(minutes).padStart(2, '0')}`;
+        this.totalTimeDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 
         // Update Smart Stats
         this.totalTasksCount.textContent = entries.length;
@@ -151,12 +418,9 @@ const TimeTracker = {
             return;
         }
 
-        // Use local date to ensure it matches the view
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const localDate = `${year}-${month}-${day}T00:00:00`;
+        // Use selected date from picker
+        const selectedDate = this.historyDate.value; // YYYY-MM-DD
+        const localDate = `${selectedDate}T00:00:00`;
 
         const entry = {
             description: desc,
@@ -210,7 +474,7 @@ const TimeTracker = {
                 <button class="btn-icon btn-save-edit" data-id="${id}" title="Save">💾</button>
                 <button class="btn-icon btn-cancel-edit" title="Cancel">❌</button>
             </td>
-        `;
+`;
         this.calculateEditDuration(tr);
     },
 
@@ -219,12 +483,9 @@ const TimeTracker = {
         const start = tr.querySelector('.edit-start').value;
         const end = tr.querySelector('.edit-end').value;
 
-        // Use local date to preserve day
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const localDate = `${year}-${month}-${day}T00:00:00`;
+        // Use selected date from picker
+        const selectedDate = this.historyDate.value; // YYYY-MM-DD
+        const localDate = `${selectedDate}T00:00:00`;
 
         const entry = {
             id: id,
@@ -244,6 +505,8 @@ const TimeTracker = {
                 if (res.success) this.loadEntries();
             });
     },
+
+    // calculateNewDuration, validateTimeInput etc. remain same below...
 
     calculateNewDuration: function () {
         const start = this.newStart.value;
@@ -313,7 +576,7 @@ const TimeTracker = {
 
         const h = Math.floor(diffMins / 60);
         const m = diffMins % 60;
-        return `${String(h).padStart(2, '0')} h ${String(m).padStart(2, '0')} m`;
+        return `${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m`;
     },
 
     getDurationInMinutes: function (start, end) {

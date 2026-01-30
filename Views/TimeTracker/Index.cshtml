@@ -351,6 +351,277 @@
         width: 100%; /* Ensure full width of cell */
     }
 
+    /* --- Tabs --- */
+    .view-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .tab-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        color: var(--text-secondary);
+        padding: 0.6rem 1.5rem;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .tab-btn.active {
+        background: var(--accent-color);
+        color: white;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    
+    .tab-btn:hover:not(.active) {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
+    
+    /* --- Weekly Report UI --- */
+    .weekly-nav {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .nav-btn {
+        background: transparent;
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .nav-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .week-range {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .weekly-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .week-stat-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .w-stat-label {
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .w-stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    [data-theme="light"] .tab-btn {
+        background: rgba(255, 255, 255, 0.5);
+        color: #64748b;
+    }
+    [data-theme="light"] .tab-btn.active {
+        background: var(--accent-color);
+        color: white;
+    }
+    [data-theme="light"] .week-stat-card {
+        background: rgba(255,255,255,0.6);
+    }
+
+    /* --- Weekly Bar Chart --- */
+    .weekly-chart-container {
+        border-radius: 16px;
+        padding: 2rem;
+        background: rgba(255, 255, 255, 0.02);
+        margin-bottom: 2rem;
+        height: 300px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .bar-chart {
+        flex: 1;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-top: 1rem;
+    }
+
+    .chart-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        height: 100%;
+        justify-content: flex-end;
+        position: relative;
+    }
+
+    .chart-bar {
+        width: 100%;
+        max-width: 40px;
+        background: var(--accent-color);
+        border-radius: 6px 6px 0 0;
+        transition: height 0.5s ease-out;
+        min-height: 4px; /* Ensure 0 values show a tiny line */
+        opacity: 0.8;
+        position: relative;
+    }
+    
+    .chart-bar:hover {
+        opacity: 1;
+    }
+
+    .chart-bar-tooltip {
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        margin-bottom: 5px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+    }
+    
+    .chart-bar:hover .chart-bar-tooltip {
+        opacity: 1;
+    }
+
+    .chart-label {
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    /* --- Daily Detail Modal --- */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .detail-modal {
+        background: var(--bg-base); /* Use theme bg */
+        width: 90%;
+        max-width: 600px;
+        border-radius: 16px;
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        transform: translateY(20px);
+        transition: transform 0.3s;
+        display: flex;
+        flex-direction: column;
+        max-height: 80vh;
+    }
+
+    .modal-overlay.active .detail-modal {
+        transform: translateY(0);
+    }
+    
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--glass-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    
+    .close-modal {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+        overflow-y: auto;
+    }
+    
+    /* Re-use tracker table styles inside modal but maybe simplified */
+    .modal-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .modal-table th {
+        text-align: left;
+        padding-bottom: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        border-bottom: 1px solid var(--glass-border);
+    }
+    .modal-table td {
+        padding: 0.75rem 0;
+        color: var(--text-primary);
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        font-size: 0.95rem;
+    }
+    .modal-table td:last-child {
+        border-bottom: none;
+    }
+
     /* --- Mobile Responsiveness --- */
     @@media (max-width: 992px) {
         .add-entry-grid {
@@ -427,72 +698,163 @@
     <div class="tracker-header">
         <h1 class="tracker-title">Daily Time Tracker</h1>
         <div class="tracker-date" id="trackerDateDisplay">Loading Date...</div>
-    </div>
-
-    <div class="summary-card-container">
-        <div class="summary-card">
-            <span class="summary-label">Total Work Time Today</span>
-            <div class="summary-value" id="dailyTotalTime">00 : 00</div>
-            
-            <div class="progress-container" title="Daily Goal: 8 Hours">
-                <div class="progress-bar" id="dailyProgressBar"></div>
-            </div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">Daily Goal: 8 hours</div>
+        <div style="margin-top: 1rem;">
+            <input type="date" id="historyDate" class="form-control-Glass" style="width: auto; display: inline-block; text-align: center; cursor: pointer;" title="Select date to view history" />
         </div>
     </div>
 
-    <div class="smart-stats-row">
-        <div class="stat-badge">
-            <span>✅ Tasks Completed:</span>
-            <strong id="totalTasksCount">0</strong>
-        </div>
+    <!-- View Tabs -->
+    <div class="view-tabs">
+        <button class="tab-btn active" id="tabDaily">Daily Tracker</button>
+        <button class="tab-btn" id="tabWeekly">Weekly Report</button>
     </div>
 
-    <div class="tracker-panel input-panel" style="margin-bottom: 2rem;">
-        <h3 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Add New Entry</h3>
-        <div class="add-entry-grid">
-            <div class="tracker-input-group">
-                <label>Description</label>
-                <input type="text" id="newDesc" class="form-control-Glass" placeholder="Project or Task Name" autocomplete="off" />
+    <!-- DAILY VIEW CONTAINER -->
+    <div id="daily-view">
+        <div class="summary-card-container">
+            <div class="summary-card">
+                <span class="summary-label">Total Work Time Today</span>
+                <div class="summary-value" id="dailyTotalTime">00 : 00</div>
+                
+                <div class="progress-container" title="Daily Goal: 8 Hours">
+                    <div class="progress-bar" id="dailyProgressBar"></div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">Daily Goal: 8 hours</div>
             </div>
-            <div class="tracker-input-group">
-                <label>Start Time</label>
-                <input type="time" id="newStart" class="form-control-Glass" />
+        </div>
+
+        <div class="smart-stats-row">
+            <div class="stat-badge">
+                <span>✅ Tasks Completed:</span>
+                <strong id="totalTasksCount">0</strong>
             </div>
-            <div class="tracker-input-group">
-                <label>End Time</label>
-                <div class="input-wrapper">
-                    <input type="time" id="newEnd" class="form-control-Glass" />
-                    <span class="error-tooltip" id="endTimeError">End time must be after start time</span>
+        </div>
+
+        <div class="tracker-panel input-panel" style="margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Add New Entry</h3>
+            <div class="add-entry-grid">
+                <div class="tracker-input-group">
+                    <label>Description</label>
+                    <input type="text" id="newDesc" class="form-control-Glass" placeholder="Project or Task Name" autocomplete="off" />
+                </div>
+                <div class="tracker-input-group">
+                    <label>Start Time</label>
+                    <input type="time" id="newStart" class="form-control-Glass" />
+                </div>
+                <div class="tracker-input-group">
+                    <label>End Time</label>
+                    <div class="input-wrapper">
+                        <input type="time" id="newEnd" class="form-control-Glass" />
+                        <span class="error-tooltip" id="endTimeError">End time must be after start time</span>
+                    </div>
+                </div>
+                <div class="tracker-input-group">
+                    <label>Duration</label>
+                    <input type="text" id="newDuration" class="form-control-Glass" placeholder="-- h -- m" readonly style="opacity: 0.7; cursor: default; background: rgba(0,0,0,0.1);" />
+                </div>
+                <div class="tracker-input-group" style="display: flex; align-items: flex-end;">
+                    <button id="addEntryBtn" class="btn-add-entry" style="width: 100%; height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                         <span>➕</span> Add Entry
+                    </button>
                 </div>
             </div>
-            <div class="tracker-input-group">
-                <label>Duration</label>
-                <input type="text" id="newDuration" class="form-control-Glass" placeholder="-- h -- m" readonly style="opacity: 0.7; cursor: default; background: rgba(0,0,0,0.1);" />
-            </div>
-            <div class="tracker-input-group" style="display: flex; align-items: flex-end;">
-                <button id="addEntryBtn" class="btn-add-entry" style="width: 100%; height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                     <span>➕</span> Add Entry
-                </button>
-            </div>
+        </div>
+
+        <div class="tracker-panel">
+            <table class="tracker-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Work Description</th>
+                        <th style="width: 15%">Start</th>
+                        <th style="width: 15%">End</th>
+                        <th style="width: 15%">Duration</th>
+                        <th style="width: 15%; text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="timeTrackerBody">
+                    <!-- Entries will be loaded here -->
+                </tbody>
+            </table>
         </div>
     </div>
+    
+    <!-- WEEKLY REPORT VIEW (Hidden by default) -->
+    <div id="weekly-view" style="display: none;">
+        <div class="weekly-nav">
+            <button class="nav-btn" id="prevWeekBtn">❮</button>
+            <span class="week-range" id="weekRangeDisplay">Loading Week...</span>
+            <button class="nav-btn" id="nextWeekBtn">❯</button>
+        </div>
 
-    <div class="tracker-panel">
-        <table class="tracker-table">
-            <thead>
-                <tr>
-                    <th style="width: 40%">Work Description</th>
-                    <th style="width: 15%">Start</th>
-                    <th style="width: 15%">End</th>
-                    <th style="width: 15%">Duration</th>
-                    <th style="width: 15%; text-align: right;">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="timeTrackerBody">
-                <!-- Entries will be loaded here -->
-            </tbody>
-        </table>
+        <div class="weekly-stats-grid">
+            <div class="week-stat-card">
+                <span class="w-stat-label">Total Time This Week</span>
+                <div class="w-stat-value" id="weekTotalTime">00:00</div>
+            </div>
+            <div class="week-stat-card">
+                <span class="w-stat-label">Total Tasks</span>
+                <div class="w-stat-value" id="weekTotalTasks">0</div>
+            </div>
+            <div class="week-stat-card">
+                <span class="w-stat-label">Avg Time / Day</span>
+                <div class="w-stat-value" id="weekAvgTime">00:00</div>
+            </div>
+            <div class="week-stat-card">
+                <span class="w-stat-label">Most Active Day</span>
+                <div class="w-stat-value" id="weekBestDay">-</div>
+            </div>
+        </div>
+
+        <!-- VISUAL INSIGHTS: Bar Chart -->
+        <div class="weekly-chart-container">
+            <h3 style="margin: 0 0 1rem 0; font-size: 1rem; color: var(--text-secondary); font-weight: 600;">Work Hours Distribution</h3>
+            <div class="bar-chart" id="weeklyBarChart">
+                <!-- Bars rendered via JS -->
+            </div>
+        </div>
+
+        <div class="tracker-panel">
+            <table class="tracker-table">
+                <thead>
+                    <tr>
+                        <th style="width: 30%">Date</th>
+                        <th style="width: 20%">Total Tasks</th>
+                        <th style="width: 30%">Total Work Time</th>
+                        <th style="width: 20%; text-align: right;">Details</th>
+                    </tr>
+                </thead>
+                <tbody id="weeklyReportBody">
+                    <!-- Weekly rows -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- DAILY DETAIL MODAL -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="detail-modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalDateTitle">Date Details</h2>
+                <button class="close-modal" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table class="modal-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Time</th>
+                            <th style="text-align: right;">Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalBodyContent">
+                        <!-- Daily details loaded here -->
+                    </tbody>
+                </table>
+                <div id="modalEmptyState" style="text-align: center; padding: 2rem; display: none; color: var(--text-secondary);">
+                    No tasks recorded for this day.
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>

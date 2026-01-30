@@ -51,6 +51,12 @@ namespace TodoListApp.Services
             return allEntries.Where(e => e.UserId == userId && e.Date.Date == date.Date);
         }
 
+        public IEnumerable<TimeTrackerEntry> GetEntriesRange(int userId, DateTime startDate, DateTime endDate)
+        {
+            var allEntries = LoadEntries();
+            return allEntries.Where(e => e.UserId == userId && e.Date.Date >= startDate.Date && e.Date.Date <= endDate.Date);
+        }
+
         public void AddEntry(TimeTrackerEntry entry)
         {
             var entries = LoadEntries();

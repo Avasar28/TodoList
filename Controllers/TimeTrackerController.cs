@@ -46,6 +46,18 @@ namespace TodoListApp.Controllers
             return Json(entries);
         }
 
+        [HttpGet]
+        public IActionResult GetWeeklyEntries(string startDate, string endDate)
+        {
+            if (!DateTime.TryParse(startDate, out var start) || !DateTime.TryParse(endDate, out var end))
+            {
+                return BadRequest("Invalid date range");
+            }
+
+            var entries = _timeTrackerService.GetEntriesRange(GetUserId(), start, end);
+            return Json(entries);
+        }
+
         [HttpPost]
         public IActionResult Add([FromBody] TimeTrackerEntry entry)
         {

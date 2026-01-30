@@ -43,7 +43,10 @@
             if (json) {
                 const data = JSON.parse(json);
                 for (const [key, value] of Object.entries(data)) {
-                    state.translationCache.set(key, value);
+                    // Sanitize Cache: Bad bug caused [object Object] storage
+                    if (value && typeof value === 'string' && !value.includes('[object Object]')) {
+                        state.translationCache.set(key, value);
+                    }
                 }
             }
         } catch (e) { console.warn("Cache error", e); }
@@ -170,13 +173,21 @@
                 const translations = await response.json();
 
                 batch.forEach((original, index) => {
-                    const translated = translations[index];
-                    if (translated) {
-                        state.translationCache.set(original, translated);
+                    const item = translations[index];
+                    let translatedText = null;
+
+                    if (item && typeof item === 'object') {
+                        translatedText = item.translatedText || item.TranslatedText;
+                    } else if (typeof item === 'string') {
+                        translatedText = item;
+                    }
+
+                    if (translatedText) {
+                        state.translationCache.set(original, translatedText);
 
                         // Apply
                         bindings.filter(b => b.text === original).forEach(b => {
-                            applyTranslation(b.item, b.type, translated);
+                            applyTranslation(b.item, b.type, translatedText);
                         });
                     }
                 });
