@@ -34,5 +34,41 @@
     "StartTime": "03:00:00",
     "EndTime": "15:00:00",
     "Duration": "12:00:00"
+  },
+  {
+    "Id": "6e1fa070-a042-4518-ba00-a6529ab1e745",
+    "UserId": 1,
+    "Description": "Unspecified Task",
+    "Date": "2026-01-30T00:00:00",
+    "StartTime": "17:05:00",
+    "EndTime": "17:05:00",
+    "Duration": "00:00:00"
+  },
+  {
+    "Id": "78a9ad32-46f1-4a5c-929a-3d7cea4c5684",
+    "UserId": 1,
+    "Description": "Unspecified Task",
+    "Date": "2026-01-30T00:00:00",
+    "StartTime": "17:05:00",
+    "EndTime": "17:08:00",
+    "Duration": "00:03:00"
+  },
+  {
+    "Id": "e90a5c30-313c-4cb4-a72e-bb99ca8b45ac",
+    "UserId": 1,
+    "Description": "Unspecified Task",
+    "Date": "2026-01-30T00:00:00",
+    "StartTime": "17:10:00",
+    "EndTime": "17:10:00",
+    "Duration": "00:00:00"
+  },
+  {
+    "Id": "1195131e-758c-49a1-a959-688b7c0d83e6",
+    "UserId": 1,
+    "Description": "Unspecified Task",
+    "Date": "2026-01-30T00:00:00",
+    "StartTime": "17:10:00",
+    "EndTime": "17:10:00",
+    "Duration": "00:00:00"
   }
 ]

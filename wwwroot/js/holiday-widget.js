@@ -14,6 +14,7 @@ const HolidayWidget = {
     holidaysData: null, // Cache for the current country/year
     reminders: JSON.parse(localStorage.getItem('holidayReminders')) || [],
     dismissedSuggestions: JSON.parse(localStorage.getItem('dismissedHolidaySuggestions')) || [],
+    manualSelection: false, // Flag to prevent weather sync from overwriting user choice
 
     init: function () {
         console.log("HolidayWidget: Initializing...");
@@ -27,112 +28,7 @@ const HolidayWidget = {
         this.startReminderLoop();
     },
 
-    startReminderLoop: function () {
-        // Check every hour (or closer if needed, but 1h is fine for "days before")
-        setInterval(() => this.checkReminders(), 3600000);
-        this.checkReminders(); // Run once on init
-    },
-
-    checkReminders: function () {
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        const todayStr = now.toISOString().split('T')[0];
-
-        this.reminders.forEach(r => {
-            if (!r.reminderEnabled || r.lastAlertedDate === todayStr) return;
-
-            const hDate = new Date(r.holidayDate);
-            hDate.setHours(0, 0, 0, 0);
-
-            // Calculate difference in days
-            const diffTime = hDate.getTime() - now.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            if (diffDays === r.reminderOffset) {
-                this.triggerReminder(r);
-                r.lastAlertedDate = todayStr;
-                this.saveReminders();
-            }
-        });
-    },
-
-    triggerReminder: function (reminder) {
-        const title = `Holiday Reminder: ${reminder.holidayName}`;
-        const body = `${reminder.holidayName} is in ${reminder.reminderOffset} day(s)! (${reminder.holidayDate})`;
-
-        if (Notification.permission === "granted") {
-            new Notification(title, {
-                body: body,
-                icon: '/favicon.ico',
-                tag: 'holiday-reminder-' + reminder.holidayName
-            });
-        } else {
-            this.showInAppBanner(title, body);
-        }
-    },
-
-    showInAppBanner: function (title, body) {
-        const container = document.getElementById('holidayWidgetCard');
-        if (!container) return;
-
-        const banner = document.createElement('div');
-        banner.className = 'holiday-reminder-banner';
-        banner.innerHTML = `
-            <div class="banner-content">
-                <strong>🔔 ${title}</strong>
-                <p>${body}</p>
-            </div>
-            <button class="banner-close" onclick="this.parentElement.remove()">×</button>
-        `;
-        container.appendChild(banner);
-
-        // Auto remove after 10s
-        setTimeout(() => {
-            if (banner.parentElement) {
-                banner.classList.add('fade-out');
-                setTimeout(() => banner.remove(), 500);
-            }
-        }, 10000);
-    },
-
-    toggleReminder: async function (holidayName, holidayDate) {
-        const existingIdx = this.reminders.findIndex(r => r.holidayName === holidayName && r.holidayDate === holidayDate);
-
-        if (existingIdx > -1) {
-            // Remove
-            this.reminders.splice(existingIdx, 1);
-        } else {
-            // Add (default 1 day before)
-            const permission = await this.requestNotificationPermission();
-            this.reminders.push({
-                holidayName,
-                holidayDate,
-                reminderOffset: 1,
-                reminderEnabled: true,
-                lastAlertedDate: ''
-            });
-        }
-
-        this.saveReminders();
-        this.fetchHolidays(); // Re-render current list to show active state
-    },
-
-    setReminderOffset: function (holidayName, holidayDate, offset) {
-        const reminder = this.reminders.find(r => r.holidayName === holidayName && r.holidayDate === holidayDate);
-        if (reminder) {
-            reminder.reminderOffset = parseInt(offset);
-            this.saveReminders();
-        }
-    },
-
-    saveReminders: function () {
-        localStorage.setItem('holidayReminders', JSON.stringify(this.reminders));
-    },
-
-    saveDismissedSuggestions: function () {
-        localStorage.setItem('dismissedHolidaySuggestions', JSON.stringify(this.dismissedSuggestions));
-    },
-
+    // ... (lines 30-144)
     requestNotificationPermission: async function () {
         if (!("Notification" in window)) return "unsupported";
         if (Notification.permission === "granted") return "granted";
@@ -146,126 +42,43 @@ const HolidayWidget = {
     syncWithWeather: function (countryName, countryCode) {
         if (!countryCode) return;
 
+        // If user manually selected a country, do NOT overwrite it with weather sync
+        if (this.manualSelection) {
+            console.log("HolidayWidget: Sync ignored due to manual selection.");
+            return;
+        }
+
         console.log(`HolidayWidget: Syncing with Weather -> ${countryName} (${countryCode})`);
 
         // If we already have a selection and it's different, update it
         if (this.selectedCountryCode !== countryCode) {
-            this.selectCountryByCode(countryCode, countryName);
+            this.selectCountryByCode(countryCode, countryName, true);
         }
     },
 
-    selectCountryByCode: function (code, fallbackName) {
+    selectCountryByCode: function (code, fallbackName, isSync = false) {
         if (!code) return;
 
         // Find country in our cached list for proper name/flag
         const country = this.allCountries.find(c => c.countryCode === code);
         if (country) {
-            this.selectCountry(country.countryCode, country.name);
+            this.selectCountry(country.countryCode, country.name, isSync);
         } else if (fallbackName) {
-            this.selectCountry(code, fallbackName);
+            this.selectCountry(code, fallbackName, isSync);
         }
     },
 
-    cacheCountries: async function () {
-        try {
-            const response = await fetch('/Todo/GetAvailableCountriesJson');
-            this.allCountries = await response.json();
-            this.populateCountryOptions(this.allCountries);
-        } catch (error) {
-            console.error("HolidayWidget: Error fetching countries", error);
-        }
-    },
+    // ...
 
-    populateCountryOptions: function (countries) {
-        const optionsContainer = document.getElementById('holidayCountryOptions');
-        const select = document.getElementById('holidayCountrySelect');
-        if (!optionsContainer || !select) return;
-
-        optionsContainer.innerHTML = '';
-        select.innerHTML = '<option value="">Select Country</option>';
-
-        countries.forEach(country => {
-            // Option for hidden select
-            const opt = document.createElement('option');
-            opt.value = country.countryCode;
-            opt.textContent = country.name;
-            select.appendChild(opt);
-
-            // Item for custom dropdown
-            const item = document.createElement('div');
-            item.className = 'option-item';
-            item.dataset.value = country.countryCode;
-            item.dataset.text = country.name;
-            item.innerHTML = `
-                <span class="opt-flag">${country.flagEmoji || '🌍'}</span>
-                <span class="opt-code">${country.countryCode}</span>
-                <span class="opt-country">${country.name}</span>
-            `;
-            item.onclick = () => this.selectCountry(country.countryCode, country.name);
-            optionsContainer.appendChild(item);
-        });
-    },
-
-    attachEventListeners: function () {
-        const searchInput = document.getElementById('holidayCountrySearch');
-        const yearSelect = document.getElementById('holidayYearSelect');
-
-        if (searchInput) {
-            searchInput.oninput = (e) => this.filterCountries(e.target.value);
-            searchInput.onfocus = () => {
-                const wrapper = searchInput.closest('.custom-currency-select');
-                if (wrapper) wrapper.classList.add('active');
-            };
-        }
-
-        if (yearSelect) {
-            yearSelect.onchange = (e) => {
-                this.selectedYear = parseInt(e.target.value);
-                if (this.selectedCountryCode) {
-                    this.fetchHolidays();
-                }
-            };
-        }
-
-        // Global click handler to close custom dropdowns
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.custom-currency-select')) {
-                document.querySelectorAll('.custom-currency-select').forEach(el => el.classList.remove('active'));
-            }
-        });
-    },
-
-    filterCountries: function (query) {
-        const q = query.toLowerCase();
-        const items = document.querySelectorAll('#holidayCountryOptions .option-item');
-        let visibleCount = 0;
-
-        items.forEach(item => {
-            const text = item.dataset.text.toLowerCase();
-            const code = item.dataset.value.toLowerCase();
-            if (text.includes(q) || code.includes(q)) {
-                item.style.display = 'flex';
-                visibleCount++;
-            } else {
-                item.style.display = 'none';
-            }
-        });
-
-        // Show/Hide "No Results" message in dropdown
-        let noResultsMsg = document.getElementById('holidayNoCountriesMsg');
-        if (!noResultsMsg) {
-            noResultsMsg = document.createElement('div');
-            noResultsMsg.id = 'holidayNoCountriesMsg';
-            noResultsMsg.className = 'no-results-dropdown';
-            noResultsMsg.textContent = 'No countries found matching your search.';
-            document.getElementById('holidayCountryOptions').appendChild(noResultsMsg);
-        }
-        noResultsMsg.style.display = visibleCount === 0 && q.length > 0 ? 'block' : 'none';
-    },
-
-    selectCountry: function (code, name) {
+    selectCountry: function (code, name, isSync = false) {
         this.selectedCountryCode = code;
         this.selectedCountryName = name; // Cache name for header
+
+        // If this is a manual selection (not sync), set the flag
+        if (!isSync) {
+            this.manualSelection = true;
+        }
+
         const searchInput = document.getElementById('holidayCountrySearch');
         const select = document.getElementById('holidayCountrySelect');
 

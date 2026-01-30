@@ -689,6 +689,276 @@
         }
     }
 
+    /* --- Timer UI --- */
+    .timer-panel {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(255, 255, 255, 0.05));
+        border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .timer-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .timer-inputs {
+        flex: 1;
+    }
+    
+    .timer-inputs label {
+        display: block;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        margin-bottom: 0.4rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .timer-display-group {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .timer-display {
+        font-family: 'Courier New', monospace;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -1px;
+        min-width: 200px;
+        text-align: right;
+    }
+
+    .btn-timer {
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-start {
+        background: var(--success-color);
+        color: white;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-start:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+    }
+
+    .btn-stop {
+        background: var(--danger-color);
+        color: white;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-stop:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+    }
+
+    .timer-glow {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+        opacity: 0;
+        transition: opacity 1s;
+        pointer-events: none;
+    }
+
+    .timer-panel.active .timer-glow {
+        opacity: 1;
+        animation: pulseGlow 2s infinite ease-in-out;
+    }
+
+    @@keyframes pulseGlow {
+        0% { opacity: 0.5; }
+        50% { opacity: 0.8; }
+        100% { opacity: 0.5; }
+    }
+
+    /* --- Idle Modal --- */
+    .idle-modal-content {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .idle-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: inline-block;
+        animation: floatIdle 3s ease-in-out infinite;
+    }
+
+    @@keyframes floatIdle {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .idle-title {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    .idle-message {
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+        font-size: 1rem;
+    }
+
+    .idle-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .btn-idle-working {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .btn-idle-pause {
+        background: transparent;
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+        padding: 0.8rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn-idle-pause:hover {
+        background: rgba(255,255,255,0.1);
+    }
+    
+    /* --- Status & Settings --- */
+    .timer-status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        background-color: var(--text-secondary);
+        border-radius: 50%;
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+        transition: background-color 0.3s, box-shadow 0.3s;
+    }
+
+    .status-dot.active {
+        background-color: var(--success-color);
+        box-shadow: 0 0 10px var(--success-color);
+        animation: pulseDot 2s infinite;
+    }
+
+    .status-dot.warning {
+        background-color: #f59e0b;
+        box-shadow: 0 0 10px #f59e0b;
+    }
+
+    .status-dot.paused {
+        background-color: var(--danger-color);
+    }
+    
+    @@keyframes pulseDot {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    .btn-icon-glass {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        color: var(--text-secondary);
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 1.2rem;
+        margin-left: 0.5rem;
+    }
+
+    .btn-icon-glass:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+        transform: rotate(30deg);
+    }
+
+    .setting-item {
+        margin-bottom: 1.5rem;
+    }
+
+    .setting-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+        cursor: pointer;
+    }
+
+    .setting-desc {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    #settingIdleEnabled {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: var(--accent-color);
+    }
+    
+    @@media (max-width: 768px) {
+        .timer-flex {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1.5rem;
+        }
+        .timer-display-group {
+            justify-content: space-between;
+        }
+        .timer-display {
+            text-align: left;
+            font-size: 2rem;
+            min-width: auto; /* Allow shrink on mobile */
+        }
+    }
     }
 
 </style>
@@ -730,8 +1000,35 @@
             </div>
         </div>
 
+        <!-- TIMER PANEL (Active Tracking) -->
+        <div class="tracker-panel timer-panel" style="margin-bottom: 2rem; position: relative; overflow: hidden;">
+            <div class="timer-glow" id="timerGlow"></div>
+            <div class="timer-flex">
+                <div class="timer-inputs">
+                    <label>Current Task</label>
+                    <input type="text" id="timerDesc" class="form-control-Glass" placeholder="What are you working on?" autocomplete="off" />
+                </div>
+                <div class="timer-display-group">
+                    <div class="timer-status-indicator" id="timerStatus" title="Status: Idle">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Idle</span>
+                    </div>
+                    <div class="timer-display" id="activeTimerDisplay">00:00:00</div>
+                    <div class="timer-controls">
+                        <button id="startTimerBtn" class="btn-timer btn-start">
+                            <span>▶</span> Start
+                        </button>
+                        <button id="stopTimerBtn" class="btn-timer btn-stop" style="display: none;">
+                            <span>⏹</span> Stop
+                        </button>
+                        <button id="timerSettingsBtn" class="btn-icon-glass" title="Timer Settings">⚙️</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="tracker-panel input-panel" style="margin-bottom: 2rem;">
-            <h3 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Add New Entry</h3>
+            <h3 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Add Manual Entry</h3>
             <div class="add-entry-grid">
                 <div class="tracker-input-group">
                     <label>Description</label>
@@ -860,5 +1157,55 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/time-tracker.js" asp-append-version="true"></script>
+    <!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+    <div class="detail-modal" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Timer Settings</h3>
+            <button class="close-modal" id="closeSettingsBtn">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="settings-form">
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <span>Idle Detection</span>
+                        <input type="checkbox" id="settingIdleEnabled" checked>
+                    </label>
+                    <p class="setting-desc">Auto-pause if you stop interacting.</p>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <span>Idle Threshold</span>
+                        <select id="settingIdleThreshold" class="form-control-Glass">
+                            <option value="3">3 Minutes</option>
+                            <option value="5" selected>5 Minutes</option>
+                            <option value="10">10 Minutes</option>
+                        </select>
+                    </label>
+                    <p class="setting-desc">How long before asking if you're there.</p>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem; text-align: right;">
+                <button class="btn-add-entry" id="saveSettingsBtn" style="width: auto;">Save Settings</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Idle Warning Modal -->
+<div class="modal-overlay" id="idleModal">
+    <div class="detail-modal" style="max-width: 450px;">
+        <div class="idle-modal-content">
+            <span class="idle-icon">💤</span>
+            <h3 class="idle-title">Are you still there?</h3>
+            <p class="idle-message">You've been inactive for a while. Do you want to keep tracking this task?</p>
+            <div class="idle-actions">
+                <button class="btn-idle-working" id="btnIdleWorking">Yes, I'm Working</button>
+                <button class="btn-idle-pause" id="btnIdlePause">Pause Tracking</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/time-tracker.js" asp-append-version="true"></script>
 }

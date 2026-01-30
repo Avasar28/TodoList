@@ -7,6 +7,7 @@ const TimeTracker = {
         this.bindEvents();
         this.loadEntries();
         this.updateDateDisplay();
+        this.initActiveTracking();
     },
 
     cacheDOM: function () {
@@ -51,6 +52,27 @@ const TimeTracker = {
         // Tabs
         this.tabDaily = document.getElementById('tabDaily');
         this.tabWeekly = document.getElementById('tabWeekly');
+
+        // Timer Elements
+        this.timerPanel = document.querySelector('.timer-panel');
+        this.timerDesc = document.getElementById('timerDesc');
+        this.activeTimerDisplay = document.getElementById('activeTimerDisplay');
+        this.startBtn = document.getElementById('startTimerBtn');
+        this.stopBtn = document.getElementById('stopTimerBtn');
+
+        // Idle Modal Elements
+        this.idleModal = document.getElementById('idleModal');
+        this.btnIdleWorking = document.getElementById('btnIdleWorking');
+        this.btnIdlePause = document.getElementById('btnIdlePause');
+
+        // Settings Elements
+        this.timerStatus = document.getElementById('timerStatus');
+        this.timerSettingsBtn = document.getElementById('timerSettingsBtn');
+        this.settingsModal = document.getElementById('settingsModal');
+        this.closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        this.saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        this.settingIdleEnabled = document.getElementById('settingIdleEnabled');
+        this.settingIdleThreshold = document.getElementById('settingIdleThreshold');
     },
 
     initializeDate: function () {
@@ -137,6 +159,30 @@ const TimeTracker = {
                 const tr = e.target.closest('tr');
                 this.calculateEditDuration(tr);
             }
+        });
+
+        // Timer Events
+        this.startBtn.addEventListener('click', () => {
+            if (!this.timerDesc.value) {
+                // Focus nicely if empty
+                this.timerDesc.focus();
+                // Optional: require description? For now let's allow starting, but encourage it.
+            }
+            this.startTimer();
+        });
+
+        this.stopBtn.addEventListener('click', () => this.stopTimer());
+
+        // Idle Modal Events
+        this.btnIdleWorking.addEventListener('click', () => this.handleIdleResponse(true));
+        this.btnIdlePause.addEventListener('click', () => this.handleIdleResponse(false));
+
+        // Settings Events
+        this.timerSettingsBtn.addEventListener('click', () => this.openSettings());
+        this.closeSettingsBtn.addEventListener('click', () => this.closeSettings());
+        this.saveSettingsBtn.addEventListener('click', () => this.saveSettings());
+        this.settingsModal.addEventListener('click', (e) => {
+            if (e.target === this.settingsModal) this.closeSettings();
         });
     },
 
@@ -616,6 +662,267 @@ const TimeTracker = {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
+    },
+    // --- Active Tracking & Idle Detection ---
+    userSettings: {
+        idleEnabled: true,
+        idleThreshold: 5 // minutes
+    },
+
+    // Runtime state
+    idleCheckInterval: null,
+    lastActivity: Date.now(),
+    lastActivityThrottle: 0,
+    isTracking: false,
+    activeStartTime: null,
+    timerInterval: null,
+    idleWarningTimeout: null, // For auto-pause if no response
+
+    loadSettings: function () {
+        const stored = localStorage.getItem('timeTrackerSettings');
+        if (stored) {
+            this.userSettings = JSON.parse(stored);
+        }
+        // Update UI to match
+        if (this.settingIdleEnabled) this.settingIdleEnabled.checked = this.userSettings.idleEnabled;
+        if (this.settingIdleThreshold) this.settingIdleThreshold.value = this.userSettings.idleThreshold;
+    },
+
+    saveSettings: function () {
+        this.userSettings.idleEnabled = this.settingIdleEnabled.checked;
+        this.userSettings.idleThreshold = parseInt(this.settingIdleThreshold.value);
+
+        localStorage.setItem('timeTrackerSettings', JSON.stringify(this.userSettings));
+        this.closeSettings();
+
+        // Apply immediately
+        this.initIdleDetection();
+    },
+
+    initActiveTracking: function () {
+        this.loadSettings();
+
+        // Check for existing session in localStorage
+        const storedStart = localStorage.getItem('activeTrackingStart');
+        const storedDesc = localStorage.getItem('activeTrackingDesc');
+
+        if (storedStart) {
+            this.activeStartTime = new Date(parseInt(storedStart));
+            this.timerDesc.value = storedDesc || '';
+            this.startTimer(true); // true = resuming
+        } else {
+            this.updateStatusEffect('idle');
+        }
+
+        this.initIdleDetection();
+    },
+
+    initIdleDetection: function () {
+        const events = ['mousemove', 'keydown', 'click', 'scroll'];
+        events.forEach(event => {
+            document.addEventListener(event, () => this.resetIdleTimer());
+        });
+
+        if (this.idleCheckInterval) clearInterval(this.idleCheckInterval);
+
+        // Only run check if enabled
+        if (this.userSettings.idleEnabled) {
+            this.idleCheckInterval = setInterval(() => this.checkIdle(), 5000);
+        }
+    },
+
+    resetIdleTimer: function () {
+        // Throttle updates to once per 2 seconds
+        const now = Date.now();
+        if (now - this.lastActivityThrottle > 2000) {
+            this.lastActivity = now;
+            this.lastActivityThrottle = now;
+        }
+    },
+
+    checkIdle: function () {
+        if (!this.isTracking) return;
+        if (!this.userSettings.idleEnabled) return;
+
+        // If modal is already open, don't check
+        if (this.idleModal.classList.contains('active')) return;
+
+        const now = Date.now();
+        const diff = now - this.lastActivity;
+        const thresholdMs = this.userSettings.idleThreshold * 60 * 1000;
+
+        if (diff > thresholdMs) {
+            this.showIdleModal();
+        }
+    },
+
+    showIdleModal: function () {
+        this.idleModal.classList.add('active');
+        this.updateStatusEffect('warning');
+
+        // Start Auto-Pause Timer (1 minute)
+        if (this.idleWarningTimeout) clearTimeout(this.idleWarningTimeout);
+        this.idleWarningTimeout = setTimeout(() => {
+            this.handleAutoPause();
+        }, 60000); // 1 minute
+    },
+
+    handleAutoPause: function () {
+        if (!this.idleModal.classList.contains('active')) return;
+
+        this.idleModal.classList.remove('active');
+
+        // Calculate the time they went idle -> End Time = Last Activity Time
+        const idleTime = new Date(this.lastActivity);
+        this.stopTimer(idleTime);
+
+        // Show Toast / Status (Red)
+        this.updateStatusEffect('paused');
+        alert("Tracking paused due to inactivity.");
+    },
+
+    handleIdleResponse: function (isWorking) {
+        this.idleModal.classList.remove('active');
+        if (this.idleWarningTimeout) clearTimeout(this.idleWarningTimeout);
+
+        if (isWorking) {
+            this.resetIdleTimer();
+            this.updateStatusEffect('active');
+        } else {
+            const idleTime = new Date(this.lastActivity);
+            this.stopTimer(idleTime);
+        }
+    },
+
+    startTimer: function (isResuming = false) {
+        if (!isResuming) {
+            this.activeStartTime = new Date();
+            this.lastActivity = Date.now(); // Sync idle timer on start
+            localStorage.setItem('activeTrackingStart', this.activeStartTime.getTime());
+            localStorage.setItem('activeTrackingDesc', this.timerDesc.value);
+        }
+
+        this.isTracking = true;
+        this.timerPanel.classList.add('active');
+        this.startBtn.style.display = 'none';
+        this.stopBtn.style.display = 'flex';
+        this.timerDesc.readOnly = true;
+
+        if (this.timerInterval) clearInterval(this.timerInterval);
+        this.timerInterval = setInterval(() => this.updateTimerDisplay(), 1000);
+        this.updateTimerDisplay();
+
+        this.updateStatusEffect('active');
+    },
+
+    stopTimer: function (endTimeOverride = null) {
+        this.isTracking = false;
+        const endTime = endTimeOverride || new Date();
+        const startTime = this.activeStartTime;
+
+        clearInterval(this.timerInterval);
+        if (this.idleWarningTimeout) clearTimeout(this.idleWarningTimeout);
+
+        localStorage.removeItem('activeTrackingStart');
+        localStorage.removeItem('activeTrackingDesc');
+
+        this.timerPanel.classList.remove('active');
+        this.startBtn.style.display = 'flex';
+        this.stopBtn.style.display = 'none';
+        this.activeTimerDisplay.textContent = '00:00:00';
+        this.timerDesc.readOnly = false;
+
+        const desc = this.timerDesc.value || 'Unspecified Task';
+        this.submitEntryDirectly(desc, startTime, endTime);
+        this.timerDesc.value = '';
+
+        if (endTimeOverride) {
+            this.updateStatusEffect('paused');
+        } else {
+            this.updateStatusEffect('idle');
+        }
+    },
+
+    updateStatusEffect: function (state) {
+        // State: 'idle', 'active', 'warning', 'paused'
+        const dot = this.timerStatus.querySelector('.status-dot');
+        const text = this.timerStatus.querySelector('.status-text');
+
+        dot.className = 'status-dot'; // reset
+
+        switch (state) {
+            case 'active':
+                dot.classList.add('active');
+                text.textContent = 'Active';
+                break;
+            case 'warning':
+                dot.classList.add('warning');
+                text.textContent = 'Idle Warning';
+                break;
+            case 'paused':
+                dot.classList.add('paused');
+                text.textContent = 'Paused (Inactive)';
+                break;
+            default: // idle
+                text.textContent = 'Idle';
+                break;
+        }
+    },
+
+    openSettings: function () {
+        this.settingsModal.classList.add('active');
+    },
+
+    closeSettings: function () {
+        this.settingsModal.classList.remove('active');
+    },
+
+    updateTimerDisplay: function () {
+        if (!this.activeStartTime) return;
+        const now = new Date();
+        const diff = now - this.activeStartTime;
+
+        const totalSeconds = Math.floor(diff / 1000);
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+
+        this.activeTimerDisplay.textContent =
+            `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    },
+
+    submitEntryDirectly: function (desc, startDate, endDate) {
+        // Safety Check: Ensure valid duration (minimum 1 second)
+        if (endDate <= startDate || (endDate - startDate) < 1000) {
+            console.warn("Skipping entry: duration too short (" + (endDate - startDate) + "ms)");
+            return;
+        }
+
+        const formatTime = (date) => {
+            return date.toTimeString().substring(0, 5); // HH:mm
+        };
+
+        const dateStr = this.formatDateForApi(startDate); // YYYY-MM-DD
+        const localDate = `${dateStr}T00:00:00`;
+
+        const entry = {
+            description: desc,
+            startTime: formatTime(startDate),
+            endTime: formatTime(endDate),
+            date: localDate
+        };
+
+        fetch('/TimeTracker/Add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(entry)
+        })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    this.loadEntries();
+                }
+            });
     }
 };
 
