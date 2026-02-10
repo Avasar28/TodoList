@@ -40,6 +40,20 @@
 
   --danger-color: #f87171;
   --success-color: #34d399;
+
+  /* Theme-Aware Gradients */
+  --gradient-emergency: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%);
+  --gradient-translator: linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(20, 184, 166, 0.02) 100%);
+  --gradient-text: linear-gradient(to right, #e2e8f0, #94a3b8);
+
+  /* Theme-Aware Shadows & Borders */
+  --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --shadow-hover: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+  --shadow-elevation: 0 4px 15px rgba(0, 0, 0, 0.1);
+  --border-card: 1px solid rgba(255, 255, 255, 0.08);
+  --text-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  --transition-smooth: background 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+  --transition: all 0.2s ease;
 }
 
 /* Light Theme Override */
@@ -81,6 +95,20 @@
 
   /* Toggle Glow (Blueish for Light Theme) */
   --toggle-glow: rgba(56, 189, 248, 0.5);
+
+  /* Light Theme Gradients */
+  --gradient-emergency: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(239, 68, 68, 0.01) 100%);
+  --gradient-translator: linear-gradient(135deg, rgba(13, 148, 136, 0.05) 0%, rgba(13, 148, 136, 0.01) 100%);
+  --gradient-text: linear-gradient(135deg, #1F3A3A 0%, #036564 100%);
+
+  /* Light Theme Shadows & Borders */
+  --shadow-card: 0 20px 40px -12px rgba(3, 101, 100, 0.08);
+  /* Soft/Diffused */
+  --shadow-hover: 0 10px 20px -5px rgba(3, 101, 100, 0.1);
+  --shadow-elevation: 0 4px 15px rgba(3, 101, 100, 0.05);
+  --border-card: 1px solid rgba(3, 101, 100, 0.12);
+  /* Subtle Separation */
+  --text-shadow: 0 10px 30px rgba(3, 101, 100, 0.08);
 }
 
 body {
@@ -99,7 +127,7 @@ body {
   letter-spacing: 0.01em;
 
   /* Global Smooth Transition for Theme Switch */
-  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: var(--transition-smooth);
 }
 
 .main-content-wrapper {
@@ -162,12 +190,12 @@ header {
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   padding: 0 1rem;
-  transition: var(--transition);
+  transition: var(--transition-smooth);
 }
 
 .search-input-wrapper:focus-within {
   border-color: var(--accent-color);
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 15px var(--accent-glow);
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -194,7 +222,7 @@ header {
   align-items: center;
   padding: 0.5rem;
   border-radius: 50%;
-  transition: var(--transition);
+  transition: var(--transition-smooth);
 }
 
 .clear-search:hover {
@@ -224,12 +252,12 @@ h1 {
   font-size: 3.5rem;
   font-weight: 700;
   margin: 0;
-  background: linear-gradient(to right, #e2e8f0, #94a3b8);
+  background: var(--gradient-text);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -2px;
-  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  text-shadow: var(--text-shadow);
 }
 
 .subtitle {
@@ -247,10 +275,9 @@ h1 {
   -webkit-backdrop-filter: blur(20px);
   border-radius: 24px;
   padding: 2.5rem;
-  border: 1px solid var(--glass-border);
-  box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  border: var(--border-card);
+  box-shadow: var(--shadow-card);
+  transition: var(--transition-smooth);
 }
 
 .add-form {
@@ -314,8 +341,8 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+  transition: var(--transition-smooth), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px var(--accent-glow);
 }
 
 .todo-content {
@@ -365,7 +392,7 @@ h1 {
 
 .btn-add:hover {
   transform: scale(1.05);
-  box-shadow: 0 8px 25px rgba(168, 85, 247, 0.6);
+  box-shadow: 0 8px 25px var(--accent-glow);
 }
 
 .todo-list {
@@ -381,7 +408,7 @@ h1 {
   padding: 1.25rem;
   border-radius: 16px;
   border: 1px solid transparent;
-  transition: all 0.3s ease;
+  transition: var(--transition-smooth), transform 0.2s ease;
   animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -389,7 +416,7 @@ h1 {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-hover);
 }
 
 .todo-item.completed {
@@ -500,7 +527,9 @@ h1 {
   backdrop-filter: blur(20px);
   padding: 2.5rem;
   border-radius: 24px;
-  border: 1px solid var(--glass-border);
+  border: var(--border-card);
+  box-shadow: var(--shadow-card);
+  transition: var(--transition-smooth);
 }
 
 .form-group label {
@@ -519,7 +548,7 @@ h1 {
   color: var(--text-primary);
   font-size: 1rem;
   font-family: inherit;
-  transition: border-color 0.2s;
+  transition: var(--transition-smooth);
 }
 
 .form-control:focus {
@@ -543,16 +572,17 @@ h1 {
   padding: 3rem 2.5rem;
   /* Spacious padding */
   border-radius: 24px;
-  border: 1px solid var(--glass-border);
+  border: var(--border-card);
   width: 100%;
   max-width: 520px;
   /* Fixed width as requested */
   text-align: center;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   /* Logical grouping */
+  transition: var(--transition-smooth);
 }
 
 /* Auth Hero Section */
@@ -565,7 +595,7 @@ h1 {
   font-weight: 800;
   margin: 0 0 0.5rem 0;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  background: var(--gradient-text);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -610,7 +640,7 @@ h1 {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: var(--transition-smooth);
   color: var(--text-primary);
 }
 
@@ -635,7 +665,7 @@ h1 {
   font-size: 1.05rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-smooth);
   width: 100%;
   margin-top: 0.5rem;
   display: flex;
@@ -6600,7 +6630,7 @@ input:checked+.slider:before {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: var(--transition-smooth);
 }
 
 [data-theme="light"] .mic-btn {

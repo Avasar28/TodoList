@@ -1,16 +1,24 @@
 /* Missing Widget Styles */
 .widget-emergency {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%);
+    background: var(--gradient-emergency);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    border: var(--border-card);
+    box-shadow: var(--shadow-card);
+    border-radius: 24px;
+    transition: var(--transition-smooth);
 }
 
 .widget-translator-summary {
-    background: linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(20, 184, 166, 0.02) 100%);
+    background: var(--gradient-translator);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    border: var(--border-card);
+    box-shadow: var(--shadow-card);
+    border-radius: 24px;
+    transition: var(--transition-smooth);
 }
 
 .emergency-visual {

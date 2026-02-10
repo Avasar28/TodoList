@@ -3,19 +3,7 @@
 }
 
 <style>
-    :root {
-        --glass-bg: rgba(255, 255, 255, 0.05);
-        --glass-border: rgba(255, 255, 255, 0.1);
-        --text-primary: #f1f5f9;
-        --text-secondary: #94a3b8;
-        --accent-color: #6366f1;
-        --danger-color: #ef4444;
-        --success-color: #10b981;
-    }
-
-    /* Override based on site.css logic if needed, but these variables 
-       often match the dark mode. Light mode might need overrides if not fully global. 
-       Assuming site.css handles body/root variables, we use them. */
+    /* Local overrides using global variables */
 
     .time-tracker-container {
         padding: 2rem 0;
@@ -23,6 +11,7 @@
         margin: 0 auto;
         padding-left: 1rem;
         padding-right: 1rem;
+        transition: var(--transition-smooth);
     }
 
     .tracker-header {
@@ -34,9 +23,10 @@
         font-size: 2.5rem;
         font-weight: 700;
         margin-bottom: 0.5rem;
-        background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+        background: var(--gradient-text);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        transition: var(--transition-smooth);
     }
 
     .tracker-date {
@@ -54,15 +44,16 @@
 
     .summary-card {
         background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
+        border: var(--border-card);
         border-radius: 20px;
         padding: 2rem 3rem;
         text-align: center;
         backdrop-filter: blur(12px);
-        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
+        box-shadow: var(--shadow-card);
         min-width: 300px;
         position: relative;
         overflow: hidden;
+        transition: var(--transition-smooth);
     }
     
     .summary-card::before {
@@ -95,9 +86,10 @@
         background: var(--glass-bg);
         backdrop-filter: blur(12px);
         border-radius: 24px;
-        border: 1px solid var(--glass-border);
+        border: var(--border-card);
         padding: 1.5rem;
-        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
+        box-shadow: var(--shadow-card);
+        transition: var(--transition-smooth);
     }
 
     .tracker-table {
@@ -151,13 +143,14 @@
 
     .form-control-Glass {
         width: 100%;
-        background: rgba(0, 0, 0, 0.2);
-        border: 1px solid var(--glass-border);
+        background: var(--glass-bg);
+        border: var(--border-card);
         color: var(--text-primary);
         padding: 0.6rem 1rem;
         border-radius: 10px;
+        border-radius: 10px;
         font-size: 0.95rem;
-        transition: all 0.3s;
+        transition: var(--transition-smooth);
     }
 
     .form-control-Glass:focus {
@@ -195,12 +188,12 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        box-shadow: 0 4px 12px var(--accent-glow);
     }
     
     .btn-add-entry:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        box-shadow: 0 6px 16px var(--accent-glow);
         filter: brightness(110%);
     }
 
@@ -209,32 +202,7 @@
         text-align: right;
     }
     
-    [data-theme="light"] {
-         --text-primary: #1e293b;
-         --text-secondary: #64748b;
-         --glass-bg: rgba(255, 255, 255, 0.6);
-         --glass-border: rgba(0, 0, 0, 0.05);
-    }
-    
-    [data-theme="light"] .tracker-title {
-        background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    
-    [data-theme="light"] .tracker-table td {
-        background: rgba(255, 255, 255, 0.5);
-        border-color: rgba(0,0,0,0.03);
-    }
-    
-    [data-theme="light"] .form-control-Glass {
-        background: rgba(255, 255, 255, 0.8);
-        color: #1e293b;
-    }
-    
-     [data-theme="light"] .form-control-Glass::placeholder {
-        color: #94a3b8;
-    }
+
 
     /* --- Smart Features UI --- */
     .smart-stats-row {
@@ -413,6 +381,7 @@
         font-size: 1.1rem;
         font-weight: 600;
         color: var(--text-primary);
+        transition: var(--transition-smooth);
     }
     
     .weekly-stats-grid {
@@ -428,6 +397,7 @@
         border-radius: 16px;
         padding: 1.5rem;
         text-align: center;
+        transition: var(--transition-smooth);
     }
     
     .w-stat-label {
@@ -563,7 +533,9 @@
         transition: transform 0.3s;
         display: flex;
         flex-direction: column;
+        flex-direction: column;
         max-height: 80vh;
+        transition: var(--transition-smooth), transform 0.3s;
     }
 
     .modal-overlay.active .detail-modal {
