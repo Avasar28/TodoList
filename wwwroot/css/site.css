@@ -3180,7 +3180,8 @@ input:checked+.slider:before {
 
 /* --- Holiday Widget Styles --- */
 .widget-holiday-live {
-  background: linear-gradient(135deg, rgba(251, 146, 60, 0.1) 0%, rgba(251, 146, 60, 0.05) 100%) !important;
+  /* Info Category - Background handled by master class */
+  position: relative;
 }
 
 .holiday-summary-content {
@@ -3926,49 +3927,95 @@ input:checked+.slider:before {
 /* Global Widget Enhancements */
 /* Global Widget Enhancements */
 .insight-card {
-  border: 1px solid var(--glass-border);
-  /* Slightly crisper border */
-  background: var(--glass-bg);
-  /* Darker, more opaque base */
-  backdrop-filter: blur(8px);
-  /* Subtle blur */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 
   position: relative;
-  /* Fill Grid Cell */
   width: 100%;
   height: 100%;
   margin: 0 !important;
-  /* Force zero margins */
   padding: 1.5rem;
-  /* Enforced consistent padding */
 
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background 0.4s ease,
+    border-color 0.4s ease;
   cursor: pointer;
   z-index: 1;
-  /* Base level */
+  border-radius: 14px;
 
-  /* Grounded Shadow (No Glow) */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
+/* Default Hover - Can be overridden by categories */
 .insight-card:hover {
-  transform: translateY(-2px);
-  /* Subtle lift */
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
-  background: rgba(30, 41, 59, 0.9);
-  /* Slightly lighter on hover */
-  border-color: rgba(255, 255, 255, 0.2);
-  /* Deeper shadow on hover, not glowing */
   z-index: 2;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* --- 1. HERO CARDS (Weather, Time) --- */
+/* Soft, calm, gentle lift */
+.widget-weather-live,
+.widget-time-live {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.widget-weather-live:hover,
+.widget-time-live:hover {
+  transform: translateY(-4px);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+  box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.2);
+}
+
+/* --- 2. INFO CARDS (Currency, Habit, Holiday) --- */
+/* Flat, stable, no movement, focus on data */
+.widget-currency-live,
+.widget-habit-tracker,
+.widget-holiday-live {
+  background: rgba(30, 41, 59, 0.4);
+  /* Flat dark glass */
+}
+
+.widget-currency-live:hover,
+.widget-habit-tracker:hover,
+.widget-holiday-live:hover {
+  transform: none;
+  /* No movement */
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  /* Soft grounded shadow */
+}
+
+/* --- 3. ACTION CARDS (News, Country, Translator, Emergency) --- */
+/* Interactive, inviting, subtle glow */
+.widget-news-feed,
+.widget-country-live,
+.widget-translator-summary,
+.widget-emergency {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%);
+}
+
+.widget-news-feed:hover,
+.widget-country-live:hover,
+.widget-translator-summary:hover,
+.widget-emergency:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+  /* Soft Glow */
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* 1. WEATHER WIDGET (Atmospheric) */
+/* Weather Specifics (Hero) */
 .widget-weather-live {
-  background: var(--glass-bg);
+  /* Gradient handled by category, just layout here */
   display: flex;
   flex-direction: column;
-  border-radius: 20px;
 }
 
 .weather-live-indicator {
@@ -4042,13 +4089,8 @@ input:checked+.slider:before {
 
 /* 2. CURRENCY WIDGET (Financial Data Board) */
 .widget-currency-live {
-  background: rgba(30, 41, 59, 0.85);
-  /* High opacity Slate */
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* Background handled by Info Category */
   border-left: 4px solid #10b981;
-  /* Accent for money */
-  padding: 1.5rem;
-  /* Standard Padding */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -4120,18 +4162,12 @@ input:checked+.slider:before {
 
 /* 3. TIME WIDGET (Digital Clock) */
 .widget-time-live {
-  background: rgba(15, 23, 42, 0.95);
-  /* Very Dark Slate/Black, high opacity */
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1.5rem;
-  /* Standard Padding */
+  /* Background handled by Hero Category */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
-  /* Inner shadow only */
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .widget-time-live::after {
@@ -4179,11 +4215,12 @@ input:checked+.slider:before {
 
 /* 4. COUNTRY WIDGET (Explorer Mode) */
 .widget-country-live {
+  /* Action Category */
   position: relative;
-  background: linear-gradient(135deg, rgba(30, 58, 138, 0.9), rgba(30, 27, 75, 0.9)), url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg');
+  /* Keep map but overlay with gradient */
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.4), rgba(30, 27, 75, 0.4)), url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg');
   background-size: cover;
   background-blend-mode: overlay;
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .country-visual-bg {
@@ -4240,15 +4277,9 @@ input:checked+.slider:before {
 /* 5. NEWS WIDGET (Timeline Feed) */
 .widget-news-feed {
   padding: 0 !important;
-  /* News Header needs full width, inner container has padding */
   display: flex;
   flex-direction: column;
-  /* Grounded Background - Lighter Glass */
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  /* Gradient handled by Action Category */
 }
 
 .widget-header-feed {
@@ -4458,20 +4489,11 @@ input:checked+.slider:before {
 
 /* 6. HABIT TRACKER WIDGET */
 .widget-habit-tracker {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  padding: 1.5rem;
-  border-radius: 20px;
+  /* Info Category */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  /* Important for summary card layout */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transition: background 0.3s ease, border-color 0.3s ease;
   cursor: pointer;
-  /* Clickable */
 }
 
 /* Summary Card Styling */
@@ -5954,9 +5976,9 @@ input:checked+.slider:before {
 /* --- Translator Widget Styles --- */
 .widget-translator {
   /* Default Dark Theme Base aligned with #036564 */
-  background: linear-gradient(135deg, rgba(3, 101, 100, 0.25) 0%, rgba(3, 101, 100, 0.1) 100%) !important;
+  background: linear-gradient(135deg, rgba(3, 101, 100, 0.15) 0%, rgba(3, 101, 100, 0.05) 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
@@ -5966,9 +5988,9 @@ input:checked+.slider:before {
 
 [data-theme="light"] .widget-translator {
   /* Light Theme Base aligned with #F5E8D8 */
-  background: linear-gradient(135deg, rgba(245, 232, 216, 0.8) 0%, rgba(245, 232, 216, 0.4) 100%) !important;
+  background: linear-gradient(135deg, rgba(245, 232, 216, 0.6) 0%, rgba(245, 232, 216, 0.2) 100%);
   border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 [data-theme="light"] .widget-translator .widget-title-sm {
@@ -6659,4 +6681,205 @@ input:checked+.slider:before {
   60% {
     transform: translate3d(4px, 0, 0);
   }
+}
+
+/* --- Translator Summary Widget (Dashboard) - Action Category --- */
+.widget-translator-summary {
+  /* Action Category - Background handled by master class */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.translator-summary-hero {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 0.5rem;
+}
+
+.trans-icon-hero {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 0 10px rgba(20, 184, 166, 0.3));
+}
+
+.trans-hero-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-main {
+  font-weight: 700;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.hero-sub {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.trans-action-hint {
+  text-align: right;
+  font-size: 0.75rem;
+  color: #5eead4;
+  margin-top: 0.5rem;
+  opacity: 0.8;
+}
+
+/* --- Emergency Widget Styles - Action Category --- */
+.widget-emergency {
+  /* Action Category */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.emergency-visual {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 0;
+}
+
+.sos-icon {
+  font-size: 3rem;
+  color: #f87171;
+  filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.4));
+  animation: pulse-emergency 2s infinite;
+}
+
+.sos-label {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #f87171;
+  letter-spacing: 2px;
+}
+
+.emergency-action-hint {
+  text-align: center;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: auto;
+}
+
+@keyframes pulse-emergency {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   LIGHT THEME REFINEMENTS FOR DASHBOARD WIDGETS
+   ========================================================================== */
+
+/* --- 1. Base Card Surface (Clean, High Contrast) --- */
+[data-theme="light"] .insight-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  /* Soft separation */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  /* Diffused lift */
+  color: #1e293b;
+  /* Dark text base */
+}
+
+[data-theme="light"] .insight-card:hover {
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  /* Keep white */
+}
+
+/* --- 2. Hero Cards (Weather, Time) --- */
+/* Very subtle tint in light mode */
+[data-theme="light"] .widget-weather-live,
+[data-theme="light"] .widget-time-live {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+}
+
+[data-theme="light"] .widget-weather-live:hover,
+[data-theme="light"] .widget-time-live:hover {
+  background: linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+}
+
+/* --- 3. Info Cards (Currency, Habit, Holiday) --- */
+/* Pure white, flat, focusing on data contrast */
+[data-theme="light"] .widget-currency-live,
+[data-theme="light"] .widget-habit-tracker,
+[data-theme="light"] .widget-holiday-live {
+  background: #ffffff;
+}
+
+[data-theme="light"] .widget-currency-live:hover,
+[data-theme="light"] .widget-habit-tracker:hover,
+[data-theme="light"] .widget-holiday-live:hover {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* --- 4. Action Cards (News, Country, Translator, Emergency) --- */
+/* Subtle warm/cool tints to invite interaction */
+[data-theme="light"] .widget-news-feed,
+[data-theme="light"] .widget-country-live,
+[data-theme="light"] .widget-translator-summary,
+[data-theme="light"] .widget-emergency {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+[data-theme="light"] .widget-news-feed:hover,
+[data-theme="light"] .widget-country-live:hover,
+[data-theme="light"] .widget-translator-summary:hover,
+[data-theme="light"] .widget-emergency:hover {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-color: rgba(99, 102, 241, 0.2);
+  /* Accent hint */
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.08);
+  /* Glow hint */
+}
+
+/* --- Text Contrast Fixes --- */
+[data-theme="light"] .insight-label-lg,
+[data-theme="light"] .hero-sub,
+[data-theme="light"] .time-diff-pill,
+[data-theme="light"] .market-status,
+[data-theme="light"] .habit-name {
+  color: #64748b;
+  /* Slate-500 for secondary text */
+}
+
+[data-theme="light"] .insight-value-huge,
+[data-theme="light"] .digital-time,
+[data-theme="light"] .rate-large,
+[data-theme="light"] .hero-main,
+[data-theme="light"] .sos-label {
+  color: #0f172a;
+  /* Slate-900 for primary text */
+  text-shadow: none;
+  /* remove glow in light mode */
+}
+
+[data-theme="light"] .insight-icon-huge {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
+  /* Subtle shadow instead of glow */
+  color: #3b82f6;
+  /* Ensure icon color pops */
 }
