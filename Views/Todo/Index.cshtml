@@ -72,8 +72,10 @@
                         </button>
                     </form>
                     
-                    <div class="todo-content">
-                        <span class="todo-title" data-translate="true">@item.Title</span>
+                    <div class="todo-content" style="min-width: 0;">
+
+                        <span class="todo-title text-truncate-2" title="@item.Title" data-translate="true">@item.Title</span>
+
                         <div class="todo-meta">
                             @if (item.DueDate.HasValue)
                             {

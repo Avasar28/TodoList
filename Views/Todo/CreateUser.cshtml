@@ -14,38 +14,64 @@
         <form asp-action="CreateUser" method="post" class="auth-form">
             <div asp-validation-summary="ModelOnly" class="text-danger" style="font-size: 0.9rem;"></div>
 
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label asp-for="Name">Full Name</label>
-                <input asp-for="Name" class="form-control" placeholder="e.g. Sarah Smith" />
+                <input asp-for="Name" class="form-control" placeholder="e.g. Sarah Smith" oninput="validateForm()" />
                 <span asp-validation-for="Name" class="text-danger small"></span>
             </div>
 
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label asp-for="Email">Email Address</label>
-                <input asp-for="Email" class="form-control" placeholder="name@company.com" />
+                <input asp-for="Email" class="form-control" placeholder="name@company.com" oninput="validateForm()" />
                 <span asp-validation-for="Email" class="text-danger small"></span>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="mb-3">
                 <div class="form-group">
                     <label asp-for="Password">Password</label>
-                    <input asp-for="Password" type="password" class="form-control" placeholder="Min 8 chars" />
+                    <input asp-for="Password" type="password" class="form-control" placeholder="Min 8 chars" oninput="validateForm()" />
+                    <small class="text-muted" style="font-size: 0.75rem; margin-top: 4px;">Min 8 chars, mixed case & symbols</small>
                     <span asp-validation-for="Password" class="text-danger small"></span>
                 </div>
 
                 <div class="form-group">
                     <label asp-for="ConfirmPassword">Confirm</label>
-                    <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Repeat" />
+                    <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Repeat" oninput="validateForm()" />
                     <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                 </div>
             </div>
 
-            <div style="margin-top: 0.5rem;">
-                <button type="submit" class="btn-auth-primary">Create User Profile</button>
+            <div style="margin-top: 1rem;">
+                <button type="submit" class="btn-auth-primary" id="btnSubmit" disabled style="opacity: 0.6; cursor: not-allowed;">Create User Profile</button>
                 <a asp-action="UserList" style="display: block; margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem; text-decoration: none; font-weight: 500;">
                     ← Back to User List
                 </a>
             </div>
         </form>
     </div>
+
+<script>
+    function validateForm() {
+        var name = document.getElementById("Name").value;
+        var email = document.getElementById("Email").value;
+        var password = document.getElementById("Password").value;
+        var confirm = document.getElementById("ConfirmPassword").value;
+        var btn = document.getElementById("btnSubmit");
+
+        var isValid = name.length > 0 && 
+                      email.length > 0 && 
+                      password.length >= 8 && 
+                      password === confirm;
+
+        if (isValid) {
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            btn.style.cursor = "pointer";
+        } else {
+            btn.disabled = true;
+            btn.style.opacity = "0.6";
+            btn.style.cursor = "not-allowed";
+        }
+    }
+</script>
 </div>

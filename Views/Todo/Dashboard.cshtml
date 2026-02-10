@@ -7,6 +7,7 @@
 <!-- Leaflet for Country Maps -->
 <!-- Leaflet for Country Maps (Local) -->
 <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+<link rel="stylesheet" href="~/css/missing_widgets.css" asp-append-version="true" />
 <script src="~/lib/leaflet/leaflet.js"></script>
 
 <style>
@@ -244,6 +245,7 @@
         align-items: center;
         padding-top: 1rem;
         border-top: 1px solid rgba(255, 255, 255, 0.05);
+        margin-top: auto;
     }
 
     .source-meta {
@@ -267,6 +269,36 @@
     .date-meta {
         font-size: 0.75rem;
         color: #64748b;
+    }
+
+    /* Category Specific Colors */
+    .badge-category.technology { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border-color: rgba(56, 189, 248, 0.3); }
+    .badge-category.business { background: rgba(167, 139, 250, 0.15); color: #c4b5fd; border-color: rgba(167, 139, 250, 0.3); }
+    .badge-category.politics { background: rgba(244, 114, 182, 0.15); color: #f9a8d4; border-color: rgba(244, 114, 182, 0.3); }
+    .badge-category.sports { background: rgba(251, 146, 60, 0.15); color: #fdba74; border-color: rgba(251, 146, 60, 0.3); }
+    .badge-category.environment { background: rgba(74, 222, 128, 0.15); color: #86efac; border-color: rgba(74, 222, 128, 0.3); }
+    .badge-category.health { background: rgba(45, 212, 191, 0.15); color: #5eead4; border-color: rgba(45, 212, 191, 0.3); }
+    .badge-category.entertainment { background: rgba(250, 204, 21, 0.15); color: #fde047; border-color: rgba(250, 204, 21, 0.3); }
+
+    /* Widget Loading Pulse */
+    .insight-card.loading {
+        position: relative;
+    }
+    
+    .insight-card.loading::after {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+        background-size: 200% 100%;
+        animation: loadingPulse 1.5s infinite;
+        z-index: 5;
+        pointer-events: none; /* UI Safety: Overlay must not block clicks */
+    }
+    
+    @@keyframes loadingPulse {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
     }
     /* --- Details Panel & Overlay System --- */
     .details-overlay {
@@ -388,7 +420,7 @@
         
         <!-- Area: Weather -->
         <div class="grid-area-weather">
-             <div class="insight-card widget-weather-live weather loading" onclick="openDetails('weather')">
+             <div class="insight-card widget-weather-live weather loading widget-primary" onclick="openDetails('weather')">
                 <div class="weather-live-indicator">
                     <span class="pulse-dot"></span> <span class="live-text">LIVE</span>
                 </div>
@@ -410,7 +442,7 @@
 
         <!-- Area: Currency -->
         <div class="grid-area-currency">
-            <div class="insight-card widget-currency-live currency compact" onclick="openDetails('currency')">
+            <div class="insight-card widget-currency-live currency compact widget-primary" onclick="openDetails('currency')">
                 <div class="widget-header-row">
                     <span class="widget-title-sm">FOREX MARKET</span>
                     <span class="market-status open">OPEN</span>
@@ -424,8 +456,11 @@
                     <div class="rate-large" id="summaryCurrencyRate">
                         @(Model.Currency.Rate > 0 ? Model.Currency.Rate.ToString("F3") : "--.---")
                     </div>
-                    <div class="trend-indicator @(Model.Currency.IsUp == true ? "up" : "down")">
-                         @(Model.Currency.IsUp == true ? "▲" : "▼") <span class="trend-val">0.05%</span>
+                    <div class="currency-meta-row">
+                        <span class="trend-indicator @(Model.Currency.IsUp == true ? "up" : "down")" id="summaryCurrencyTrend">
+                             @(Model.Currency.IsUp == true ? "▲" : "▼") <span class="trend-val">0.05%</span>
+                        </span>
+                        <span class="meta-item-sm" id="summaryCurrencyMeta">1 @Model.FromCurrency = @Model.Currency.Rate @Model.ToCurrency</span>
                     </div>
                 </div>
             </div>
@@ -433,7 +468,7 @@
 
         <!-- Area: Time -->
         <div class="grid-area-time">
-            <div class="insight-card widget-time-live time compact" onclick="openDetails('time')">
+            <div class="insight-card widget-time-live time compact widget-primary" onclick="openDetails('time')">
                  <div class="widget-header-row">
                     <span class="widget-title-sm">WORLD CLOCK</span>
                      <span class="zone-badge">@Model.TargetTimeZone</span>
@@ -449,7 +484,7 @@
 
         <!-- Area: Habit Tracker -->
         <div class="grid-area-habit">
-             <div class="insight-card widget-habit-tracker habit" id="habitWidget" onclick="openDetails('habit')">
+             <div class="insight-card widget-habit-tracker habit widget-secondary" id="habitWidget" onclick="openDetails('habit')">
                 <div class="habit-summary-content">
                     <div class="habit-summary-header">
                         <span class="widget-title-sm">DAILY HABITS</span>
@@ -480,10 +515,18 @@
 
         <!-- Area: News Feed -->
         <div class="grid-area-news">
-             <div class="insight-card widget-news-feed news loading" id="newsWidgetCard" onclick="openDetails('news')">
+             <div class="insight-card widget-news-feed news loading widget-secondary" id="newsWidgetCard" onclick="openDetails('news')">
                 <div class="widget-header-feed">
-                    <span class="feed-title">Live News Feed</span>
-                    <span class="feed-live-dot"></span>
+                    <div class="header-left">
+                        <span class="feed-title">Live News Feed</span>
+                        <span class="feed-live-dot"></span>
+                    </div>
+                    <div class="header-right">
+                        <span class="badge-count" id="summaryNewsCount">-- Stories</span>
+                    </div>
+                </div>
+                <div class="news-meta-bar">
+                    <span class="meta-text" id="summaryNewsMeta">Loading regional headlines...</span>
                 </div>
                 <div class="news-timeline-container">
                     <!-- Placeholder Items for Loading -->
@@ -516,7 +559,7 @@
         
         <!-- Area: Country -->
         <div class="grid-area-country">
-            <div class="insight-card widget-country-live country" onclick="openDetails('country')">
+            <div class="insight-card widget-country-live country widget-secondary" onclick="openDetails('country')">
                 <div class="country-visual-bg">
                     <div class="search-hint-overlay">
                         <span class="search-icon-lg">🔍</span>
@@ -532,7 +575,7 @@
 
         <!-- Area: Holiday -->
         <div class="grid-area-holiday">
-            <div class="insight-card widget-holiday-live holiday loading" id="holidayWidgetCard" onclick="openDetails('holiday')">
+            <div class="insight-card widget-holiday-live holiday loading widget-secondary" id="holidayWidgetCard" onclick="openDetails('holiday')">
                 <div class="widget-header-row">
                     <span class="widget-title-sm">PUBLIC HOLIDAYS</span>
                     <span class="holiday-next-pill" id="nextHolidayBadge">Loading...</span>
@@ -546,7 +589,7 @@
 
         <!-- Area: Translator -->
         <div class="grid-area-translator">
-            <div class="insight-card widget-translator-summary translator" onclick="openDetails('translator')">
+            <div class="insight-card widget-translator-summary translator widget-secondary" onclick="openDetails('translator')">
                 <div class="widget-header-row">
                     <span class="widget-title-sm">TRANSLATOR</span>
                     <span class="pulse-dot" style="background:#10b981; box-shadow:0 0 10px #10b981;"></span>
@@ -566,7 +609,7 @@
 
         <!-- Area: Emergency -->
         <div class="grid-area-emergency">
-            <div class="insight-card widget-emergency emergency" onclick="openDetails('emergency')">
+            <div class="insight-card widget-emergency emergency widget-attention" onclick="openDetails('emergency')">
                 <div class="widget-header-row">
                     <span class="widget-title-sm" style="color: #f87171;">EMERGENCY SOS</span>
                     <span class="pulse-dot"></span>
@@ -1321,6 +1364,11 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/habit-tracker.js"></script>
+    <script src="~/js/emergency-widget.js"></script>
+    <script src="~/js/holiday-widget.js"></script>
+    <script src="~/js/translator-widget.js"></script>
+    
     <script>
         // --- Widget Detail Management ---
         function openDetails(type) {
@@ -2155,7 +2203,7 @@
                     <div class="news-item-card insight-mode" onclick="viewArticle(${globalIndex})">
                         <div class="news-card-body">
                             <div class="news-tags-row">
-                                <span class="insight-badge badge-category">${item.category}</span>
+                                <span class="insight-badge badge-category ${item.category.toLowerCase()}">${item.category}</span>
                                 <span class="insight-badge badge-location">📍 ${item.locationTag || 'Global'}</span>
                                 <span class="insight-badge badge-sentiment ${sentimentClass}">
                                     <span class="sentiment-dot"></span>
@@ -2217,7 +2265,7 @@
             // 3. Set Badges
             const sentimentClass = (sentiment || 'Neutral').toLowerCase();
             badgeRow.innerHTML = `
-                <span class="insight-badge badge-category">${category || 'General'}</span>
+                <span class="insight-badge badge-category ${(category || 'General').toLowerCase()}">${category || 'General'}</span>
                 <span class="insight-badge badge-location">📍 ${location || 'Global'}</span>
                 <span class="insight-badge badge-sentiment ${sentimentClass}">
                     <span class="sentiment-dot"></span>
@@ -2797,8 +2845,4 @@
             initializeAll();
         }
     </script>
-    <script src="~/js/habit-tracker.js"></script>
-    <script src="~/js/emergency-widget.js"></script>
-    <script src="~/js/holiday-widget.js"></script>
-<script src="~/js/translator-widget.js"></script>
 }

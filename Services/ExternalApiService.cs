@@ -600,7 +600,7 @@ namespace TodoListApp.Services
                         Link = link,
                         Sentiment = sentiment,
                         LocationTag = locationTag,
-                        Category = topic 
+                        Category = topic
                     };
                 }).Where(x => !string.IsNullOrEmpty(x.Title)).ToList();
 
@@ -708,84 +708,6 @@ namespace TodoListApp.Services
             return "General";
         }
 
-        // --- DYNAMIC VISUAL MAPPER (Curated Pools) ---
-        // Returns a varied, high-quality image from a pool based on the article hash.
-        private string GetDynamicImage(string category, string articleTitle)
-        {
-            // Deterministic Index: Abs(Hash) % Count
-            // Ensures the same article always gets the same image, but different articles get different ones.
-            int hash = Math.Abs(articleTitle.GetHashCode());
-            
-            string[] pool = category switch
-            {
-                "Technology" => new[] {
-                    "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80", // Circuit
-                    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80", // Cyber
-                    "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&q=80", // Code
-                    "https://images.unsplash.com/photo-1531297461136-8208630f9604?w=800&q=80", // Chip
-                    "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&q=80"  // Matrix
-                },
-                "Business" => new[] {
-                    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80", // Chart
-                    "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&q=80", // Stocks
-                    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80", // Skyscrappers
-                    "https://images.unsplash.com/photo-1554224155-984063681ee4?w=800&q=80", // Meeting
-                    "https://images.unsplash.com/photo-1611974765270-ca12586343bb?w=800&q=80"  // Trading
-                },
-                "Politics" => new[] {
-                    "https://images.unsplash.com/photo-1541872703-74c59636a226?w=800&q=80", // Podium
-                    "https://images.unsplash.com/photo-1529101091760-61df6be5d18b?w=800&q=80", // Flags
-                    "https://images.unsplash.com/photo-1555848962-6e79363ec58f?w=800&q=80", // Vote
-                    "https://images.unsplash.com/photo-1477281746055-612b48937664?w=800&q=80", // Capitol
-                    "https://images.unsplash.com/photo-1575320181282-9afab399332c?w=800&q=80"  // Microphone
-                },
-                "Sports" => new[] {
-                    "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80", // Runner
-                    "https://images.unsplash.com/photo-1579952363873-27f3bde9be2b?w=800&q=80", // Ball
-                    "https://images.unsplash.com/photo-1471295253337-3ceaaedca402?w=800&q=80", // Stadium
-                    "https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=800&q=80", // Gym
-                    "https://images.unsplash.com/photo-1526620810753-226d9422f934?w=800&q=80"  // Soccer
-                },
-                "Health" => new[] {
-                    "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&q=80", // Steth
-                    "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=800&q=80", // Medicine
-                    "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80", // Workout
-                    "https://images.unsplash.com/photo-1584036561566-b9370001e9e3?w=800&q=80", // Lab
-                    "https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=800&q=80"  // Nurse
-                },
-                "Entertainment" => new[] {
-                    "https://images.unsplash.com/photo-1499364615650-ec38552f4f34?w=800&q=80", // Stage
-                    "https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?w=800&q=80", // Cinema
-                    "https://images.unsplash.com/photo-1514525253440-b393452e8d26?w=800&q=80", // Concert
-                    "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80", // Mic
-                    "https://images.unsplash.com/photo-1603190287605-e6ade32fa852?w=800&q=80"  // Popcorn
-                },
-                "Environment" => new[] {
-                    "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80", // Nature
-                    "https://images.unsplash.com/photo-1534274988757-9d7d6a36eb82?w=800&q=80", // Sun
-                    "https://images.unsplash.com/photo-1428908728789-d2de25dbd4e2?w=800&q=80", // Clouds
-                    "https://images.unsplash.com/photo-1520121401995-928cd50d4e27?w=800&q=80", // Lightning
-                    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80"  // Forest
-                },
-                "City" => new[] {
-                    "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&q=80", // City Generic
-                    "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800&q=80", // NY Vibe
-                    "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=800&q=80", // Urban
-                    "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80", // Skyline
-                    "https://images.unsplash.com/photo-1496568816309-51d7c20e3b21?w=800&q=80"  // Night City
-                },
-                "Error" => new[] {
-                    "https://images.unsplash.com/photo-1594322436404-5a0526db4d13?w=800&q=80" // Storm/Warning visual
-                },
-                _ => new[] {
-                    "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80", // News ppr
-                    "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&q=80", // Newspaper 2
-                    "https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=800&q=80"  // Read
-                }
-            };
-            
-            return pool[hash % pool.Length];
-        }
 
 
 
