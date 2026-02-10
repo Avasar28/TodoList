@@ -381,10 +381,12 @@
         </div>
     </div>
 
-    <!-- Asymmetric Dashboard Grid -->
-    <div class="dashboard-grid-asymmetric">
+    <!-- Premium Dashboard Grid -->
+    <div class="dashboard-grid-premium">
         
-        <!-- Area: Weather (Tall Atmosphere Card) -->
+        <!-- ROW 1: STATUS (Weather, Currency, Time) -->
+        
+        <!-- Area: Weather -->
         <div class="grid-area-weather">
              <div class="insight-card widget-weather-live weather loading" onclick="openDetails('weather')">
                 <div class="weather-live-indicator">
@@ -406,7 +408,7 @@
             </div>
         </div>
 
-        <!-- Area: Currency (Financial Card) -->
+        <!-- Area: Currency -->
         <div class="grid-area-currency">
             <div class="insight-card widget-currency-live currency compact" onclick="openDetails('currency')">
                 <div class="widget-header-row">
@@ -429,7 +431,7 @@
             </div>
         </div>
 
-        <!-- Area: Time (Digital Clock Card) -->
+        <!-- Area: Time -->
         <div class="grid-area-time">
             <div class="insight-card widget-time-live time compact" onclick="openDetails('time')">
                  <div class="widget-header-row">
@@ -443,58 +445,40 @@
             </div>
         </div>
 
-        <!-- Area: Holiday (Calendar Card) -->
-        <div class="grid-area-holiday">
-            <div class="insight-card widget-holiday-live holiday loading" id="holidayWidgetCard" onclick="openDetails('holiday')">
-                <div class="widget-header-row">
-                    <span class="widget-title-sm">PUBLIC HOLIDAYS</span>
-                    <span class="holiday-next-pill" id="nextHolidayBadge">Loading...</span>
-                </div>
-                <div class="holiday-summary-content">
-                    <div class="holiday-count-large" id="summaryHolidayCount">--</div>
-                    <span class="holiday-label-sm" id="summaryHolidayLabel">Fetching @DateTime.Now.Year Holidays</span>
-                </div>
-            </div>
-        </div>
+        <!-- ROW 2: FOCUS (Habits, News) -->
 
-        <!-- Area: Translator (Summary Widget) -->
-        <div class="grid-area-translator">
-            <div class="insight-card widget-translator-summary translator" onclick="openDetails('translator')">
-                <div class="widget-header-row">
-                    <span class="widget-title-sm">TRANSLATOR</span>
-                    <span class="pulse-dot" style="background:#10b981; box-shadow:0 0 10px #10b981;"></span>
-                </div>
-                <div class="translator-summary-hero">
-                    <div class="trans-icon-hero">🈂️</div>
-                    <div class="trans-hero-text">
-                        <span class="hero-main">Quick Translate</span>
-                        <span class="hero-sub">100+ Languages</span>
+        <!-- Area: Habit Tracker -->
+        <div class="grid-area-habit">
+             <div class="insight-card widget-habit-tracker habit" id="habitWidget" onclick="openDetails('habit')">
+                <div class="habit-summary-content">
+                    <div class="habit-summary-header">
+                        <span class="widget-title-sm">DAILY HABITS</span>
+                        <div class="summary-badges">
+                            <span class="badge-pill" id="habitSummaryCount">0 Active</span>
+                        </div>
+                    </div>
+                    
+                    <div class="habit-summary-hero">
+                        <div class="hero-left">
+                            <span class="hero-stat-label">Best Streak</span>
+                            <span class="hero-stat-val" id="habitSummaryBest">0</span>
+                        </div>
+                         <div class="hero-right">
+                             <span class="hero-stat-label">Today's Progress</span>
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" id="habitSummaryProgress" style="width: 0%"></div>
+                            </div>
+                         </div>
+                    </div>
+
+                    <div class="habit-summary-footer">
+                        <span class="click-hint">Click to manage habits & streaks →</span>
                     </div>
                 </div>
-                <div class="trans-action-hint">
-                    Click to start translating →
-                </div>
             </div>
         </div>
 
-        <!-- Area: Country (Explorer Card) -->
-        <div class="grid-area-country">
-            <div class="insight-card widget-country-live country" onclick="openDetails('country')">
-                <div class="country-visual-bg">
-                    <div class="search-hint-overlay">
-                        <span class="search-icon-lg">🔍</span>
-                        <span class="search-text">Explore Global Data</span>
-                    </div>
-                </div>
-                <div class="country-label-overlay">
-                    <span class="country-name-lg" id="summaryCountryName">Country Explorer</span>
-                    <span class="country-meta-sm" id="summaryCountryMeta" style="display:block; font-size:0.75rem; color:rgba(255,255,255,0.7);">Search to explore</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Area: News (Timeline Feed) -->
-
+        <!-- Area: News Feed -->
         <div class="grid-area-news">
              <div class="insight-card widget-news-feed news loading" id="newsWidgetCard" onclick="openDetails('news')">
                 <div class="widget-header-feed">
@@ -528,7 +512,59 @@
             </div>
         </div>
 
-        <!-- Area: Emergency (SOS Widget) -->
+        <!-- ROW 3: TOOLS (Country, Holiday, Translator, Emergency) -->
+        
+        <!-- Area: Country -->
+        <div class="grid-area-country">
+            <div class="insight-card widget-country-live country" onclick="openDetails('country')">
+                <div class="country-visual-bg">
+                    <div class="search-hint-overlay">
+                        <span class="search-icon-lg">🔍</span>
+                        <span class="search-text">Explore Global Data</span>
+                    </div>
+                </div>
+                <div class="country-label-overlay">
+                    <span class="country-name-lg" id="summaryCountryName">Country Explorer</span>
+                    <span class="country-meta-sm" id="summaryCountryMeta" style="display:block; font-size:0.75rem; color:rgba(255,255,255,0.7);">Search to explore</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Area: Holiday -->
+        <div class="grid-area-holiday">
+            <div class="insight-card widget-holiday-live holiday loading" id="holidayWidgetCard" onclick="openDetails('holiday')">
+                <div class="widget-header-row">
+                    <span class="widget-title-sm">PUBLIC HOLIDAYS</span>
+                    <span class="holiday-next-pill" id="nextHolidayBadge">Loading...</span>
+                </div>
+                <div class="holiday-summary-content">
+                    <div class="holiday-count-large" id="summaryHolidayCount">--</div>
+                    <span class="holiday-label-sm" id="summaryHolidayLabel">Fetching @DateTime.Now.Year Holidays</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Area: Translator -->
+        <div class="grid-area-translator">
+            <div class="insight-card widget-translator-summary translator" onclick="openDetails('translator')">
+                <div class="widget-header-row">
+                    <span class="widget-title-sm">TRANSLATOR</span>
+                    <span class="pulse-dot" style="background:#10b981; box-shadow:0 0 10px #10b981;"></span>
+                </div>
+                <div class="translator-summary-hero">
+                    <div class="trans-icon-hero">🈂️</div>
+                    <div class="trans-hero-text">
+                        <span class="hero-main">Quick Translate</span>
+                        <span class="hero-sub">100+ Languages</span>
+                    </div>
+                </div>
+                <div class="trans-action-hint">
+                    Click to start translating →
+                </div>
+            </div>
+        </div>
+
+        <!-- Area: Emergency -->
         <div class="grid-area-emergency">
             <div class="insight-card widget-emergency emergency" onclick="openDetails('emergency')">
                 <div class="widget-header-row">
@@ -545,39 +581,12 @@
             </div>
         </div>
 
-        <!-- Area: Habit Tracker (Summary Widget) -->
-        <div class="grid-area-habit">
-             <div class="insight-card widget-habit-tracker habit" id="habitWidget" onclick="openDetails('habit')">
-                <div class="habit-summary-content">
-                    <div class="habit-summary-header">
-                        <span class="widget-title-sm">DAILY HABITS</span>
-                        <div class="summary-badges">
-                            <span class="badge-pill" id="habitSummaryCount">0 Active</span>
-                        </div>
-                    </div>
-                    
-                    <div class="habit-summary-hero">
-                        <div class="hero-left">
-                            <span class="hero-stat-label">Best Streak</span>
-                            <span class="hero-stat-val" id="habitSummaryBest">0</span>
-                        </div>
-                         <div class="hero-right">
-                             <span class="hero-stat-label">Today's Progress</span>
-                            <div class="mini-progress-bar">
-                                <div class="mini-progress-fill" id="habitSummaryProgress" style="width: 0%"></div>
-                            </div>
-                         </div>
-                    </div>
-
-                    <div class="habit-summary-footer">
-                        <span class="click-hint">Click to manage habits & streaks →</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
-</div>
+
+    <!-- Legacy Grid Hidden
+    <div class="dashboard-grid-asymmetric">
+    ... (old code removed)
+    </div> -->
 
 <!-- Habit Tracker Details Panel -->
 <div class="details-panel" id="habitDetails" style="max-width: 600px;">

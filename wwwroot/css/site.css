@@ -87,32 +87,61 @@ body {
   background-color: var(--bg-base);
   background: radial-gradient(circle at top center, var(--bg-gradient-end) 0%, var(--bg-base) 100%);
   background-attachment: fixed;
+  background-size: cover;
   color: var(--text-primary);
-  /* Use variable for body text */
   font-family: 'Outfit', sans-serif;
   margin: 0;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 5vh;
+  width: 100%;
+  overflow-x: hidden;
+  /* Removed flex centering to allow full block layout */
+
   letter-spacing: 0.01em;
-  /* Slight airiness */
 
   /* Global Smooth Transition for Theme Switch */
   transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.main-content-wrapper {
+  padding-top: 100px;
+  /* Space for fixed navbar */
+  padding-left: 0.5rem !important;
+  /* Reduced from 2rem to cover more space */
+  padding-right: 0.5rem !important;
+  /* Reduced from 2rem */
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 100vh;
+}
+
 .container {
   width: 100%;
-  max-width: 700px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 0;
 }
 
 header {
   text-align: center;
   margin-bottom: 2.5rem;
+}
+
+/* --- Premium Dashboard Grid (Strict 3-Column Uniform) --- */
+.dashboard-grid-premium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, 1fr);
+  /* Force 3 equal rows to fill height */
+  /* 3 Equal Columns with min-width constraint */
+  gap: 1.5rem;
+  /* Slightly reduced gap to help fit screen */
+  width: 100%;
+  height: calc(100vh - 140px);
+  /* Fit to screen height (ViewHeight - Navbar/Padding) */
+  margin-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  align-items: stretch;
+  /* Ensure all items in a row stretch to the tallest height */
 }
 
 /* Add Task Section */
@@ -509,26 +538,153 @@ h1 {
 
 .auth-card {
   background: var(--glass-bg);
-  /* Use theme variable */
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding: 2.5rem;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 3rem 2.5rem;
+  /* Spacious padding */
   border-radius: 24px;
   border: 1px solid var(--glass-border);
   width: 100%;
-  max-width: 400px;
+  max-width: 520px;
+  /* Fixed width as requested */
   text-align: center;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  /* Logical grouping */
 }
 
-.auth-card h2,
-.auth-card h1 {
+/* Auth Hero Section */
+.auth-header {
+  margin-bottom: 0.5rem;
+}
+
+.auth-hero-title {
+  font-size: 2.2rem;
+  font-weight: 800;
   margin: 0 0 0.5rem 0;
-  font-weight: 600;
-  background: linear-gradient(to right, #ffffff, #94a3b8);
-  background-clip: text;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+  line-height: 1.2;
+}
+
+.auth-hero-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* Form Styles */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  /* Increased spacing between fields */
+  text-align: left;
+  /* Verify alignment */
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+
+.auth-card .form-control {
+  height: 3.2rem;
+  /* Taller inputs */
+  padding: 0 1.25rem;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--text-primary);
+}
+
+.auth-card .form-control:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 4px var(--accent-glow);
+  outline: none;
+}
+
+.auth-card .form-control::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Primary Action Button */
+.btn-auth-primary {
+  height: 3.2rem;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: none;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  /* Assuming indigo accent */
+}
+
+.btn-auth-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(99, 102, 241, 0.4);
+  filter: brightness(1.1);
+}
+
+.forgot-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+.forgot-link {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.forgot-link:hover {
+  color: var(--accent-color);
+}
+
+/* Footer Links */
+.auth-footer {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.auth-footer a {
+  color: var(--accent-color);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.auth-footer a:hover {
+  color: #fff;
+  text-decoration: underline;
 }
 
 /* --- Country Explorer Styles --- */
@@ -645,6 +801,7 @@ h1 {
   margin-bottom: 0.5rem;
   background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.7) 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -871,28 +1028,27 @@ h1 {
 /* Navigation Bar */
 .nav-bar {
   position: fixed;
-  top: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
+  width: 100%;
   display: flex;
-  gap: 2rem;
+  justify-content: space-between;
   align-items: center;
   background: var(--glass-bg);
-  padding: 0.75rem 2rem;
-  border-radius: 50px;
+  padding: 1rem 2rem;
+  border-radius: 0;
+  border-bottom: 1px solid var(--glass-border);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  border: 1px solid var(--glass-border);
   z-index: 1000;
-  width: fit-content;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .nav-links {
   display: flex;
-  gap: 1.5rem;
-  border-right: 1px solid var(--glass-border);
-  padding-right: 1.5rem;
+  gap: 2rem;
+  border-right: none;
+  padding-right: 0;
 }
 
 .nav-link {
@@ -967,11 +1123,12 @@ h1 {
   text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
 }
 
-/* Centered Layout */
+/* Centered Layout - Now Fluid */
 .centered-view {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding-top: 2rem;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding-top: 0;
 }
 
 .text-center {
@@ -1036,13 +1193,11 @@ h1 {
 /* Featured Grid - Large Layout */
 .realtime-grid.featured-grid {
   display: grid;
-  /* Auto-fit with a large minimum width (e.g. 450px) forcing wrap if not enough space */
-  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 2rem;
-  max-width: 1600px;
-  /* Increased max-width */
-  margin: 0 auto 3rem auto;
   width: 100%;
+  max-width: 100%;
+  margin: 0 0 3rem 0;
 }
 
 .insight-card {
@@ -2213,6 +2368,7 @@ input[type="time"].form-control {
   font-variant-numeric: tabular-nums;
   background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.7) 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
   line-height: 1;
@@ -2530,6 +2686,7 @@ input:checked+.slider:before {
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 0.25rem 0;
@@ -2541,6 +2698,7 @@ input:checked+.slider:before {
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -2762,7 +2920,7 @@ input:checked+.slider:before {
   line-height: 1.8;
   font-size: 1.1rem;
   color: var(--text-primary);
-  max-width: 800px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -2790,7 +2948,7 @@ input:checked+.slider:before {
 
 /* --- Top Status Strip --- */
 .dashboard-container.centered-view {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 0 1rem;
   width: 100%;
@@ -2886,79 +3044,139 @@ input:checked+.slider:before {
   box-sizing: border-box;
 }
 
-/* Grid Area Assignments */
-/* Grid Area Assignments with Overflow Protection */
+/* --- Premium Dashboard Grid (Strict 3-Column Uniform) --- */
+/* --- Premium Dashboard Grid (Strict 3-Column Uniform) --- */
+/* --- Premium Dashboard Grid (Strict 3-Column Uniform) --- */
+.dashboard-grid-premium {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(3, 1fr) !important;
+  /* Strictly 3 Equal Rows */
+  gap: 20px !important;
+  /* Fixed gap */
+  width: 100% !important;
+  height: 85vh !important;
+  /* Force fit to screen height */
+  margin: 0 !important;
+  padding: 0 0 10px 0 !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+}
+
+/* Explicit Grid Placement (Desktop) */
 .grid-area-weather {
-  grid-area: weather;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  border-radius: 20px;
+  grid-column: 1 !important;
+  grid-row: 1 !important;
 }
 
 .grid-area-currency {
-  grid-area: currency;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  border-radius: 20px;
+  grid-column: 2 !important;
+  grid-row: 1 !important;
 }
 
 .grid-area-time {
-  grid-area: time;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  border-radius: 20px;
-}
-
-.grid-area-country {
-  grid-area: country;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  border-radius: 20px;
-}
-
-.grid-area-news {
-  grid-area: news;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  border-radius: 20px;
-}
-
-.grid-area-holiday {
-  grid-area: holiday;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  border-radius: 20px;
-}
-
-.grid-area-emergency {
-  grid-area: emergency;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  border-radius: 20px;
+  grid-column: 3 !important;
+  grid-row: 1 !important;
 }
 
 .grid-area-habit {
-  grid-area: habit;
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+}
+
+.grid-area-news {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+}
+
+.grid-area-country {
+  grid-column: 3 !important;
+  grid-row: 2 !important;
+}
+
+.grid-area-holiday {
+  grid-column: 1 !important;
+  grid-row: 3 !important;
+}
+
+.grid-area-translator {
+  grid-column: 2 !important;
+  grid-row: 3 !important;
+}
+
+.grid-area-emergency {
+  grid-column: 3 !important;
+  grid-row: 3 !important;
+}
+
+/* All Widgets Default Styling */
+/* All Widgets Default Styling */
+.grid-area-weather,
+.grid-area-time,
+.grid-area-currency,
+.grid-area-habit,
+.grid-area-news,
+.grid-area-country,
+.grid-area-holiday,
+.grid-area-translator,
+.grid-area-emergency {
+  min-height: 0;
+  /* REMOVED 280px constraint to allow fitting to screen */
   min-width: 0;
+  height: 100%;
+  /* force full height of row */
+  overflow: hidden;
+  /* Prevent ANY overlap */
+  border-radius: 20px;
+  /* Ensure radius clips content */
+  position: relative;
+  /* Context for absolute children */
+  display: flex;
+  /* Flex container for direct children if needed */
+  flex-direction: column;
+}
+
+/* Ensure no widget ever exceeds 100% of its grid cell */
+.insight-card {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
   overflow: hidden;
   border-radius: 20px;
 }
 
-.grid-area-translator {
-  grid-area: translator;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  border-radius: 20px;
+/* Responsive: 2 Columns (Tablet/Small Laptop) */
+@media (max-width: 992px) {
+  .dashboard-grid-premium {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Reset explicit placement for auto-flow */
+  .grid-area-weather,
+  .grid-area-currency,
+  .grid-area-time,
+  .grid-area-habit,
+  .grid-area-news,
+  .grid-area-country,
+  .grid-area-holiday,
+  .grid-area-translator,
+  .grid-area-emergency {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
 }
+
+/* Responsive: 1 Column (Mobile) */
+@media (max-width: 768px) {
+  .dashboard-grid-premium {
+    /* grid-template-columns: 1fr; (Already default if we reset) */
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Grid Area Assignments Removed - Using Uniform Grid */
 
 /* --- Holiday Widget Styles --- */
 .widget-holiday-live {
@@ -3800,6 +4018,7 @@ input:checked+.slider:before {
   line-height: 1;
   background: -webkit-linear-gradient(#fff, #cbd5e1);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -4619,7 +4838,7 @@ input:checked+.slider:before {
   display: flex;
   gap: 3px;
   flex-wrap: wrap;
-  max-width: 320px;
+  max-width: 100%;
   /* ~13 cols of 7 days if grid, but we are doing strip? logic says list of days */
   /* Let's try a strip first, 60 days * (8px + 3px) ~= 660px. That's wide. */
   /* Requirement: "Calendar Heatmap" usually implies specific grid. */

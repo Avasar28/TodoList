@@ -4,42 +4,48 @@
     ViewData["Title"] = "Create User";
 }
 
-<div class="dashboard-container fade-in">
-    <div class="dashboard-header">
-        <h1>Create User</h1>
-        <p class="subtitle">Add a new user to the system</p>
-    </div>
+<div class="auth-container fade-in">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-hero-title">Create User</h1>
+            <p class="auth-hero-subtitle">Add a new member to your team.</p>
+        </div>
 
-    <div class="auth-card" style="margin-top: 2rem;">
-        <form asp-action="CreateUser" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form asp-action="CreateUser" method="post" class="auth-form">
+            <div asp-validation-summary="ModelOnly" class="text-danger" style="font-size: 0.9rem;"></div>
 
             <div class="form-group">
                 <label asp-for="Name">Full Name</label>
-                <input asp-for="Name" class="form-control" placeholder="John Doe" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+                <input asp-for="Name" class="form-control" placeholder="e.g. Sarah Smith" />
+                <span asp-validation-for="Name" class="text-danger small"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="Email">Email</label>
-                <input asp-for="Email" class="form-control" placeholder="user@example.com" />
-                <span asp-validation-for="Email" class="text-danger"></span>
+                <label asp-for="Email">Email Address</label>
+                <input asp-for="Email" class="form-control" placeholder="name@company.com" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Password">Password</label>
-                <input asp-for="Password" type="password" class="form-control" placeholder="Min. 8 characters" />
-                <span asp-validation-for="Password" class="text-danger"></span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label asp-for="Password">Password</label>
+                    <input asp-for="Password" type="password" class="form-control" placeholder="Min 8 chars" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ConfirmPassword">Confirm</label>
+                    <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Repeat" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="ConfirmPassword">Confirm Password</label>
-                <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Repeat your password" />
-                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            <div style="margin-top: 0.5rem;">
+                <button type="submit" class="btn-auth-primary">Create User Profile</button>
+                <a asp-action="UserList" style="display: block; margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem; text-decoration: none; font-weight: 500;">
+                    ← Back to User List
+                </a>
             </div>
-
-            <button type="submit" class="btn btn-primary btn-block">Send OTP & Create User</button>
-            <a asp-action="UserList" class="btn btn-secondary btn-block" style="margin-top: 1rem;">Back to List</a>
         </form>
     </div>
 </div>

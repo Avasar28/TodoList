@@ -4,42 +4,44 @@
     ViewData["Title"] = "Login";
 }
 
-<div class="auth-container">
+<div class="auth-container fade-in">
     <div class="auth-card">
-        <h2 data-translate="true">Welcome Back</h2>
-        <p class="auth-subtitle" data-translate="true">Login with your email</p>
+        <div class="auth-header">
+            <h1 class="auth-hero-title" data-translate="true">Welcome Back</h1>
+            <p class="auth-hero-subtitle" data-translate="true">Access your dashboard and manage your tasks efficiently.</p>
+        </div>
 
         @if (TempData["SuccessMessage"] != null)
         {
-            <div class="alert alert-success" data-translate="true">
+            <div class="alert alert-success" style="border-radius: 12px; font-size: 0.9rem;" data-translate="true">
                 @TempData["SuccessMessage"]
             </div>
         }
 
         <form asp-action="Login" method="post" class="auth-form">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly" class="text-danger" style="font-size: 0.9rem;"></div>
             
             <div class="form-group">
-                <label asp-for="Email" data-translate="true">Email</label>
-                <input asp-for="Email" class="form-control" placeholder="example@domain.com" autocomplete="email" />
-                <span asp-validation-for="Email" class="text-danger"></span>
+                <label asp-for="Email" data-translate="true">Email Address</label>
+                <input asp-for="Email" class="form-control" placeholder="name@company.com" autocomplete="email" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
             </div>
             
             <div class="form-group">
                 <label asp-for="Password" data-translate="true">Password</label>
-                <input asp-for="Password" class="form-control" />
-                <span asp-validation-for="Password" class="text-danger"></span>
+                <input asp-for="Password" class="form-control" placeholder="••••••••" />
+                <span asp-validation-for="Password" class="text-danger small"></span>
                 <div class="forgot-container">
-                    <a asp-action="ForgotPassword" class="forgot-link" data-translate="true">Forgot Password?</a>
+                    <a asp-action="ForgotPassword" class="forgot-link" data-translate="true">Forgot password?</a>
                 </div>
             </div>
 
-            <button type="submit" class="btn-auth" data-translate="true">Login</button>
+            <button type="submit" class="btn-auth-primary" data-translate="true">Sign In</button>
         </form>
 
-        <p class="auth-footer">
-            <span data-translate="true">Don't have an account?</span> <a asp-action="Signup" data-translate="true">Sign up</a>
-        </p>
+        <div class="auth-footer">
+            <span data-translate="true">New here?</span> <a asp-action="Signup" data-translate="true">Create an account</a>
+        </div>
     </div>
 </div>
 
