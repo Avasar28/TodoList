@@ -2091,7 +2091,8 @@ h1 {
   margin-left: 10px;
 }
 
-.custom-currency-select {
+.custom-currency-select,
+.custom-holiday-select {
   position: relative;
   width: 100%;
 }
@@ -2114,7 +2115,8 @@ h1 {
   transform: translateY(-1px);
 }
 
-.custom-currency-select.active .select-header {
+.custom-currency-select.active .select-header,
+.custom-holiday-select.active .select-header {
   border-color: var(--accent-color);
   box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.15);
   background: rgba(255, 255, 255, 0.08);
@@ -2148,7 +2150,8 @@ h1 {
   transition: transform 0.3s ease;
 }
 
-.custom-currency-select.active .dropdown-arrow {
+.custom-currency-select.active .dropdown-arrow,
+.custom-holiday-select.active .dropdown-arrow {
   transform: rotate(180deg);
   color: var(--accent-color);
 }
@@ -2169,7 +2172,8 @@ h1 {
   padding: 8px;
 }
 
-.custom-currency-select.active .custom-options {
+.custom-currency-select.active .custom-options,
+.custom-holiday-select.active .custom-options {
   display: block;
   animation: slideUpFade 0.25s ease-out;
 }

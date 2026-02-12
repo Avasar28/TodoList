@@ -63,13 +63,24 @@ HolidayWidget.attachEventListeners = function () {
     // 1. Search Logic
     const searchInput = document.getElementById('holidayCountrySearch');
     const optionsContainer = document.getElementById('holidayCountryOptions');
-    const customSelect = document.querySelector('.custom-currency-select'); // Reusing existing class for styling
+    const customSelect = document.querySelector('.custom-holiday-select'); // Isolated class
 
     if (searchInput) {
         searchInput.addEventListener('input', (e) => this.handleSearchInput(e.target.value));
         searchInput.addEventListener('focus', () => {
             if (searchInput.value.length >= 2) {
                 if (customSelect) customSelect.classList.add('active');
+            }
+        });
+
+        // Enter key support
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const query = searchInput.value.trim();
+                if (query.length >= 2) {
+                    this.selectBestMatch(query);
+                }
             }
         });
     }
@@ -92,8 +103,7 @@ HolidayWidget.attachEventListeners = function () {
 };
 
 HolidayWidget.handleSearchInput = function (query) {
-    const optionsContainer = document.getElementById('holidayCountryOptions');
-    const customSelect = document.querySelector('.custom-currency-select');
+    const customSelect = document.querySelector('.custom-holiday-select');
 
     if (!query || query.length < 2) {
         if (customSelect) customSelect.classList.remove('active');
@@ -111,6 +121,36 @@ HolidayWidget.handleSearchInput = function (query) {
         if (customSelect) customSelect.classList.add('active');
     } else {
         if (customSelect) customSelect.classList.remove('active');
+    }
+};
+
+HolidayWidget.selectBestMatch = function (query) {
+    const lowerQuery = query.toLowerCase();
+
+    // 1. Exact Name Match
+    let match = this.allCountries.find(c => c.name.toLowerCase() === lowerQuery);
+
+    // 2. Exact Code Match
+    if (!match) {
+        match = this.allCountries.find(c => c.countryCode.toLowerCase() === lowerQuery);
+    }
+
+    // 3. Starts With
+    if (!match) {
+        match = this.allCountries.find(c => c.name.toLowerCase().startsWith(lowerQuery));
+    }
+
+    // 4. Includes
+    if (!match) {
+        match = this.allCountries.find(c => c.name.toLowerCase().includes(lowerQuery));
+    }
+
+    if (match) {
+        this.selectCountry(match.countryCode, match.name);
+        // Hide dropdown
+        const customSelect = document.querySelector('.custom-holiday-select');
+        if (customSelect) customSelect.classList.remove('active');
+        document.getElementById('holidayCountrySearch').blur();
     }
 };
 
@@ -258,7 +298,7 @@ HolidayWidget.selectCountry = function (code, name, isSync = false) {
     if (searchInput) searchInput.value = name;
     if (select) select.value = code;
 
-    document.querySelectorAll('.custom-currency-select').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.custom-holiday-select').forEach(el => el.classList.remove('active'));
     this.fetchHolidays();
 };
 
