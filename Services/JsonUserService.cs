@@ -40,10 +40,31 @@ namespace TodoListApp.Services
             var users = ReadUsers();
             var user = users.FirstOrDefault(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
             
-            if (user != null && BCrypt.Net.BCrypt.Verify(password, user.Password))
+            if (user != null)
             {
-                if (!user.IsEmailVerified) return null; // Optional: can be handled in controller for better UX
-                return user;
+                bool isPasswordValid = false;
+                try
+                {
+                    isPasswordValid = BCrypt.Net.BCrypt.Verify(password, user.Password);
+                }
+                catch (Exception)
+                {
+                    // Fallback: If Verify fails (e.g., stored password is not a valid hash), check plain text
+                    // This fixes the issue for users with plain-text passwords stored during the bug window
+                    if (user.Password == password)
+                    {
+                        isPasswordValid = true;
+                        // Optional: Auto-fix the password to be hashed?
+                        // user.Password = BCrypt.Net.BCrypt.HashPassword(password);
+                        // WriteUsers(users); 
+                    }
+                }
+
+                if (isPasswordValid)
+                {
+                    if (!user.IsEmailVerified) return null; 
+                    return user;
+                }
             }
             return null;
         }
@@ -151,8 +172,11 @@ namespace TodoListApp.Services
             {
                 existing.Name = user.Name;
                 existing.Email = user.Email;
-                // Only update password if strictly necessary, but for now let's keep it simple
-                // existing.Password = user.Password; 
+                // Update password if it has changed (it's already hashed in controller if changed)
+                if (!string.IsNullOrEmpty(user.Password)) 
+                {
+                    existing.Password = user.Password; 
+                }
                 WriteUsers(users);
                 return true;
             }

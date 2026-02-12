@@ -10,7 +10,9 @@
             <h1>User List</h1>
             <p class="subtitle">Registered users in the system</p>
         </div>
-        <a asp-action="CreateUser" class="btn btn-primary">Create New User</a>
+        <a asp-action="CreateUser" class="btn-glow-primary">
+            <span>+</span> Create New User
+        </a>
     </div>
 
     <div class="todo-card" style="margin-top: 2rem;">
@@ -38,9 +40,9 @@
                         <td>@user.Email</td>
                         <td class="cell-truncate" title="@user.Password">@user.Password</td>
                         <td class="text-right">
-                            <a asp-action="EditUser" asp-route-id="@user.Id" class="btn btn-sm btn-secondary" style="margin-right: 5px;">Edit</a>
+                            <a asp-action="EditUser" asp-route-id="@user.Id" class="btn-edit-unique" style="margin-right: 5px;">Edit</a>
                             <form asp-action="DeleteUser" asp-route-id="@user.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure?');">
-                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                <button type="submit" class="btn-delete-unique">Delete</button>
                             </form>
                         </td>
                     </tr>

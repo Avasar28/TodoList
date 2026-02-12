@@ -296,8 +296,32 @@ namespace TodoListApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult EditUser(TodoListApp.Models.User user)
+        public IActionResult EditUser(TodoListApp.Models.User user, string? newPassword, string? confirmPassword)
         {
+            // Handle Password Change
+            if (!string.IsNullOrEmpty(newPassword))
+            {
+                if (newPassword != confirmPassword)
+                {
+                    ModelState.AddModelError("ConfirmPassword", "Passwords do not match.");
+                    return View(user);
+                }
+                // Hash the password before saving!
+                user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            }
+            else
+            {
+                // Keep existing password (hidden field value)
+                // If the hidden field was modified or empty, we might have an issue, 
+                // but usually it retains the old value.
+                // Alternatively, fetch from DB to be safe if 'user.Password' comes back null/empty.
+                if (string.IsNullOrEmpty(user.Password))
+                {
+                     var existingUser = _userService.GetUser(user.Id);
+                     if (existingUser != null) user.Password = existingUser.Password;
+                }
+            }
+
             if (_userService.UpdateUser(user))
             {
                 return RedirectToAction(nameof(UserList));

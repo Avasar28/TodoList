@@ -2,7 +2,7 @@
   {
     "Id": 1,
     "Email": "projtest28@gmail.com",
-    "Password": "$2a$11$I4OCQFxj/7VwlXQsN1BPo.kxvZVQySDSPzHa/lsVHI4WtUZaRS.IC",
+    "Password": "12121212",
     "ResetToken": null,
     "ResetTokenExpiry": null,
     "IsEmailVerified": true,

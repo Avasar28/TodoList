@@ -1,0 +1,44 @@
+/* --- Edit User Page Styles --- */
+.auth-card-wide {
+    margin: 2rem auto;
+    max-width: 500px;
+    float: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(10px);
+}
+
+.auth-card-wide h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.btn-glass-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8) !important;
+    padding: 0.6rem 1.5rem;
+    border-radius: 30px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    width: 100%;
+}
+
+.btn-glass-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    color: white !important;
+}
+
+.btn-block-glow {
+    width: 100%;
+    justify-content: center;
+    margin-top: 1rem;
+    padding: 0.8rem;
+    font-size: 1rem;
+}

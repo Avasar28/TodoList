@@ -4,13 +4,13 @@
     ViewData["Title"] = "Edit User";
 }
 
-<div class="dashboard-container fade-in">
+<div class="dashboard-container fade-in" id="editUserContainer">
     <div class="dashboard-header">
         <h1>Edit User</h1>
         <p class="subtitle">Update user details</p>
     </div>
 
-    <div class="auth-card" style="margin-top: 2rem;">
+    <div class="auth-card auth-card-wide" style="margin-top: 2rem;">
         <form asp-action="EditUser" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
@@ -28,8 +28,19 @@
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
-            <a asp-action="UserList" class="btn btn-secondary btn-block" style="margin-top: 1rem;">Back to List</a>
+            <!-- Password Change Fields -->
+            <div class="form-group" style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                <h5 style="margin-bottom: 1rem; color: rgba(255,255,255,0.8); font-size: 1rem;">Change Password (Optional)</h5>
+                
+                <label for="newPassword">New Password</label>
+                <input type="password" name="newPassword" class="form-control" placeholder="Leave blank to keep current" />
+                
+                <label for="confirmPassword" style="margin-top: 10px;">Confirm New Password</label>
+                <input type="password" name="confirmPassword" class="form-control" placeholder="Confirm new password" />
+            </div>
+
+            <button type="submit" class="btn-glow-primary btn-block-glow">Save Changes</button>
+            <a asp-action="UserList" class="btn-outline-unique">Back to List</a>
         </form>
     </div>
 </div>
