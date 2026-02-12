@@ -1099,7 +1099,7 @@
                     <button type="submit" class="btn-primary-sm" onclick="event.preventDefault(); refreshNewsData();" data-translate="true">Search</button>
                 </div>
                 <div class="sort-selector">
-                    <select id="newsSortSelect" onchange="refreshNewsData()" class="form-select-sm">
+                    <select id="newsSortSelect" onchange="refreshNewsData()">
                         <option value="relevance">Most Relevant</option>
                         <option value="latest">Latest News</option>
                     </select>
@@ -1699,7 +1699,9 @@
             // When weather location changes, sync News context.
             const newsInput = document.getElementById('newsSearchInput');
             if (newsInput) {
-                newsInput.value = data.city;
+                // If weather location is generic "My Location", default news to "World" to ensure results
+                const newsLoc = (data.city === "My Location") ? "World" : data.city;
+                newsInput.value = newsLoc;
                 refreshNewsData(); 
             }
 

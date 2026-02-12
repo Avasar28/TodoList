@@ -542,40 +542,49 @@ namespace TodoListApp.Services
                 string resolvedName = location;
                 string countryCode = "US";
 
-                try 
+                // Handle "My Location" placeholder - don't try to geocode it
+                if (location.Equals("My Location", StringComparison.OrdinalIgnoreCase))
                 {
-                    var geoUrl = $"https://geocoding-api.open-meteo.com/v1/search?name={Uri.EscapeDataString(location)}&count=1&language=en&format=json";
-                    // Short timeout for geocoding as it's optional
-                    using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(3));
-                    var geoRes = await _httpClient.GetAsync(geoUrl, cts.Token);
-                    
-                    if (geoRes.IsSuccessStatusCode)
+                    location = "World";
+                    resolvedName = "Global";
+                }
+                else
+                {
+                    try 
                     {
-                        var geoJson = await geoRes.Content.ReadAsStringAsync();
-                        using var doc = JsonDocument.Parse(geoJson);
-                        if (doc.RootElement.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                        var geoUrl = $"https://geocoding-api.open-meteo.com/v1/search?name={Uri.EscapeDataString(location)}&count=1&language=en&format=json";
+                        // Short timeout for geocoding as it's optional
+                        using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(3));
+                        var geoRes = await _httpClient.GetAsync(geoUrl, cts.Token);
+                        
+                        if (geoRes.IsSuccessStatusCode)
                         {
-                            var res = results[0];
-                            var city = res.TryGetProperty("admin3", out var a3) ? a3.GetString() : "";
-                            var district = res.TryGetProperty("admin2", out var a2) ? a2.GetString() : "";
-                            var country = res.TryGetProperty("country_code", out var cc) ? cc.GetString() : "US";
-                            
-                            resolvedName = !string.IsNullOrEmpty(city) ? city : (!string.IsNullOrEmpty(district) ? district : res.GetProperty("name").GetString() ?? location);
-                            countryCode = country ?? "US";
+                            var geoJson = await geoRes.Content.ReadAsStringAsync();
+                            using var doc = JsonDocument.Parse(geoJson);
+                            if (doc.RootElement.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                            {
+                                var res = results[0];
+                                var city = res.TryGetProperty("admin3", out var a3) ? a3.GetString() : "";
+                                var district = res.TryGetProperty("admin2", out var a2) ? a2.GetString() : "";
+                                var country = res.TryGetProperty("country_code", out var cc) ? cc.GetString() : "US";
+                                
+                                resolvedName = !string.IsNullOrEmpty(city) ? city : (!string.IsNullOrEmpty(district) ? district : res.GetProperty("name").GetString() ?? location);
+                                countryCode = country ?? "US";
+                            }
                         }
                     }
-                }
-                catch 
-                {
-                    // If geocoding fails (DNS, Timeout, etc.), just use the original location string.
-                    // This ensures the news search still proceeds even if we can't pretty-print the location name.
-                    Console.WriteLine($"[News] Geocoding failed for '{location}', falling back to raw query.");
+                    catch 
+                    {
+                        // If geocoding fails (DNS, Timeout, etc.), just use the original location string.
+                        // This ensures the news search still proceeds even if we can't pretty-print the location name.
+                        Console.WriteLine($"[News] Geocoding failed for '{location}', falling back to raw query.");
+                    }
                 }
 
                 // 2. Build Query
                 var queryBuilder = new System.Text.StringBuilder($"{location}"); 
                 
-                if (!string.IsNullOrEmpty(category) && category != "All")
+                if (!string.IsNullOrEmpty(category) && category != "All" && category != "World")
                 {
                     queryBuilder.Append($" {category}");
                 }
