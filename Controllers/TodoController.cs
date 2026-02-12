@@ -198,6 +198,13 @@ namespace TodoListApp.Controllers
             return Json(data);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetEmergencyNumbersJson()
+        {
+            var data = await _externalApiService.GetAllEmergencyNumbersAsync();
+            return Json(data);
+        }
+
         private int GetUserId()
         {
             var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);

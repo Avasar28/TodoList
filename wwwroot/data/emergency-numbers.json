@@ -1,0 +1,3460 @@
+[
+    {
+        "country": "Afghanistan",
+        "code": "AF",
+        "flag": "🇦🇫",
+        "services": [
+            {
+                "name": "Police",
+                "number": "119",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "112",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "119",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Albania",
+        "code": "AL",
+        "flag": "🇦🇱",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "129",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "127",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "128",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Algeria",
+        "code": "DZ",
+        "flag": "🇩🇿",
+        "services": [
+            {
+                "name": "Police",
+                "number": "17",
+                "type": "police"
+            },
+            {
+                "name": "Civil Protection",
+                "number": "14",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Andorra",
+        "code": "AD",
+        "flag": "🇦🇩",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "110",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "116",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "118",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Angola",
+        "code": "AO",
+        "flag": "🇦🇴",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "111",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "113",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "112",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "115",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Antigua and Barbuda",
+        "code": "AG",
+        "flag": "🇦🇬",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            },
+            {
+                "name": "Fire",
+                "number": "911",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "911",
+                "type": "ambulance"
+            },
+            {
+                "name": "Police",
+                "number": "911",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "Argentina",
+        "code": "AR",
+        "flag": "🇦🇷",
+        "services": [
+            {
+                "name": "Police",
+                "number": "101",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "100",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "107",
+                "type": "ambulance"
+            },
+            {
+                "name": "Violence Against Women",
+                "number": "144",
+                "type": "helpline"
+            }
+        ]
+    },
+    {
+        "country": "Armenia",
+        "code": "AM",
+        "flag": "🇦🇲",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Fire",
+                "number": "101",
+                "type": "fire"
+            },
+            {
+                "name": "Police",
+                "number": "102",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "103",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Australia",
+        "code": "AU",
+        "flag": "🇦🇺",
+        "services": [
+            {
+                "name": "Police",
+                "number": "000",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "000",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "000",
+                "type": "ambulance"
+            },
+            {
+                "name": "SES (Storm/Flood)",
+                "number": "132 500",
+                "type": "disaster"
+            }
+        ]
+    },
+    {
+        "country": "Austria",
+        "code": "AT",
+        "flag": "🇦🇹",
+        "services": [
+            {
+                "name": "European Emergency",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "133",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "144",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "122",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Azerbaijan",
+        "code": "AZ",
+        "flag": "🇦🇿",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Fire",
+                "number": "101",
+                "type": "fire"
+            },
+            {
+                "name": "Police",
+                "number": "102",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "103",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Bahamas",
+        "code": "BS",
+        "flag": "🇧🇸",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Bahrain",
+        "code": "BH",
+        "flag": "🇧🇭",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "999",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Bangladesh",
+        "code": "BD",
+        "flag": "🇧🇳",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "999",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Barbados",
+        "code": "BB",
+        "flag": "🇧🇧",
+        "services": [
+            {
+                "name": "Police",
+                "number": "211",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "511",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "311",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Belarus",
+        "code": "BY",
+        "flag": "🇧🇾",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Fire",
+                "number": "101",
+                "type": "fire"
+            },
+            {
+                "name": "Police",
+                "number": "102",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "103",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Belgium",
+        "code": "BE",
+        "flag": "🇧🇪",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "101",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "Belize",
+        "code": "BZ",
+        "flag": "🇧🇿",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Benin",
+        "code": "BJ",
+        "flag": "🇧🇯",
+        "services": [
+            {
+                "name": "Police",
+                "number": "117",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "118",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "112",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Bhutan",
+        "code": "BT",
+        "flag": "🇧🇹",
+        "services": [
+            {
+                "name": "Police",
+                "number": "113",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "112",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "110",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Bolivia",
+        "code": "BO",
+        "flag": "🇧🇴",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "110",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "118",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "119",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Bosnia and Herzegovina",
+        "code": "BA",
+        "flag": "🇧🇦",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "122",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "123",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "124",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Botswana",
+        "code": "BW",
+        "flag": "🇧🇼",
+        "services": [
+            {
+                "name": "Police",
+                "number": "999",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "997",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "998",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Brazil",
+        "code": "BR",
+        "flag": "🇧🇷",
+        "services": [
+            {
+                "name": "Police (Military)",
+                "number": "190",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance (SAMU)",
+                "number": "192",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire Dept",
+                "number": "193",
+                "type": "fire"
+            },
+            {
+                "name": "Women's Helpline",
+                "number": "180",
+                "type": "helpline"
+            }
+        ]
+    },
+    {
+        "country": "Brunei",
+        "code": "BN",
+        "flag": "🇧🇳",
+        "services": [
+            {
+                "name": "Police",
+                "number": "993",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "991",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "995",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Bulgaria",
+        "code": "BG",
+        "flag": "🇧🇬",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "166",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "150",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "160",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Burkina Faso",
+        "code": "BF",
+        "flag": "🇧🇫",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "17",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "18",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Burundi",
+        "code": "BI",
+        "flag": "🇧🇮",
+        "services": [
+            {
+                "name": "Police",
+                "number": "117",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "112",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "118",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Cambodia",
+        "code": "KH",
+        "flag": "🇰🇭",
+        "services": [
+            {
+                "name": "Police",
+                "number": "117",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "118",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "119",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Cameroon",
+        "code": "CM",
+        "flag": "🇨🇲",
+        "services": [
+            {
+                "name": "Police",
+                "number": "117",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "118",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Canada",
+        "code": "CA",
+        "flag": "🇨🇦",
+        "services": [
+            {
+                "name": "Police",
+                "number": "911",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "911",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "911",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Cape Verde",
+        "code": "CV",
+        "flag": "🇨🇻",
+        "services": [
+            {
+                "name": "Police",
+                "number": "132",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "131",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "130",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Central African Republic",
+        "code": "CF",
+        "flag": "🇨🇫",
+        "services": [
+            {
+                "name": "Police",
+                "number": "117",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "118",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "1220",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Chad",
+        "code": "TD",
+        "flag": "🇹🇩",
+        "services": [
+            {
+                "name": "Police",
+                "number": "17",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "18",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Chile",
+        "code": "CL",
+        "flag": "🇨🇱",
+        "services": [
+            {
+                "name": "Police",
+                "number": "133",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "131",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "132",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "China",
+        "code": "CN",
+        "flag": "🇨🇳",
+        "services": [
+            {
+                "name": "Police",
+                "number": "110",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "119",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "120",
+                "type": "ambulance"
+            },
+            {
+                "name": "Traffic Police",
+                "number": "122",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "Colombia",
+        "code": "CO",
+        "flag": "🇨🇴",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "123",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "112",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "Comoros",
+        "code": "KM",
+        "flag": "🇰🇲",
+        "services": [
+            {
+                "name": "Police",
+                "number": "17",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "18",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Congo",
+        "code": "CG",
+        "flag": "🇨🇬",
+        "services": [
+            {
+                "name": "Police",
+                "number": "117",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "118",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Costa Rica",
+        "code": "CR",
+        "flag": "🇨🇷",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Croatia",
+        "code": "HR",
+        "flag": "🇭🇷",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "192",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "193",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "194",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Cuba",
+        "code": "CU",
+        "flag": "🇨🇺",
+        "services": [
+            {
+                "name": "Police",
+                "number": "106",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "105",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "104",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Cyprus",
+        "code": "CY",
+        "flag": "🇨🇾",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "All Services",
+                "number": "199",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Czech Republic",
+        "code": "CZ",
+        "flag": "🇨🇿",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "158",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "155",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "150",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Denmark",
+        "code": "DK",
+        "flag": "🇩🇰",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "114",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "Djibouti",
+        "code": "DJ",
+        "flag": "🇩🇯",
+        "services": [
+            {
+                "name": "Police",
+                "number": "17",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "18",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Dominican Republic",
+        "code": "DO",
+        "flag": "🇩🇴",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Ecuador",
+        "code": "EC",
+        "flag": "🇪🇨",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Egypt",
+        "code": "EG",
+        "flag": "🇪🇬",
+        "services": [
+            {
+                "name": "Police",
+                "number": "122",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "123",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "180",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "El Salvador",
+        "code": "SV",
+        "flag": "🇸🇻",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Estonia",
+        "code": "EE",
+        "flag": "🇪🇪",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Eswatini",
+        "code": "SZ",
+        "flag": "🇸🇿",
+        "services": [
+            {
+                "name": "Police",
+                "number": "999",
+                "type": "police"
+            },
+            {
+                "name": "Fire/Amb",
+                "number": "933",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Ethiopia",
+        "code": "ET",
+        "flag": "🇪🇹",
+        "services": [
+            {
+                "name": "Police",
+                "number": "991",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "939",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "907",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Fiji",
+        "code": "FJ",
+        "flag": "🇫🇯",
+        "services": [
+            {
+                "name": "Police",
+                "number": "917",
+                "type": "police"
+            },
+            {
+                "name": "Fire/Ambulance",
+                "number": "911",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Finland",
+        "code": "FI",
+        "flag": "🇫🇮",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "France",
+        "code": "FR",
+        "flag": "🇫🇷",
+        "services": [
+            {
+                "name": "Europe Emergency",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Medical (SAMU)",
+                "number": "15",
+                "type": "ambulance"
+            },
+            {
+                "name": "Police",
+                "number": "17",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "18",
+                "type": "fire"
+            },
+            {
+                "name": "Homeless SAMU",
+                "number": "115",
+                "type": "helpline"
+            }
+        ]
+    },
+    {
+        "country": "Gabon",
+        "code": "GA",
+        "flag": "🇬🇦",
+        "services": [
+            {
+                "name": "Police",
+                "number": "1730",
+                "type": "police"
+            },
+            {
+                "name": "Information",
+                "number": "1300",
+                "type": "alert"
+            },
+            {
+                "name": "Fire",
+                "number": "18",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Gambia",
+        "code": "GM",
+        "flag": "🇬🇲",
+        "services": [
+            {
+                "name": "Police",
+                "number": "117",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "116",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "118",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Georgia",
+        "code": "GE",
+        "flag": "🇬🇪",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Germany",
+        "code": "DE",
+        "flag": "🇩🇪",
+        "services": [
+            {
+                "name": "Police",
+                "number": "110",
+                "type": "police"
+            },
+            {
+                "name": "Fire & Ambulance",
+                "number": "112",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Ghana",
+        "code": "GH",
+        "flag": "🇬🇭",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "191",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "192",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "193",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Greece",
+        "code": "GR",
+        "flag": "🇬🇷",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "100",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "166",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "199",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Grenada",
+        "code": "GD",
+        "flag": "🇬🇩",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Guatemala",
+        "code": "GT",
+        "flag": "🇬🇹",
+        "services": [
+            {
+                "name": "Police",
+                "number": "110",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance/Fire",
+                "number": "122",
+                "type": "ambulance"
+            },
+            {
+                "name": "Ambulance/Fire",
+                "number": "123",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Guinea",
+        "code": "GN",
+        "flag": "🇬🇳",
+        "services": [
+            {
+                "name": "Police",
+                "number": "117",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "442-020",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Guyana",
+        "code": "GY",
+        "flag": "🇬🇾",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Haiti",
+        "code": "HT",
+        "flag": "🇭🇹",
+        "services": [
+            {
+                "name": "Police",
+                "number": "114",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "116",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "115",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Honduras",
+        "code": "HN",
+        "flag": "🇭🇳",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "199",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "198",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "195",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Hong Kong",
+        "code": "HK",
+        "flag": "🇭🇰",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "999",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Hungary",
+        "code": "HU",
+        "flag": "🇭🇺",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Ambulance",
+                "number": "104",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "105",
+                "type": "fire"
+            },
+            {
+                "name": "Police",
+                "number": "107",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "Iceland",
+        "code": "IS",
+        "flag": "🇮🇸",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "India",
+        "code": "IN",
+        "flag": "🇮🇳",
+        "services": [
+            {
+                "name": "National Emergency",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "100",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "101",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "102",
+                "type": "ambulance"
+            },
+            {
+                "name": "Women Helpline",
+                "number": "1091",
+                "type": "helpline"
+            },
+            {
+                "name": "Disaster Mgmt",
+                "number": "108",
+                "type": "disaster"
+            }
+        ]
+    },
+    {
+        "country": "Indonesia",
+        "code": "ID",
+        "flag": "🇮🇩",
+        "services": [
+            {
+                "name": "Police",
+                "number": "110",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "118",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "113",
+                "type": "fire"
+            },
+            {
+                "name": "Search & Rescue",
+                "number": "115",
+                "type": "disaster"
+            }
+        ]
+    },
+    {
+        "country": "Iran",
+        "code": "IR",
+        "flag": "🇮🇷",
+        "services": [
+            {
+                "name": "Police",
+                "number": "110",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "115",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "125",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Iraq",
+        "code": "IQ",
+        "flag": "🇮🇶",
+        "services": [
+            {
+                "name": "Police",
+                "number": "104",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "122",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "115",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Ireland",
+        "code": "IE",
+        "flag": "🇮🇪",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police (Garda)",
+                "number": "999",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "Israel",
+        "code": "IL",
+        "flag": "🇮🇱",
+        "services": [
+            {
+                "name": "Police",
+                "number": "100",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "101",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "102",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Italy",
+        "code": "IT",
+        "flag": "🇮🇹",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "113",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "118",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "115",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Jamaica",
+        "code": "JM",
+        "flag": "🇯🇲",
+        "services": [
+            {
+                "name": "Police",
+                "number": "119",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "110",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "110",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Japan",
+        "code": "JP",
+        "flag": "🇯🇵",
+        "services": [
+            {
+                "name": "Police",
+                "number": "110",
+                "type": "police"
+            },
+            {
+                "name": "Fire & Ambulance",
+                "number": "119",
+                "type": "fire"
+            },
+            {
+                "name": "Coast Guard",
+                "number": "118",
+                "type": "coast"
+            }
+        ]
+    },
+    {
+        "country": "Jordan",
+        "code": "JO",
+        "flag": "🇯🇴",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Kazakhstan",
+        "code": "KZ",
+        "flag": "🇰🇿",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Fire",
+                "number": "101",
+                "type": "fire"
+            },
+            {
+                "name": "Police",
+                "number": "102",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "103",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Kenya",
+        "code": "KE",
+        "flag": "🇰🇪",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "999",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "Kuwait",
+        "code": "KW",
+        "flag": "🇰🇼",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Kyrgyzstan",
+        "code": "KG",
+        "flag": "🇰🇬",
+        "services": [
+            {
+                "name": "Fire",
+                "number": "101",
+                "type": "fire"
+            },
+            {
+                "name": "Police",
+                "number": "102",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "103",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Laos",
+        "code": "LA",
+        "flag": "🇱🇦",
+        "services": [
+            {
+                "name": "Police",
+                "number": "191",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "190",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "195",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Latvia",
+        "code": "LV",
+        "flag": "🇱🇻",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Fire",
+                "number": "01",
+                "type": "fire"
+            },
+            {
+                "name": "Police",
+                "number": "02",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "03",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Lebanon",
+        "code": "LB",
+        "flag": "🇱🇧",
+        "services": [
+            {
+                "name": "Police",
+                "number": "112",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "175",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "140",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Lesotho",
+        "code": "LS",
+        "flag": "🇱🇸",
+        "services": [
+            {
+                "name": "Police",
+                "number": "123",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "122",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Liberia",
+        "code": "LR",
+        "flag": "🇱🇷",
+        "services": [
+            {
+                "name": "Police",
+                "number": "911",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "Libya",
+        "code": "LY",
+        "flag": "🇱🇾",
+        "services": [
+            {
+                "name": "Police",
+                "number": "197",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "190",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "191",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Liechtenstein",
+        "code": "LI",
+        "flag": "🇱🇮",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "117",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "118",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "144",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Lithuania",
+        "code": "LT",
+        "flag": "🇱🇹",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "02",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "01",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "03",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Luxembourg",
+        "code": "LU",
+        "flag": "🇱🇺",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "113",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "Madagascar",
+        "code": "MG",
+        "flag": "🇲🇬",
+        "services": [
+            {
+                "name": "Police",
+                "number": "117",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "118",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "124",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Malawi",
+        "code": "MW",
+        "flag": "🇲🇼",
+        "services": [
+            {
+                "name": "Police",
+                "number": "997",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "998",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "999",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Malaysia",
+        "code": "MY",
+        "flag": "🇲🇾",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "999",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Maldives",
+        "code": "MV",
+        "flag": "🇲🇻",
+        "services": [
+            {
+                "name": "Coast Guard",
+                "number": "191",
+                "type": "coast"
+            },
+            {
+                "name": "Police",
+                "number": "119",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "118",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "102",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Mali",
+        "code": "ML",
+        "flag": "🇲🇱",
+        "services": [
+            {
+                "name": "Police",
+                "number": "17",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "18",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "15",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Malta",
+        "code": "MT",
+        "flag": "🇲🇹",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Mexico",
+        "code": "MX",
+        "flag": "🇲🇽",
+        "services": [
+            {
+                "name": "Police",
+                "number": "911",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "911",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "911",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Moldova",
+        "code": "MD",
+        "flag": "🇲🇩",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Fire",
+                "number": "901",
+                "type": "fire"
+            },
+            {
+                "name": "Police",
+                "number": "902",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "903",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Monaco",
+        "code": "MC",
+        "flag": "🇲🇨",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "17",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "18",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Mongolia",
+        "code": "MN",
+        "flag": "🇲🇳",
+        "services": [
+            {
+                "name": "Fire",
+                "number": "101",
+                "type": "fire"
+            },
+            {
+                "name": "Police",
+                "number": "102",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "103",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Montenegro",
+        "code": "ME",
+        "flag": "🇲🇪",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "122",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "123",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "124",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Morocco",
+        "code": "MA",
+        "flag": "🇲🇦",
+        "services": [
+            {
+                "name": "Police",
+                "number": "19",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance/Fire",
+                "number": "15",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Mozambique",
+        "code": "MZ",
+        "flag": "🇲🇿",
+        "services": [
+            {
+                "name": "Police",
+                "number": "119",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance/Fire",
+                "number": "117",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Myanmar",
+        "code": "MM",
+        "flag": "🇲🇲",
+        "services": [
+            {
+                "name": "Police",
+                "number": "199",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "191",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "192",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Namibia",
+        "code": "NA",
+        "flag": "🇳🇦",
+        "services": [
+            {
+                "name": "Police",
+                "number": "10111",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "Nepal",
+        "code": "NP",
+        "flag": "🇳🇵",
+        "services": [
+            {
+                "name": "Police",
+                "number": "100",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "101",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "102",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Netherlands",
+        "code": "NL",
+        "flag": "🇳🇱",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police (Non-Urgent)",
+                "number": "0900-8844",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "New Zealand",
+        "code": "NZ",
+        "flag": "🇳🇿",
+        "services": [
+            {
+                "name": "Police",
+                "number": "111",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "111",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "111",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Nicaragua",
+        "code": "NI",
+        "flag": "🇳🇮",
+        "services": [
+            {
+                "name": "Police",
+                "number": "118",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "115",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "128",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Nigeria",
+        "code": "NG",
+        "flag": "🇳🇬",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "199",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "North Macedonia",
+        "code": "MK",
+        "flag": "🇲🇰",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "192",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "193",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "194",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Norway",
+        "code": "NO",
+        "flag": "🇳🇴",
+        "services": [
+            {
+                "name": "Fire",
+                "number": "110",
+                "type": "fire"
+            },
+            {
+                "name": "Police",
+                "number": "112",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "113",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Oman",
+        "code": "OM",
+        "flag": "🇴🇲",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "9999",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Pakistan",
+        "code": "PK",
+        "flag": "🇵🇰",
+        "services": [
+            {
+                "name": "Police",
+                "number": "15",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "115",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "16",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Panama",
+        "code": "PA",
+        "flag": "🇵🇦",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "104",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "103",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Papua New Guinea",
+        "code": "PG",
+        "flag": "🇵🇬",
+        "services": [
+            {
+                "name": "Police",
+                "number": "112",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "110",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "111",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Paraguay",
+        "code": "PY",
+        "flag": "🇵🇾",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Peru",
+        "code": "PE",
+        "flag": "🇵🇪",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "105",
+                "type": "police"
+            },
+            {
+                "name": "Fire & Ambulance",
+                "number": "116",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Philippines",
+        "code": "PH",
+        "flag": "🇵🇭",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Poland",
+        "code": "PL",
+        "flag": "🇵🇱",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "997",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "998",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "999",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Portugal",
+        "code": "PT",
+        "flag": "🇵🇹",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Qatar",
+        "code": "QA",
+        "flag": "🇶🇦",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "999",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Romania",
+        "code": "RO",
+        "flag": "🇷🇴",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Russia",
+        "code": "RU",
+        "flag": "🇷🇺",
+        "services": [
+            {
+                "name": "General (Mobile)",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Fire",
+                "number": "101",
+                "type": "fire"
+            },
+            {
+                "name": "Police",
+                "number": "102",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "103",
+                "type": "ambulance"
+            },
+            {
+                "name": "Gas Emergency",
+                "number": "104",
+                "type": "disaster"
+            }
+        ]
+    },
+    {
+        "country": "Rwanda",
+        "code": "RW",
+        "flag": "🇷🇼",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Saint Lucia",
+        "code": "LC",
+        "flag": "🇱🇨",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "999",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "911",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Saudi Arabia",
+        "code": "SA",
+        "flag": "🇸🇦",
+        "services": [
+            {
+                "name": "Police",
+                "number": "999",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "997",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "998",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Senegal",
+        "code": "SN",
+        "flag": "🇸🇳",
+        "services": [
+            {
+                "name": "Police",
+                "number": "17",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "18",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Serbia",
+        "code": "RS",
+        "flag": "🇷🇸",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "192",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "193",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "194",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Seychelles",
+        "code": "SC",
+        "flag": "🇸🇨",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "999",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "Sierra Leone",
+        "code": "SL",
+        "flag": "🇸🇱",
+        "services": [
+            {
+                "name": "Police",
+                "number": "019",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance/Fire",
+                "number": "999",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Singapore",
+        "code": "SG",
+        "flag": "🇸🇬",
+        "services": [
+            {
+                "name": "Police",
+                "number": "999",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance/Fire",
+                "number": "995",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Slovakia",
+        "code": "SK",
+        "flag": "🇸🇰",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "158",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "155",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "150",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Slovenia",
+        "code": "SI",
+        "flag": "🇸🇮",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "113",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "Solomon Islands",
+        "code": "SB",
+        "flag": "🇸🇧",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "999",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Somalia",
+        "code": "SO",
+        "flag": "🇸🇴",
+        "services": [
+            {
+                "name": "Police",
+                "number": "888",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "999",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "555",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "South Africa",
+        "code": "ZA",
+        "flag": "🇿🇦",
+        "services": [
+            {
+                "name": "Police",
+                "number": "10111",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance/Fire",
+                "number": "10177",
+                "type": "ambulance"
+            },
+            {
+                "name": "Cellular Emergency",
+                "number": "112",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "South Korea",
+        "code": "KR",
+        "flag": "🇰🇷",
+        "services": [
+            {
+                "name": "Police",
+                "number": "112",
+                "type": "police"
+            },
+            {
+                "name": "Fire/Ambulance",
+                "number": "119",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Spain",
+        "code": "ES",
+        "flag": "🇪🇸",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "091",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "061",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "080",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Sri Lanka",
+        "code": "LK",
+        "flag": "🇱🇰",
+        "services": [
+            {
+                "name": "Police",
+                "number": "119",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance/Fire",
+                "number": "110",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Sudan",
+        "code": "SD",
+        "flag": "🇸🇩",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "999",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Suriname",
+        "code": "SR",
+        "flag": "🇸🇷",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "115",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Sweden",
+        "code": "SE",
+        "flag": "🇸🇪",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police (Non-Urgent)",
+                "number": "114 14",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "Switzerland",
+        "code": "CH",
+        "flag": "🇨🇭",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "117",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "118",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "144",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Syria",
+        "code": "SY",
+        "flag": "🇸🇾",
+        "services": [
+            {
+                "name": "Police",
+                "number": "112",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "110",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "113",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Taiwan",
+        "code": "TW",
+        "flag": "🇹🇼",
+        "services": [
+            {
+                "name": "Police",
+                "number": "110",
+                "type": "police"
+            },
+            {
+                "name": "Fire/Ambulance",
+                "number": "119",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Tajikistan",
+        "code": "TJ",
+        "flag": "🇹🇯",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Fire",
+                "number": "01",
+                "type": "fire"
+            },
+            {
+                "name": "Police",
+                "number": "02",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "03",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Tanzania",
+        "code": "TZ",
+        "flag": "🇹🇿",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "111",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "114",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "115",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Thailand",
+        "code": "TH",
+        "flag": "🇹🇭",
+        "services": [
+            {
+                "name": "Police",
+                "number": "191",
+                "type": "police"
+            },
+            {
+                "name": "Tourist Police",
+                "number": "1155",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "1669",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "199",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Togo",
+        "code": "TG",
+        "flag": "🇹🇬",
+        "services": [
+            {
+                "name": "Police",
+                "number": "117",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "118",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Trinidad and Tobago",
+        "code": "TT",
+        "flag": "🇹🇹",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "999",
+                "type": "alert"
+            },
+            {
+                "name": "Police",
+                "number": "999",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "990",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "990",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Tunisia",
+        "code": "TN",
+        "flag": "🇹🇳",
+        "services": [
+            {
+                "name": "Police",
+                "number": "197",
+                "type": "police"
+            },
+            {
+                "name": "Civil Protection",
+                "number": "198",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "190",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Turkey",
+        "code": "TR",
+        "flag": "🇹🇷",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "112",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Uganda",
+        "code": "UG",
+        "flag": "🇺🇬",
+        "services": [
+            {
+                "name": "Police",
+                "number": "999",
+                "type": "police"
+            }
+        ]
+    },
+    {
+        "country": "UAE",
+        "code": "AE",
+        "flag": "🇦🇪",
+        "services": [
+            {
+                "name": "Police",
+                "number": "999",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "998",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "997",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Ukraine",
+        "code": "UA",
+        "flag": "🇺🇦",
+        "services": [
+            {
+                "name": "Fire",
+                "number": "101",
+                "type": "fire"
+            },
+            {
+                "name": "Police",
+                "number": "102",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "103",
+                "type": "ambulance"
+            },
+            {
+                "name": "Gas",
+                "number": "104",
+                "type": "disaster"
+            }
+        ]
+    },
+    {
+        "country": "United Kingdom",
+        "code": "GB",
+        "flag": "🇬🇧",
+        "services": [
+            {
+                "name": "Police",
+                "number": "999",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "999",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "999",
+                "type": "ambulance"
+            },
+            {
+                "name": "Medical (Non-Urgent)",
+                "number": "111",
+                "type": "helpline"
+            }
+        ]
+    },
+    {
+        "country": "United States",
+        "code": "US",
+        "flag": "🇺🇸",
+        "services": [
+            {
+                "name": "Police",
+                "number": "911",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "911",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "911",
+                "type": "ambulance"
+            },
+            {
+                "name": "Suicide Crisis",
+                "number": "988",
+                "type": "helpline"
+            }
+        ]
+    },
+    {
+        "country": "Uruguay",
+        "code": "UY",
+        "flag": "🇺🇾",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Uzbekistan",
+        "code": "UZ",
+        "flag": "🇺🇿",
+        "services": [
+            {
+                "name": "Fire",
+                "number": "101",
+                "type": "fire"
+            },
+            {
+                "name": "Police",
+                "number": "102",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "103",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Venezuela",
+        "code": "VE",
+        "flag": "🇻🇪",
+        "services": [
+            {
+                "name": "All Services",
+                "number": "911",
+                "type": "alert"
+            }
+        ]
+    },
+    {
+        "country": "Vietnam",
+        "code": "VN",
+        "flag": "🇻🇳",
+        "services": [
+            {
+                "name": "Police",
+                "number": "113",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "114",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "115",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Yemen",
+        "code": "YE",
+        "flag": "🇾🇪",
+        "services": [
+            {
+                "name": "Police",
+                "number": "194",
+                "type": "police"
+            },
+            {
+                "name": "Ambulance",
+                "number": "191",
+                "type": "ambulance"
+            },
+            {
+                "name": "Fire",
+                "number": "191",
+                "type": "fire"
+            }
+        ]
+    },
+    {
+        "country": "Zambia",
+        "code": "ZM",
+        "flag": "🇿🇲",
+        "services": [
+            {
+                "name": "Police",
+                "number": "999",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "993",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "991",
+                "type": "ambulance"
+            }
+        ]
+    },
+    {
+        "country": "Zimbabwe",
+        "code": "ZW",
+        "flag": "🇿🇼",
+        "services": [
+            {
+                "name": "Police",
+                "number": "995",
+                "type": "police"
+            },
+            {
+                "name": "Fire",
+                "number": "993",
+                "type": "fire"
+            },
+            {
+                "name": "Ambulance",
+                "number": "994",
+                "type": "ambulance"
+            }
+        ]
+    }
+]

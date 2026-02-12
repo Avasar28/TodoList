@@ -20,6 +20,22 @@ namespace TodoListApp.Services
         Task<CountryData?> GetCountryDetailsAsync(string name);
         Task<List<ViewModels.HolidayCountry>> GetAvailableCountriesAsync();
         Task<ViewModels.HolidayData> GetPublicHolidaysAsync(string countryCode, int year);
+        Task<List<EmergencyCountryData>> GetAllEmergencyNumbersAsync();
+    }
+
+    public class EmergencyCountryData
+    {
+        public string Country { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public string Flag { get; set; } = string.Empty;
+        public List<EmergencyService> Services { get; set; } = new List<EmergencyService>();
+    }
+
+    public class EmergencyService
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Number { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
     }
 
     public class WeatherData

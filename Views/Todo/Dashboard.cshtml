@@ -398,7 +398,7 @@
 <!-- Top Status Strip -->
     <div class="dashboard-status-strip">
         <div class="status-greeting">
-            <h2 id="dynamicGreeting">Good Evening, @Model.UserName</h2>
+            <h2 id="dynamicGreeting" data-username="@Model.UserName">Good Evening, @Model.UserName</h2>
             <span class="status-date" id="currentDateDisplay">@DateTime.Now.ToString("dddd, MMMM dd, yyyy")</span>
         </div>
         
@@ -470,12 +470,12 @@
         <div class="grid-area-time">
             <div class="insight-card widget-time-live time compact widget-primary" onclick="openDetails('time')">
                  <div class="widget-header-row">
-                    <span class="widget-title-sm">WORLD CLOCK</span>
-                     <span class="zone-badge">@Model.TargetTimeZone</span>
+                    <span class="widget-title-sm">LOCAL TIME</span>
+                     <span class="zone-badge">My Location</span>
                 </div>
                 <div class="time-digital-display">
-                    <span class="digital-time" id="summaryTargetTime">@(string.IsNullOrEmpty(Model.TimeConversion.TargetTime) ? "--:--" : Model.TimeConversion.TargetTime)</span>
-                    <span class="time-diff-pill">@Model.TimeConversion.OffsetDisplay HRS</span>
+                    <span class="digital-time" id="summaryTargetTime">--:--</span>
+                    <span class="time-diff-pill">Standard</span>
                 </div>
             </div>
         </div>
@@ -1476,10 +1476,10 @@
             }
         }
 
-        // --- 3. Ticking Converter Clocks (Summary & Panel) ---
+        // --- 3. Ticking Converter Clocks (Panel Only) ---
         function startConverterClocks() {
             const displays = [
-                document.getElementById('summaryTargetTime'),
+                // document.getElementById('summaryTargetTime'), // Handled by RealTimeClock now
                 document.getElementById('panelTargetTime')
             ];
 
@@ -1494,6 +1494,40 @@
                     const targetTime = new Date(utc + (offsetMinutes * 60000));
                     display.textContent = targetTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 });
+            }
+            
+            setInterval(update, 1000);
+            update();
+        }
+
+        // --- 3.5 Real-Time User Clock (Status & Widget) ---
+        function startRealTimeClock() {
+            const liveClock = document.getElementById('liveClock');
+            const summaryTime = document.getElementById('summaryTargetTime');
+            const greetingEl = document.getElementById('dynamicGreeting');
+            const userName = greetingEl ? greetingEl.getAttribute('data-username') : '';
+
+            function update() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const hour = now.getHours();
+                
+                // Clock Updates
+                if (liveClock) liveClock.textContent = timeString;
+                if (summaryTime) {
+                    summaryTime.textContent = timeString;
+                    if(summaryTime.textContent === "Invalid Date") summaryTime.textContent = "--:--";
+                }
+
+                // Dynamic Greeting Update
+                if (greetingEl) {
+                    let greeting = "Good Morning";
+                    if (hour >= 12 && hour < 17) greeting = "Good Afternoon";
+                    else if (hour >= 17 && hour < 21) greeting = "Good Evening";
+                    else if (hour >= 21 || hour < 5) greeting = "Good Night";
+                    
+                    greetingEl.textContent = `${greeting}, ${userName}`;
+                }
             }
             
             setInterval(update, 1000);
@@ -2832,6 +2866,7 @@
             console.log("=== INITIALIZING DASHBOARD ===");
             initDashboard();
             startConverterClocks();
+            startRealTimeClock();
             updateWorldClocks();
             startLocalClock();
             console.log("=== INITIALIZATION COMPLETE ===");

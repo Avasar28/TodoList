@@ -14,188 +14,51 @@
  */
 class EmergencyWidget {
     constructor() {
-        this.data = [
-            {
-                country: "Algeria",
-                code: "DZ",
-                flag: "🇩🇿",
-                services: [
-                    { name: "Police", number: "17", type: "police" },
-                    { name: "Civil Protection", number: "14", type: "fire" }
-                ]
-            },
-            {
-                country: "Argentina",
-                code: "AR",
-                flag: "🇦🇷",
-                services: [
-                    { name: "Police", number: "101", type: "police" },
-                    { name: "Fire", number: "100", type: "fire" },
-                    { name: "Ambulance", number: "107", type: "ambulance" },
-                    { name: "Violence Against Women", number: "144", type: "helpline" }
-                ]
-            },
-            {
-                country: "Australia",
-                code: "AU",
-                flag: "🇦🇺",
-                services: [
-                    { name: "Triple Zero (All Services)", number: "000", type: "alert" },
-                    { name: "SES (Storm/Flood)", number: "132 500", type: "disaster" }
-                ]
-            },
-            {
-                country: "Brazil",
-                code: "BR",
-                flag: "🇧🇷",
-                services: [
-                    { name: "Police (Military)", number: "190", type: "police" },
-                    { name: "Ambulance (SAMU)", number: "192", type: "ambulance" },
-                    { name: "Fire Dept", number: "193", type: "fire" },
-                    { name: "Women's Helpline", number: "180", type: "helpline" }
-                ]
-            },
-            {
-                country: "Canada",
-                code: "CA",
-                flag: "🇨🇦",
-                services: [
-                    { name: "All Services", number: "911", type: "alert" }
-                ]
-            },
-            {
-                country: "China",
-                code: "CN",
-                flag: "🇨🇳",
-                services: [
-                    { name: "Police", number: "110", type: "police" },
-                    { name: "Fire", number: "119", type: "fire" },
-                    { name: "Ambulance", number: "120", type: "ambulance" },
-                    { name: "Traffic Police", number: "122", type: "police" }
-                ]
-            },
-            {
-                country: "France",
-                code: "FR",
-                flag: "🇫🇷",
-                services: [
-                    { name: "Europe Emergency", number: "112", type: "alert" },
-                    { name: "Medical (SAMU)", number: "15", type: "ambulance" },
-                    { name: "Police", number: "17", type: "police" },
-                    { name: "Fire", number: "18", type: "fire" },
-                    { name: "Homeless SAMU", number: "115", type: "helpline" }
-                ]
-            },
-            {
-                country: "Germany",
-                code: "DE",
-                flag: "🇩🇪",
-                services: [
-                    { name: "Police", number: "110", type: "police" },
-                    { name: "Fire & Ambulance", number: "112", type: "fire" }
-                ]
-            },
-            {
-                country: "India",
-                code: "IN",
-                flag: "🇮🇳",
-                services: [
-                    { name: "National Emergency", number: "112", type: "alert" },
-                    { name: "Police", number: "100", type: "police" },
-                    { name: "Fire", number: "101", type: "fire" },
-                    { name: "Ambulance", number: "102", type: "ambulance" },
-                    { name: "Women Helpline", number: "1091", type: "helpline" },
-                    { name: "Disaster Mgmt", number: "108", type: "disaster" }
-                ]
-            },
-            {
-                country: "Japan",
-                code: "JP",
-                flag: "🇯🇵",
-                services: [
-                    { name: "Police", number: "110", type: "police" },
-                    { name: "Fire & Ambulance", number: "119", type: "fire" },
-                    { name: "Coast Guard", number: "118", type: "coast" }
-                ]
-            },
-            {
-                country: "Mexico",
-                code: "MX",
-                flag: "🇲🇽",
-                services: [
-                    { name: "All Services", number: "911", type: "alert" }
-                ]
-            },
-            {
-                country: "New Zealand",
-                code: "NZ",
-                flag: "🇳🇿",
-                services: [
-                    { name: "All Services", number: "111", type: "alert" }
-                ]
-            },
-            {
-                country: "Russia",
-                code: "RU",
-                flag: "🇷🇺",
-                services: [
-                    { name: "General (Mobile)", number: "112", type: "alert" },
-                    { name: "Fire", number: "101", type: "fire" },
-                    { name: "Police", number: "102", type: "police" },
-                    { name: "Ambulance", number: "103", type: "ambulance" },
-                    { name: "Gas Emergency", number: "104", type: "disaster" }
-                ]
-            },
-            {
-                country: "South Africa",
-                code: "ZA",
-                flag: "🇿🇦",
-                services: [
-                    { name: "Police", number: "10111", type: "police" },
-                    { name: "Ambulance/Fire", number: "10177", type: "ambulance" },
-                    { name: "Cellular Emergency", number: "112", type: "alert" }
-                ]
-            },
-            {
-                country: "United Kingdom",
-                code: "GB",
-                flag: "🇬🇧",
-                services: [
-                    { name: "Emergency", number: "999", type: "alert" },
-                    { name: "Medical (Non-Urgent)", number: "111", type: "helpline" }
-                ]
-            },
-            {
-                country: "United States",
-                code: "US",
-                flag: "🇺🇸",
-                services: [
-                    { name: "All Services", number: "911", type: "alert" },
-                    { name: "Suicide Crisis", number: "988", type: "helpline" }
-                ]
-            }
-        ];
-
+        this.data = []; // Initialize data as empty, will be loaded via fetch
         this.init();
     }
 
     init() {
-        this.attachEventListeners();
+        this.cacheDOM();
+        this.bindEvents();
+        this.loadEmergencyData(); // Load data from JSON
         this.renderInitialState();
 
-        // Listen for global weather updates to auto-detect location
-        window.addEventListener('weather-location-updated', (e) => {
+        // Listen for weather location updates to auto-detect country
+        document.addEventListener('weather-location-updated', (e) => {
             if (e.detail && e.detail.country) {
-                console.log("EmergencyWidget: Auto-detecting from weather", e.detail.country);
-                this.autoDetect(e.detail.country);
+                // Determine if we should auto-select
+                // Only auto-select if user hasn't manually searched recently?
+                // For now, let's just log it or maybe suggest it.
+                // this.prefillCountry(e.detail.country);
+                // Implementation decided: Just use the data for suggestions if needed,
+                // but for now we wait for user input.
             }
         });
     }
 
-    attachEventListeners() {
-        const searchInput = document.getElementById('emergencySearchInput');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
+    async loadEmergencyData() {
+        try {
+            // Fetch from internal API instead of direct file access
+            const response = await fetch('/Todo/GetEmergencyNumbersJson');
+            if (!response.ok) throw new Error('Failed to load emergency data');
+            this.data = await response.json();
+            console.log(`EmergencyWidget: Loaded ${this.data.length} countries via API.`);
+        } catch (error) {
+            console.error('EmergencyWidget: Error loading data', error);
+            // Fallback or empty state
+            this.data = [];
+        }
+    }
+
+    cacheDOM() {
+        this.searchInput = document.getElementById('emergencySearchInput');
+        this.resultsContainer = document.getElementById('emergencyResults');
+    }
+
+    bindEvents() {
+        if (this.searchInput) {
+            this.searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
         }
     }
 
@@ -212,9 +75,8 @@ class EmergencyWidget {
         if (match) {
             this.renderDetail(match);
             // Update input to reflect the auto-selection, but maybe keep it clean or show the country name
-            const searchInput = document.getElementById('emergencySearchInput');
-            if (searchInput) {
-                searchInput.value = match.country;
+            if (this.searchInput) {
+                this.searchInput.value = match.country;
             }
         }
     }
@@ -229,27 +91,24 @@ class EmergencyWidget {
 
         const filtered = this.data.filter(item =>
             item.country.toLowerCase().includes(trimmed) ||
-            item.code.toLowerCase().includes(trimmed)
+            item.code.toLowerCase().includes(trimmed) ||
+            item.services.some(svc => svc.number.replace(/\s/g, '').includes(trimmed))
         );
 
-        // If user typed 'India' and it's the only result, maybe show it?
-        // But the requirement says "Show suggestions while typing".
-        // Let's render suggestions for now, unless explicit selection.
         this.renderSuggestions(filtered, query);
     }
 
     renderSuggestions(items, query) {
-        const container = document.getElementById('emergencyResults');
-        if (!container) return;
+        if (!this.resultsContainer) return;
 
-        container.innerHTML = '';
+        this.resultsContainer.innerHTML = '';
 
         if (items.length === 0) {
-            container.innerHTML = `
+            this.resultsContainer.innerHTML = `
                 <div class="empty-state-friendly">
-                    <div class="empty-icon">🤷‍♂️</div>
-                    <h4>No data available for "${query}"</h4>
-                    <p>Please try searching for another country (e.g., "France", "Japan").</p>
+                    <div class="empty-icon">🌍</div>
+                    <h4>We couldn't find emergency numbers for "${query}".</h4>
+                    <p>Please try searching for a nearby country or use a universal international number like <strong>112</strong> or <strong>911</strong> if applicable.</p>
                 </div>
             `;
             return;
@@ -258,10 +117,17 @@ class EmergencyWidget {
         const list = document.createElement('div');
         list.className = 'emergency-suggestions-list';
 
+        // Check if we are showing all items (initial state or empty query)
+        // If so, maybe add a header? For now, just the list is fine as per "show all name".
+
         items.forEach(item => {
             const el = document.createElement('div');
             el.className = 'suggestion-item';
             el.onclick = () => this.renderDetail(item);
+
+            // If searching by number, maybe highlight the matching service?
+            // For now, keep it simple.
+
             el.innerHTML = `
                 <span class="sugg-flag">${item.flag}</span>
                 <span class="sugg-name">${item.country}</span>
@@ -271,14 +137,13 @@ class EmergencyWidget {
             list.appendChild(el);
         });
 
-        container.appendChild(list);
+        this.resultsContainer.appendChild(list);
     }
 
     renderDetail(item) {
-        const container = document.getElementById('emergencyResults');
-        if (!container) return;
+        if (!this.resultsContainer) return;
 
-        container.innerHTML = '';
+        this.resultsContainer.innerHTML = '';
 
         // Simple mobile detection
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -326,10 +191,10 @@ class EmergencyWidget {
             `;
         }).join('');
 
-        container.innerHTML = `
+        this.resultsContainer.innerHTML = `
             <div class="result-header-large animation-fade-in">
-                <button class="back-link" onclick="window.emergencyWidget.handleSearch(document.getElementById('emergencySearchInput').value || '')" aria-label="Back to search results">
-                    ← Back
+                <button class="back-link" onclick="window.emergencyWidget.renderInitialState()" aria-label="Back to all countries">
+                    ← Back to All Countries
                 </button>
                 <div class="rh-main">
                     <span class="rh-flag" aria-hidden="true">${item.flag}</span>
@@ -377,13 +242,12 @@ class EmergencyWidget {
     }
 
     renderInitialState() {
-        const container = document.getElementById('emergencyResults');
-        if (!container) return;
+        if (!this.resultsContainer) return;
 
-        container.innerHTML = `
-            <div class="initial-search-state">
+        this.resultsContainer.innerHTML = `
+            <div class="initial-search-state animation-fade-in">
                 <div class="search-icon-placeholder">🆘</div>
-                <p>Type a country name to instantly find emergency numbers.</p>
+                <p>Type a country name (e.g. "Japan", "Brazil") or an emergency number (e.g. "911", "112") to find details.</p>
                 <div class="common-flags">
                     <span>🇺🇸</span><span>🇬🇧</span><span>🇮🇳</span><span>🇪🇺</span><span>🇦🇺</span>
                 </div>

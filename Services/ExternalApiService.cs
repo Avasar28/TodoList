@@ -15,13 +15,39 @@ namespace TodoListApp.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _config;
+        private readonly Microsoft.AspNetCore.Hosting.IWebHostEnvironment _webHostEnvironment;
         private static List<NewsItem> _newsCache = new List<NewsItem>();
         private static JsonDocument? _tempCache;
+        private static List<EmergencyCountryData>? _emergencyCache;
 
-        public ExternalApiService(HttpClient httpClient, IConfiguration config)
+        public ExternalApiService(HttpClient httpClient, IConfiguration config, Microsoft.AspNetCore.Hosting.IWebHostEnvironment webHostEnvironment)
         {
             _httpClient = httpClient;
             _config = config;
+            _webHostEnvironment = webHostEnvironment;
+        }
+
+        public async Task<List<EmergencyCountryData>> GetAllEmergencyNumbersAsync()
+        {
+            if (_emergencyCache != null && _emergencyCache.Count > 0)
+                return _emergencyCache;
+
+            var path = System.IO.Path.Combine(_webHostEnvironment.WebRootPath, "data", "emergency-numbers.json");
+            if (!System.IO.File.Exists(path))
+                return new List<EmergencyCountryData>();
+
+            try 
+            {
+                var json = await System.IO.File.ReadAllTextAsync(path);
+                var data = JsonSerializer.Deserialize<List<EmergencyCountryData>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                _emergencyCache = data ?? new List<EmergencyCountryData>();
+                return _emergencyCache;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading emergency data: {ex.Message}");
+                return new List<EmergencyCountryData>();
+            }
         }
 
         public List<NewsItem> GetCachedNews() => _newsCache;
