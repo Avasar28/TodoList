@@ -79,5 +79,14 @@
     "StartTime": "11:41:00",
     "EndTime": "11:42:00",
     "Duration": "00:01:00"
+  },
+  {
+    "Id": "7d8053f1-3f38-4436-b89b-bd6f1097b9e1",
+    "UserId": 1,
+    "Description": "Unspecified Task",
+    "Date": "2026-02-13T00:00:00",
+    "StartTime": "18:46:00",
+    "EndTime": "18:46:00",
+    "Duration": "00:00:00"
   }
 ]
