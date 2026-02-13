@@ -257,6 +257,4 @@ class EmergencyWidget {
 }
 
 // Initialize on load
-document.addEventListener('DOMContentLoaded', () => {
-    window.emergencyWidget = new EmergencyWidget();
-});
+// Initialization handled by Dashboard.cshtml

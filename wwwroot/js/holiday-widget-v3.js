@@ -822,8 +822,4 @@ HolidayWidget.fetchDefaultHolidays = function () {
 };
 
 // Initialize when ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => HolidayWidget.init());
-} else {
-    HolidayWidget.init();
-}
+// Initialization handled by Dashboard.cshtml

@@ -942,8 +942,4 @@ const TranslatorWidget = (function () {
     };
 })();
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', TranslatorWidget.init);
-} else {
-    TranslatorWidget.init();
-}
+// Initialization handled by Dashboard.cshtml

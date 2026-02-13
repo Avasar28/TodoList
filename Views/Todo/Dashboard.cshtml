@@ -2489,6 +2489,13 @@
             startRealTimeClock();
             updateWorldClocks();
             startLocalClock();
+            
+            // Initialize External Widgets
+            if (typeof HolidayWidget !== 'undefined') HolidayWidget.init();
+            if (typeof HabitTracker !== 'undefined') window.habitTracker = new HabitTracker();
+            if (typeof EmergencyWidget !== 'undefined') window.emergencyWidget = new EmergencyWidget();
+            if (typeof TranslatorWidget !== 'undefined') TranslatorWidget.init();
+
             console.log("=== INITIALIZATION COMPLETE ===");
         }
 

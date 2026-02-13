@@ -871,6 +871,4 @@ class HabitTracker {
 }
 
 // Initialize on load
-document.addEventListener('DOMContentLoaded', () => {
-    window.habitTracker = new HabitTracker();
-});
+// Initialization handled by Dashboard.cshtml
