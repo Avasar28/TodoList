@@ -250,76 +250,90 @@
     </div> -->
 
 <!-- Habit Tracker Details Panel -->
-<div class="details-panel" id="habitDetails" style="max-width: 600px;">
-    <div class="panel-header">
-        <h2>My Habits</h2>
-        <button class="close-panel" onclick="closeDetails()">×</button>
+<div class="details-panel" id="habitDetails">
+    <div class="widget-hero">
+        <div class="widget-hero-content">
+             <h2 class="widget-hero-title">My Habits</h2>
+             <div class="widget-hero-subtitle">
+                 <span class="text-muted">Track your daily progress and build consistency</span>
+             </div>
+        </div>
+        <button class="btn-back-dashboard" onclick="closeDetails()">
+            ← Back to Dashboard
+        </button>
     </div>
-    <div class="panel-content">
+
+    <div class="widget-content-container">
         
-        <div class="habit-controls-panel">
-            <input type="text" id="newHabitInput" placeholder="Add a new habit..." class="form-control" />
-            <button id="addHabitBtn" class="btn-primary">Add</button>
+        <div class="habit-controls-panel" style="max-width: 600px; margin: 0 auto;">
+            <div class="input-with-button">
+                <input type="text" id="newHabitInput" placeholder="Add a new habit..." class="form-control" />
+                <button id="addHabitBtn" class="btn-primary">Add</button>
+            </div>
         </div>
 
-        <div class="habit-list-container" id="habitList" style="margin-top: 1.5rem;">
+        <div class="habit-list-container" id="habitList" style="margin-top: 2rem; max-width: 800px; margin-left: auto; margin-right: auto;">
             <!-- Items go here -->
         </div>
 
-        <div id="habitEmptyState" class="empty-state" style="display:none; padding: 3rem 1rem;">
-             <div class="empty-icon">🌱</div>
-            <span>Start small. Add your first habit above!</span>
+        <div id="habitEmptyState" class="empty-state" style="display:none; padding: 4rem 1rem;">
+             <div class="empty-icon" style="font-size: 4rem; opacity: 0.5;">🌱</div>
+             <div style="margin-top: 1rem; font-size: 1.2rem; color: rgba(255,255,255,0.7);">Start small. Add your first habit above!</div>
         </div>
 
     </div>
 </div>
 
 <!-- Holiday Details Panel -->
-<div class="details-panel" id="holidayDetails" style="max-width: 800px;">
-    <div class="panel-header">
-        <div class="header-info">
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <h2>Holiday Calendar</h2>
-                <div class="view-toggle-pills">
-                    <button class="view-pill active" id="holidayListViewBtn" onclick="HolidayWidget.setView('list')" title="List View">📋</button>
-                    <button class="view-pill" id="holidayCalendarViewBtn" onclick="HolidayWidget.setView('calendar')" title="Calendar View">📅</button>
+<div class="details-panel" id="holidayDetails">
+    <div class="widget-hero">
+        <div class="widget-hero-content">
+             <h2 class="widget-hero-title">Holiday Calendar</h2>
+             <div class="widget-hero-subtitle">
+                 <div class="view-toggle-pills" style="margin-right: 1.5rem;">
+                    <button class="view-pill active" id="holidayListViewBtn" onclick="HolidayWidget.setView('list')" title="List View">📋 List</button>
+                    <button class="view-pill" id="holidayCalendarViewBtn" onclick="HolidayWidget.setView('calendar')" title="Calendar View">📅 Calendar</button>
                 </div>
-            </div>
-            <p class="text-muted small">Explore public holidays worldwide</p>
+                <div class="calendar-nav-controls" id="holidayCalendarNav" style="display: none; align-items: center; gap: 0.5rem;">
+                    <button class="nav-btn-glass" onclick="HolidayWidget.previousMonth()">‹</button>
+                    <span class="current-month-year" id="holidayCalendarMonthYear" style="min-width: 130px; text-align: center; font-variant-numeric: tabular-nums;">Jan 2026</span>
+                    <button class="nav-btn-glass" onclick="HolidayWidget.nextMonth()">›</button>
+                </div>
+             </div>
         </div>
-        <div class="calendar-nav-controls" id="holidayCalendarNav" style="display: none; align-items: center; gap: 0.75rem;">
-            <button class="nav-btn-glass" onclick="HolidayWidget.previousMonth()">‹</button>
-            <span class="current-month-year" id="holidayCalendarMonthYear" style="min-width: 140px; text-align: center; font-weight: 600; color: #a5b4fc;">January 2026</span>
-            <button class="nav-btn-glass" onclick="HolidayWidget.nextMonth()">›</button>
-        </div>
-        <button class="close-panel" onclick="closeDetails()">×</button>
+        <button class="btn-back-dashboard" onclick="closeDetails()">
+            ← Back to Dashboard
+        </button>
     </div>
-    <div class="panel-content holiday-expanded-container">
-        <div class="holiday-search-section">
-            <div class="input-with-button">
-                 <div class="custom-holiday-select" style="width: 100%;">
-                    <div class="select-header" onclick="focusInput('holidayCountrySearch')">
+
+    <div class="widget-content-container">
+        <!-- Controls Section -->
+        <div class="widget-section" style="max-width: 900px; margin: 0 auto; margin-bottom: 2rem;">
+            <div class="holiday-search-flex" style="display: flex; gap: 1rem; align-items: center;">
+                 <div class="custom-holiday-select" style="flex: 1;">
+                    <div class="select-header" onclick="document.getElementById('holidayCountrySearch').focus()">
                         <span class="select-icon">🌍</span>
-                        <input type="text" class="btn-search-input" id="holidayCountrySearch" placeholder="Search country..." autocomplete="off" />
+                        <input type="text" class="btn-search-input" id="holidayCountrySearch" placeholder="Search country..." autocomplete="off" style="width: 100%; border: none; background: transparent; color: white; outline: none;" />
                     </div>
                     <div class="custom-options" id="holidayCountryOptions">
                         <!-- Populated via JS -->
                     </div>
                     <select id="holidayCountrySelect" style="display: none;"></select>
                 </div>
-            </div>
-            <div class="year-selector">
-                <select id="holidayYearSelect" class="form-control">
-                    @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year + 5; y++)
-                    {
-                        <option value="@y" selected="@(y == DateTime.Now.Year)">@y</option>
-                    }
-                </select>
+
+                <div class="year-selector" style="width: 120px;">
+                    <select id="holidayYearSelect" class="form-control" style="cursor: pointer;">
+                        @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year + 5; y++)
+                        {
+                            <option value="@y" selected="@(y == DateTime.Now.Year)">@y</option>
+                        }
+                    </select>
+                </div>
             </div>
         </div>
         
         <!-- AI Suggestions Section -->
-        <div id="aiHolidaySuggestions" class="ai-suggestions-container" style="display: none;">
+        <div id="aiHolidaySuggestions" class="ai-suggestions-container" style="display: none; max-width: 900px; margin: 0 auto 2rem auto;">
             <!-- Injected via JS -->
         </div>
 
@@ -328,7 +342,7 @@
             <p>Fetching holiday data...</p>
         </div>
 
-        <div id="holidayList" class="holiday-list-grid">
+        <div id="holidayList" class="holiday-list-grid" style="max-width: 900px; margin: 0 auto;">
             <!-- Items injected via JS -->
             <div class="initial-search-state">
                 <div class="search-icon-placeholder">📅</div>
@@ -342,31 +356,38 @@
 <div class="details-overlay" id="detailsOverlay" onclick="closeDetails()"></div>
 
 <!-- Weather Details Panel -->
-<div class="details-panel" id="weatherDetails" style="max-width: 800px;">
-    <div class="panel-header">
-        <h2>Detailed Weather</h2>
-        <button class="close-panel" onclick="closeDetails()">×</button>
+<div class="details-panel" id="weatherDetails">
+    <div class="widget-hero">
+        <div class="widget-hero-content">
+             <h2 class="widget-hero-title">Detailed Weather</h2>
+             <div class="widget-hero-subtitle">
+                 <span id="weatherLocation">@Model.Weather.City@(string.IsNullOrEmpty(Model.Weather.District) ? "" : ", " + Model.Weather.District)</span>
+                 <span id="weatherSubLocation">@Model.Weather.State, @Model.Weather.Country</span>
+                 <span id="weatherCoords" style="font-size: 0.85em; opacity: 0.8; margin-left: 10px;">Lat: @Model.Weather.Latitude.ToString("F4") | Lon: @Model.Weather.Longitude.ToString("F4")</span>
+             </div>
+        </div>
+        <button class="btn-back-dashboard" onclick="closeDetails()">
+            ← Back to Dashboard
+        </button>
     </div>
-    <div class="panel-content weather-expanded">
-        <!-- 1. Location Details -->
-        <div class="location-header">
-            <h3 id="weatherLocation">@Model.Weather.City@(string.IsNullOrEmpty(Model.Weather.District) ? "" : ", " + Model.Weather.District)</h3>
-            <p id="weatherSubLocation" class="text-muted">@Model.Weather.State, @Model.Weather.Country</p>
-            <p id="weatherCoords">Lat: @Model.Weather.Latitude.ToString("F4") | Lon: @Model.Weather.Longitude.ToString("F4")</p>
+    
+    <div class="widget-content-container">
+        <!-- 1. Search Form -->
+        <div class="widget-section">
+            <form id="weatherSearchForm" class="detail-form" style="max-width: 600px; margin: 0 auto;">
+                <div class="form-group">
+                    <div class="input-with-button">
+                        <input type="text" id="weatherSearchInput" name="city" value="@Model.SelectedCity" class="form-control" placeholder="Search City, State or Country..." data-translate="true" data-translate-placeholder="true" />
+                        <button type="submit" class="btn-primary-sm" id="weatherSearchSubmit" data-translate="true">Search</button>
+                        <button type="button" class="btn-secondary-sm" id="geolocateBtn" title="Use my current location">📍</button>
+                    </div>
+                </div>
+            </form>
         </div>
 
-        <form id="weatherSearchForm" class="detail-form">
-            <div class="form-group">
-                <div class="input-with-button">
-                    <input type="text" id="weatherSearchInput" name="city" value="@Model.SelectedCity" class="form-control" placeholder="Search City, State or Country..." data-translate="true" data-translate-placeholder="true" />
-                    <button type="submit" class="btn-primary-sm" id="weatherSearchSubmit" data-translate="true">Search</button>
-                    <button type="button" class="btn-secondary-sm" id="geolocateBtn" title="Use my current location">📍</button>
-                </div>
-            </div>
-        </form>
-
+        <!-- 2. Weather Grid -->
         <div class="weather-grid-detailed">
-            <!-- 2. Current Weather Hero -->
+            <!-- Current Weather Hero -->
             <div class="weather-main-section">
                 <div class="current-weather-hero">
                     <div class="hero-icon" id="panelWeatherIcon">@Model.Weather.Icon</div>
@@ -403,7 +424,7 @@
                 </div>
             </div>
 
-            <!-- 4. Air Quality & UV -->
+            <!-- Air Quality & UV -->
             <div class="weather-side-section">
                 <div class="info-card-glass aqi-card">
                     <span class="panel-subtitle-small">Air Quality (AQI)</span>
@@ -420,7 +441,7 @@
                     </div>
                 </div>
 
-                <!-- 5. Sun & Moon Data -->
+                <!-- Sun & Moon Data -->
                 <div class="info-card-glass astro-card" style="margin-top: 1rem;">
                     <span class="panel-subtitle-small">Sun & Moon</span>
                     <div class="astro-grid">
@@ -476,19 +497,29 @@
 
 <!-- Currency Details Panel -->
 <div class="details-panel" id="currencyDetails">
-    <div class="panel-header">
-        <h2>Currency Converter</h2>
-        <button class="close-panel" onclick="closeDetails()">×</button>
+    <div class="widget-hero">
+        <div class="widget-hero-content">
+             <h2 class="widget-hero-title">Currency Converter</h2>
+             <div class="widget-hero-subtitle">
+                 <span id="baseRateInfo">1 @Model.Currency.From = @Model.Currency.Rate @Model.Currency.To</span>
+                 <span class="divider-dot">•</span>
+                 <span id="currencyTimestamp">Last Synced: @Model.Currency.LastUpdated</span>
+             </div>
+        </div>
+        <button class="btn-back-dashboard" onclick="closeDetails()">
+            ← Back to Dashboard
+        </button>
     </div>
-    <div class="panel-content">
-        <form id="currencyForm" class="detail-form">
+
+    <div class="widget-content-container">
+        <form id="currencyForm" class="detail-form" style="max-width: 800px; margin: 0 auto; width: 100%;">
             <div class="currency-converter-card">
                 <div class="form-group">
                     <label data-translate="true">Amount to Convert</label>
-                    <input type="number" id="convertAmount" value="1" class="form-control" step="any" />
+                    <input type="number" id="convertAmount" value="1" class="form-control" step="any" style="font-size: 1.5rem; padding: 1rem;" />
                 </div>
                 
-                <div class="currency-horizontal-row">
+                <div class="currency-horizontal-row" style="margin-top: 1.5rem;">
                     <div class="currency-btn-item">
                         <span class="btn-mini-label">From</span>
                         <div class="custom-currency-select" id="fromCurrencyWrapper">
@@ -542,24 +573,22 @@
                     </div>
                 </div>
 
-                <div class="result-display">
+                <div class="result-display" style="margin-top: 2rem;">
                     <div class="result-header" data-translate="true">Converted Amount</div>
                     <div class="conversion-result-row">
-                        <div id="conversionResult" class="conversion-val">@Model.Currency.Rate</div>
+                        <div id="conversionResult" class="conversion-val" style="font-size: 3rem;">@Model.Currency.Rate</div>
                         <div id="rateMovement" class="movement-badge @(Model.Currency.IsUp == null ? "d-none" : (Model.Currency.IsUp == true ? "up" : "down"))">
                             @(Model.Currency.IsUp == true ? "↑" : "↓")
                         </div>
                     </div>
-                    <div id="baseRateInfo" class="rate-info">1 @Model.Currency.From = @Model.Currency.Rate @Model.Currency.To</div>
-                    <div id="currencyTimestamp" class="sync-time">Last Synced: @Model.Currency.LastUpdated</div>
                 </div>
             </div>
         </form>
 
-        <div class="currency-stats">
-            <div class="chart-box">
+        <div class="currency-stats" style="margin-top: 2rem;">
+            <div class="chart-box" style="height: 400px;">
                 <h3 class="panel-subtitle" data-translate="true">Market History (Last 7 Days)</h3>
-                <div class="chart-container-large">
+                <div class="chart-container-large" style="height: 100%;">
                     <canvas id="currencyChartFull"></canvas>
                 </div>
             </div>
@@ -569,31 +598,49 @@
 
 <!-- Emergency Details Panel -->
 <div class="details-panel" id="emergencyDetails">
-    <div class="panel-header">
-        <h2 style="color: #f87171;">Emergency Numbers</h2>
-        <button class="close-panel" onclick="closeDetails()">×</button>
-    </div>
-    <div class="panel-content">
-        <div class="emergency-search-hero">
-            <input type="text" id="emergencySearchInput" placeholder="Type country name..." class="form-control" autocomplete="off" />
+    <div class="widget-hero">
+        <div class="widget-hero-content">
+             <h2 class="widget-hero-title" style="color: #f87171;">Emergency Numbers</h2>
+             <div class="widget-hero-subtitle">
+                 <span class="text-muted">Quick access to local emergency contacts</span>
+             </div>
         </div>
-        
-        <div class="emergency-results-grid" id="emergencyResults">
-            <!-- Results populate here -->
+        <button class="btn-back-dashboard" onclick="closeDetails()">
+            ← Back to Dashboard
+        </button>
+    </div>
+
+    <div class="widget-content-container">
+        <div class="widget-section" style="width: 100%;">
+            <div class="emergency-search-hero" style="margin-bottom: 2rem;">
+                <input type="text" id="emergencySearchInput" placeholder="Type country name..." class="form-control" autocomplete="off" style="font-size: 1.2rem; padding: 1.2rem;" />
+            </div>
+            
+            <div id="emergencyResults">
+                <!-- Results populate here -->
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Time Details Panel -->
 <div class="details-panel" id="timeDetails">
-    <div class="panel-header">
-        <h2 data-translate="true">World Clock & Converter</h2>
-        <button class="close-panel" onclick="closeDetails()">×</button>
+    <div class="widget-hero">
+        <div class="widget-hero-content">
+             <h2 class="widget-hero-title">World Clock & Converter</h2>
+             <div class="widget-hero-subtitle">
+                 <span data-translate="true">Compare time zones and track global hours</span>
+             </div>
+        </div>
+        <button class="btn-back-dashboard" onclick="closeDetails()">
+            ← Back to Dashboard
+        </button>
     </div>
-    <div class="panel-content">
-        <form id="timeForm" class="detail-form">
-            <div class="header-controls">
-                <div class="format-toggle">
+
+    <div class="widget-content-container">
+        <form id="timeForm" class="detail-form" style="max-width: 900px; margin: 0 auto; width: 100%;">
+            <div class="header-controls" style="margin-bottom: 2rem;">
+                <div class="format-toggle" style="justify-content: center;">
                     <span class="toggle-label" data-translate="true">12H</span>
                     <label class="switch">
                         <input type="checkbox" id="conversionFormatToggle" onchange="handleConversionFormatChange()">
@@ -661,7 +708,7 @@
                     </div>
                 </div>
 
-                <div class="result-display">
+                <div class="result-display" style="margin-top: 2rem;">
                     <div class="result-header" data-translate="true">Converted Time</div>
                     <div class="conversion-result-row">
                         <div id="timeResultVal" class="conversion-val" data-no-translate="true">@Model.TimeConversion.TargetTime</div>
@@ -673,71 +720,80 @@
             </div>
         </form>
 
-        <h3 class="panel-subtitle" data-translate="true">Global Overview</h3>
-        <div class="world-clock-list">
-            <div class="clock-row">
-                <span class="city" data-translate="true">New York</span>
-                <span class="time" data-tz="America/New_York" data-no-translate="true">--:--</span>
-            </div>
-            <div class="clock-row">
-                <span class="city" data-translate="true">London</span>
-                <span class="time" data-tz="Europe/London" data-no-translate="true">--:--</span>
-            </div>
-            <div class="clock-row">
-                <span class="city" data-translate="true">Mumbai</span>
-                <span class="time" data-tz="Asia/Kolkata" data-no-translate="true">--:--</span>
-            </div>
-            <div class="clock-row">
-                <span class="city" data-translate="true">Tokyo</span>
-                <span class="time" data-tz="Asia/Tokyo" data-no-translate="true">--:--</span>
-            </div>
-            <div class="clock-row">
-                 <span class="city" data-translate="true">Dubai</span>
-                 <span class="time" data-tz="Asia/Dubai" data-no-translate="true">--:--</span>
+        <div class="widget-section" style="max-width: 900px; margin: 2rem auto;">
+            <h3 class="panel-subtitle" data-translate="true">Global Overview</h3>
+            <div class="world-clock-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+                <div class="clock-row">
+                    <span class="city" data-translate="true">New York</span>
+                    <span class="time" data-tz="America/New_York" data-no-translate="true">--:--</span>
+                </div>
+                <div class="clock-row">
+                    <span class="city" data-translate="true">London</span>
+                    <span class="time" data-tz="Europe/London" data-no-translate="true">--:--</span>
+                </div>
+                <div class="clock-row">
+                    <span class="city" data-translate="true">Mumbai</span>
+                    <span class="time" data-tz="Asia/Kolkata" data-no-translate="true">--:--</span>
+                </div>
+                <div class="clock-row">
+                    <span class="city" data-translate="true">Tokyo</span>
+                    <span class="time" data-tz="Asia/Tokyo" data-no-translate="true">--:--</span>
+                </div>
+                <div class="clock-row">
+                     <span class="city" data-translate="true">Dubai</span>
+                     <span class="time" data-tz="Asia/Dubai" data-no-translate="true">--:--</span>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- News Details Panel (Feed) -->
-<div class="details-panel" id="newsDetails" style="max-width: 900px;">
-    <div class="panel-header">
-        <div class="header-info">
-            <h2>Local & Global News</h2>
-            <p id="newsResolvedLocation" class="text-muted small">Auto-detecting location...</p>
+<div class="details-panel" id="newsDetails">
+    <div class="widget-hero">
+        <div class="widget-hero-content">
+             <h2 class="widget-hero-title">Local & Global News</h2>
+             <div class="widget-hero-subtitle">
+                 <span id="newsResolvedLocation">Auto-detecting location...</span>
+             </div>
         </div>
-        <button class="close-panel" onclick="closeDetails()">×</button>
+        <button class="btn-back-dashboard" onclick="closeDetails()">
+            ← Back to Dashboard
+        </button>
     </div>
-    <div class="panel-content">
+
+    <div class="widget-content-container">
         <!-- News Controls -->
-        <div class="news-controls">
-            <div class="search-bar-row">
-                <div class="input-with-button">
-                    <input type="text" id="newsSearchInput" class="form-control" placeholder="Search news by location or keyword..." data-translate="true" data-translate-placeholder="true" />
-                    <button type="submit" class="btn-primary-sm" onclick="event.preventDefault(); refreshNewsData();" data-translate="true">Search</button>
+        <div class="widget-section">
+            <div class="news-controls">
+                <div class="search-bar-row">
+                    <div class="input-with-button">
+                        <input type="text" id="newsSearchInput" class="form-control" placeholder="Search news by location or keyword..." data-translate="true" data-translate-placeholder="true" />
+                        <button type="submit" class="btn-primary-sm" onclick="event.preventDefault(); refreshNewsData();" data-translate="true">Search</button>
+                    </div>
+                    <div class="sort-selector">
+                        <select id="newsSortSelect" onchange="refreshNewsData()">
+                            <option value="relevance">Most Relevant</option>
+                            <option value="latest">Latest News</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="sort-selector">
-                    <select id="newsSortSelect" onchange="refreshNewsData()">
-                        <option value="relevance">Most Relevant</option>
-                        <option value="latest">Latest News</option>
-                    </select>
+                
+                <div class="category-pills" id="newsCategoryPills">
+                    <button class="pill active" data-category="All" data-translate="true">All</button>
+                    <button class="pill" data-category="World" data-translate="true">World</button>
+                    <button class="pill" data-category="Business" data-translate="true">Business</button>
+                    <button class="pill" data-category="Technology" data-translate="true">Technology</button>
+                    <button class="pill" data-category="Health" data-translate="true">Health</button>
+                    <button class="pill" data-category="Science" data-translate="true">Science</button>
+                    <button class="pill" data-category="Sports" data-translate="true">Sports</button>
+                    <button class="pill" data-category="Entertainment" data-translate="true">Entertainment</button>
                 </div>
-            </div>
-            
-            <div class="category-pills" id="newsCategoryPills">
-                <button class="pill active" data-category="All" data-translate="true">All</button>
-                <button class="pill" data-category="World" data-translate="true">World</button>
-                <button class="pill" data-category="Business" data-translate="true">Business</button>
-                <button class="pill" data-category="Technology" data-translate="true">Technology</button>
-                <button class="pill" data-category="Health" data-translate="true">Health</button>
-                <button class="pill" data-category="Science" data-translate="true">Science</button>
-                <button class="pill" data-category="Sports" data-translate="true">Sports</button>
-                <button class="pill" data-category="Entertainment" data-translate="true">Entertainment</button>
             </div>
         </div>
 
         <!-- News Feed Container -->
-        <div class="news-feed-container" id="newsFeed">
+        <div class="news-feed-container" id="newsFeed" style="flex: 1; min-height: 400px;">
             <!-- Loading State -->
             <div class="news-loading-state">
                 <div class="spinner"></div>
@@ -752,44 +808,56 @@
 </div>
 
 <!-- News Article Detail Page (Internal/Immersive) -->
-<div class="details-panel" id="newsArticleDetails" style="max-width: 1000px; z-index: 1002;">
-    <div class="panel-header">
-        <button class="back-btn" onclick="backToNewsFeed()">← Back to Feed</button>
-        <button class="close-panel" onclick="closeDetails()">×</button>
+<div class="details-panel" id="newsArticleDetails" style="z-index: 10000;">
+    <div class="widget-hero">
+        <div class="widget-hero-content">
+             <h2 class="widget-hero-title">Article View</h2>
+        </div>
+        <button class="btn-back-dashboard" onclick="backToNewsFeed()">
+            ← Back to Feed
+        </button>
+        <!-- hidden close for consistency if needed, but back to feed acts as primary nav -->
+        <button class="close-panel" onclick="closeDetails()" style="display: none;">×</button>
     </div>
-    <div class="panel-content article-reader" id="articleReaderContent">
-        <div class="article-header">
-            <div class="news-tags-row mb-3" id="articleBadgeRow">
-                <!-- Badges will be injected here -->
+
+    <div class="widget-content-container" style="max-width: 900px;">
+        <div class="panel-content article-reader" id="articleReaderContent" style="padding: 0;">
+            <div class="article-header">
+                <div class="news-tags-row mb-3" id="articleBadgeRow">
+                    <!-- Badges will be injected here -->
+                </div>
+                <div class="article-meta">
+                    <span id="articleSource" class="source-badge">Source</span>
+                    <span id="articleDate" class="date-text">Date</span>
+                </div>
+                <h1 id="articleTitle" style="font-size: 2.5rem; margin: 1rem 0; line-height: 1.2;">Article Title</h1>
             </div>
-            <div class="article-meta">
-                <span id="articleSource" class="source-badge">Source</span>
-                <span id="articleDate" class="date-text">Date</span>
+            <div id="articleImageContainer" class="article-image-full"></div>
+            <div id="articleBody" class="article-body" style="font-size: 1.1rem; line-height: 1.8;">
+                <!-- Content will be injected here -->
+                <div class="article-loading">
+                    <div class="spinner"></div>
+                    <p>Extracting article content for in-app reading...</p>
+                </div>
             </div>
-            <h1 id="articleTitle">Article Title</h1>
-        </div>
-        <div id="articleImageContainer" class="article-image-full"></div>
-        <div id="articleBody" class="article-body">
-            <!-- Content will be injected here -->
-            <div class="article-loading">
-                <div class="spinner"></div>
-                <p>Extracting article content for in-app reading...</p>
+            <div class="article-footer" style="margin-top: 3rem; border-top: 1px solid var(--glass-border); padding-top: 2rem;">
+                <a id="articleSourceLink" href="#" target="_blank" class="btn-secondary-sm">Read Full Story on Source Website</a>
             </div>
-        </div>
-        <div class="article-footer">
-            <a id="articleSourceLink" href="#" target="_blank" class="btn-secondary-sm">Read Full Story on Source Website</a>
         </div>
     </div>
 </div>
 
 <!-- Translator Details Panel -->
-<div class="details-panel" id="translatorDetails" style="max-width: 900px;">
-    <div class="panel-header">
-        <div class="header-info">
-             <h2>Language Translator</h2>
-             <p class="text-muted small">AI-powered multi-language translation</p>
+<div class="details-panel" id="translatorDetails">
+    <div class="widget-hero">
+        <div class="widget-hero-content">
+             <h2 class="widget-hero-title">Language Translator</h2>
+             <div class="widget-hero-subtitle">
+                 <span class="text-muted small">AI-powered multi-language translation</span>
+             </div>
         </div>
-        <div class="trans-mode-toggle">
+        
+        <div class="trans-mode-toggle" style="margin-right: 2rem;">
             <span class="mode-label active" id="modeTextLabel" onclick="TranslatorWidget.setMode('text')">Text</span>
             <label class="switch">
                 <input type="checkbox" id="transModeToggle" onchange="TranslatorWidget.toggleMode()">
@@ -797,149 +865,154 @@
             </label>
             <span class="mode-label" id="modeConvLabel" onclick="TranslatorWidget.setMode('conversation')">Conversation</span>
         </div>
-        <button class="close-panel" onclick="closeDetails()">×</button>
+
+        <button class="btn-back-dashboard" onclick="closeDetails()">
+            ← Back to Dashboard
+        </button>
     </div>
     
-    <!-- Standard Text Mode -->
-    <div class="panel-content translator-expanded-view" id="transTextView">
-         <div class="translator-expanded-body">
-             <!-- Source Side -->
-             <div class="trans-side source-side">
-                  <div class="details-control-row">
-                      <label>From:</label>
-                      <div class="custom-select-wrapper" id="sourceLangWrapper">
-                            <div class="custom-select-trigger" tabindex="0">
-                                <span class="selected-text" id="sourceLangLabel">Auto Detect</span>
-                                <i class="arrow-icon">▼</i>
-                            </div>
-                            <div class="custom-options">
-                                <div class="search-container">
-                                    <input type="text" class="dropdown-search" placeholder="Search..." id="sourceSearch">
+    <div class="widget-content-container">
+        <!-- Standard Text Mode -->
+        <div class="panel-content translator-expanded-view" id="transTextView" style="height: 100%; padding: 0;">
+             <div class="translator-expanded-body" style="height: 100%;">
+                 <!-- Source Side -->
+                 <div class="trans-side source-side">
+                      <div class="details-control-row">
+                          <label>From:</label>
+                          <div class="custom-select-wrapper" id="sourceLangWrapper">
+                                <div class="custom-select-trigger" tabindex="0">
+                                    <span class="selected-text" id="sourceLangLabel">Auto Detect</span>
+                                    <i class="arrow-icon">▼</i>
                                 </div>
-                                <div class="options-list" id="sourceOptionsList"></div>
-                            </div>
-                            <input type="hidden" id="transSourceLang" value="auto">
-                      </div>
-                  </div>
-                  <div class="textarea-wrapper-expanded">
-                      <textarea id="transSourceText" class="trans-textarea" placeholder="Enter text..." spellcheck="false"></textarea>
-                      <button id="transMicBtn" class="tool-btn mic-btn" title="Voice Input">🎤</button>
-                      <div class="trans-footer-row">
-                          <span id="transDetectedLang" class="trans-detected"></span>
-                          <button id="transActionBtn" class="btn-primary-sm">Translate</button>
-                      </div>
-                  </div>
-             </div>
-
-             <!-- Swap Column (Middle) -->
-             <div class="trans-middle-control">
-                  <button id="transSwapBtn" class="trans-swap-btn" title="Swap Languages">⇄</button>
-                  <span id="transStatus" class="trans-status-dot"></span>
-             </div>
-
-             <!-- Target Side -->
-             <div class="trans-side target-side">
-                  <div class="details-control-row">
-                      <label>To:</label>
-                      <div class="custom-select-wrapper" id="targetLangWrapper">
-                            <div class="custom-select-trigger" tabindex="0">
-                                <span class="selected-text" id="targetLangLabel">English</span>
-                                <i class="arrow-icon">▼</i>
-                            </div>
-                            <div class="custom-options">
-                                <div class="search-container">
-                                    <input type="text" class="dropdown-search" placeholder="Search..." id="targetSearch">
+                                <div class="custom-options">
+                                    <div class="search-container">
+                                        <input type="text" class="dropdown-search" placeholder="Search..." id="sourceSearch">
+                                    </div>
+                                    <div class="options-list" id="sourceOptionsList"></div>
                                 </div>
-                                <div class="options-list" id="targetOptionsList"></div>
-                            </div>
-                            <input type="hidden" id="transTargetLang" value="en">
+                                <input type="hidden" id="transSourceLang" value="auto">
+                          </div>
                       </div>
-                  </div>
-                  <div class="textarea-wrapper-expanded">
-                      <textarea id="transTargetText" class="trans-textarea readonly" placeholder="Translation..." readonly></textarea>
-                      <div class="trans-tools">
-                          <button id="transCopyBtn" class="tool-btn" title="Copy">📋</button>
-                          <button id="transSpeakBtn" class="tool-btn" title="Listen">🔊</button>
+                      <div class="textarea-wrapper-expanded">
+                          <textarea id="transSourceText" class="trans-textarea" placeholder="Enter text..." spellcheck="false"></textarea>
+                          <button id="transMicBtn" class="tool-btn mic-btn" title="Voice Input">🎤</button>
+                          <div class="trans-footer-row">
+                              <span id="transDetectedLang" class="trans-detected"></span>
+                              <button id="transActionBtn" class="btn-primary-sm">Translate</button>
+                          </div>
                       </div>
-                  </div>
-             </div>
-         </div>
-    </div>
+                 </div>
 
-    <!-- Conversation Mode -->
-    <div class="panel-content conversation-view" id="transConvView" style="display: none;">
-        <!-- Global Conversation Controls -->
-        <div class="conv-global-controls">
-            <button class="icon-btn-sm" id="convMuteBtn" title="Mute Audio" onclick="TranslatorWidget.toggleMute()">
-                <span id="convMuteIcon">🔊</span>
-            </button>
-            <span class="divider-v"></span>
-            <button class="icon-btn-sm" id="convClearBtn" title="Clear History" onclick="TranslatorWidget.clearChat()">
-                🗑️
-            </button>
+                 <!-- Swap Column (Middle) -->
+                 <div class="trans-middle-control">
+                      <button id="transSwapBtn" class="trans-swap-btn" title="Swap Languages">⇄</button>
+                      <span id="transStatus" class="trans-status-dot"></span>
+                 </div>
+
+                 <!-- Target Side -->
+                 <div class="trans-side target-side">
+                      <div class="details-control-row">
+                          <label>To:</label>
+                          <div class="custom-select-wrapper" id="targetLangWrapper">
+                                <div class="custom-select-trigger" tabindex="0">
+                                    <span class="selected-text" id="targetLangLabel">English</span>
+                                    <i class="arrow-icon">▼</i>
+                                </div>
+                                <div class="custom-options">
+                                    <div class="search-container">
+                                        <input type="text" class="dropdown-search" placeholder="Search..." id="targetSearch">
+                                    </div>
+                                    <div class="options-list" id="targetOptionsList"></div>
+                                </div>
+                                <input type="hidden" id="transTargetLang" value="en">
+                          </div>
+                      </div>
+                      <div class="textarea-wrapper-expanded">
+                          <textarea id="transTargetText" class="trans-textarea readonly" placeholder="Translation..." readonly></textarea>
+                          <div class="trans-tools">
+                              <button id="transCopyBtn" class="tool-btn" title="Copy">📋</button>
+                              <button id="transSpeakBtn" class="tool-btn" title="Listen">🔊</button>
+                          </div>
+                      </div>
+                 </div>
+             </div>
         </div>
 
-        <div class="conv-split-container">
-            <!-- Person A (Left) -->
-            <div class="conv-side" id="convSideA">
-                <div class="conv-header">
-                    <div class="custom-select-wrapper" id="convLangAWrapper">
-                        <div class="custom-select-trigger" tabindex="0">
-                            <span class="selected-text" id="convLangALabel">English</span>
-                            <i class="arrow-icon">▼</i>
-                        </div>
-                        <div class="custom-options">
-                            <div class="search-container">
-                                <input type="text" class="dropdown-search" placeholder="Search..." id="convSearchA">
-                            </div>
-                            <div class="options-list" id="convOptionsListA"></div>
-                        </div>
-                        <input type="hidden" id="convLangA" value="en">
-                    </div>
-                </div>
-                
-                <div class="conv-chat-area" id="convChatA">
-                    <div class="conv-placeholder">Tap mic to speak...</div>
-                </div>
-
-                <div class="conv-controls">
-                    <button class="conv-mic-btn" id="convMicBtnA">
-                        <span class="mic-icon">🎤</span>
-                        <span class="mic-status">Tap to Speak</span>
-                    </button>
-                </div>
+        <!-- Conversation Mode -->
+        <div class="panel-content conversation-view" id="transConvView" style="display: none; height: 100%; padding: 0;">
+            <!-- Global Conversation Controls -->
+            <div class="conv-global-controls">
+                <button class="icon-btn-sm" id="convMuteBtn" title="Mute Audio" onclick="TranslatorWidget.toggleMute()">
+                    <span id="convMuteIcon">🔊</span>
+                </button>
+                <span class="divider-v"></span>
+                <button class="icon-btn-sm" id="convClearBtn" title="Clear History" onclick="TranslatorWidget.clearChat()">
+                    🗑️
+                </button>
             </div>
 
-            <!-- Divider -->
-            <div class="conv-divider"></div>
-
-            <!-- Person B (Right) -->
-            <div class="conv-side" id="convSideB">
-                <div class="conv-header">
-                    <div class="custom-select-wrapper" id="convLangBWrapper">
-                        <div class="custom-select-trigger" tabindex="0">
-                            <span class="selected-text" id="convLangBLabel">Spanish</span>
-                            <i class="arrow-icon">▼</i>
-                        </div>
-                        <div class="custom-options">
-                            <div class="search-container">
-                                <input type="text" class="dropdown-search" placeholder="Search..." id="convSearchB">
+            <div class="conv-split-container">
+                <!-- Person A (Left) -->
+                <div class="conv-side" id="convSideA">
+                    <div class="conv-header">
+                        <div class="custom-select-wrapper" id="convLangAWrapper">
+                            <div class="custom-select-trigger" tabindex="0">
+                                <span class="selected-text" id="convLangALabel">English</span>
+                                <i class="arrow-icon">▼</i>
                             </div>
-                            <div class="options-list" id="convOptionsListB"></div>
+                            <div class="custom-options">
+                                <div class="search-container">
+                                    <input type="text" class="dropdown-search" placeholder="Search..." id="convSearchA">
+                                </div>
+                                <div class="options-list" id="convOptionsListA"></div>
+                            </div>
+                            <input type="hidden" id="convLangA" value="en">
                         </div>
-                        <input type="hidden" id="convLangB" value="es">
+                    </div>
+                    
+                    <div class="conv-chat-area" id="convChatA">
+                        <div class="conv-placeholder">Tap mic to speak...</div>
+                    </div>
+
+                    <div class="conv-controls">
+                        <button class="conv-mic-btn" id="convMicBtnA">
+                            <span class="mic-icon">🎤</span>
+                            <span class="mic-status">Tap to Speak</span>
+                        </button>
                     </div>
                 </div>
 
-                <div class="conv-chat-area" id="convChatB">
-                    <div class="conv-placeholder">Tap mic to speak...</div>
-                </div>
+                <!-- Divider -->
+                <div class="conv-divider"></div>
 
-                <div class="conv-controls">
-                    <button class="conv-mic-btn" id="convMicBtnB">
-                        <span class="mic-icon">🎤</span>
-                        <span class="mic-status">Tap to Speak</span>
-                    </button>
+                <!-- Person B (Right) -->
+                <div class="conv-side" id="convSideB">
+                    <div class="conv-header">
+                        <div class="custom-select-wrapper" id="convLangBWrapper">
+                            <div class="custom-select-trigger" tabindex="0">
+                                <span class="selected-text" id="convLangBLabel">Spanish</span>
+                                <i class="arrow-icon">▼</i>
+                            </div>
+                            <div class="custom-options">
+                                <div class="search-container">
+                                    <input type="text" class="dropdown-search" placeholder="Search..." id="convSearchB">
+                                </div>
+                                <div class="options-list" id="convOptionsListB"></div>
+                            </div>
+                            <input type="hidden" id="convLangB" value="es">
+                        </div>
+                    </div>
+
+                    <div class="conv-chat-area" id="convChatB">
+                        <div class="conv-placeholder">Tap mic to speak...</div>
+                    </div>
+
+                    <div class="conv-controls">
+                        <button class="conv-mic-btn" id="convMicBtnB">
+                            <span class="mic-icon">🎤</span>
+                            <span class="mic-status">Tap to Speak</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -947,36 +1020,43 @@
 </div>
 
 <!-- Country Details Panel -->
-<div class="details-panel" id="countryDetails" style="max-width: 900px;">
-    <div class="panel-header">
-        <div class="header-info">
-            <h2>Country Explorer</h2>
-            <p class="text-muted small">Global facts & information A-Z</p>
+<div class="details-panel" id="countryDetails">
+    <div class="widget-hero">
+        <div class="widget-hero-content">
+             <h2 class="widget-hero-title">Country Explorer</h2>
+             <div class="widget-hero-subtitle">
+                 <span class="text-muted" data-translate="true">Global facts & information A-Z</span>
+             </div>
         </div>
-        <button class="close-panel" onclick="closeDetails()">×</button>
+        <button class="btn-back-dashboard" onclick="closeDetails()">
+            ← Back to Dashboard
+        </button>
     </div>
-    <div class="panel-content country-explorer">
-        <div class="country-search-area">
-            <div class="search-input-wrapper">
-                <i class="search-icon-glass">🔍</i>
-                <input type="text" id="countrySearchInput" class="form-control" placeholder="Search any country (e.g. Canada, Brazil)..." oninput="handleCountrySearchInput(this.value)" autocomplete="off" data-translate="true" data-translate-placeholder="true" />
-                <div id="countrySearchResults" class="country-dropdown-glass" style="display: none;"></div>
+
+    <div class="widget-content-container">
+        <div class="widget-section" style="max-width: 800px; margin: 0 auto; width: 100%;">
+            <div class="country-search-area">
+                <div class="search-input-wrapper">
+                    <i class="search-icon-glass">🔍</i>
+                    <input type="text" id="countrySearchInput" class="form-control" placeholder="Search any country (e.g. Canada, Brazil)..." oninput="handleCountrySearchInput(this.value)" autocomplete="off" data-translate="true" data-translate-placeholder="true" style="font-size: 1.2rem; padding: 1rem 1rem 1rem 3rem;" />
+                    <div id="countrySearchResults" class="country-dropdown-glass" style="display: none;"></div>
+                </div>
             </div>
-        </div>
 
-        <div id="countryLoadingState" class="news-loading-state" style="display: none;">
-            <div class="spinner"></div>
-            <p>Fetching global data...</p>
-        </div>
+            <div id="countryLoadingState" class="news-loading-state" style="display: none; margin-top: 2rem;">
+                <div class="spinner"></div>
+                <p>Fetching global data...</p>
+            </div>
 
-        <div id="countryPlaceholder" class="placeholder-empty">
-            <div class="placeholder-icon">🌏</div>
-            <h3 data-translate="true">Discover the World</h3>
-            <p data-translate="true">Search for any country to view comprehensive details including flags, capitals, populations, and more.</p>
-        </div>
+            <div id="countryPlaceholder" class="placeholder-empty" style="margin-top: 4rem;">
+                <div class="placeholder-icon" style="font-size: 5rem; margin-bottom: 2rem;">🌏</div>
+                <h3 data-translate="true">Discover the World</h3>
+                <p data-translate="true">Search for any country to view comprehensive details including flags, capitals, populations, and more.</p>
+            </div>
 
-        <div id="countryDetailsContent" class="country-details-view" style="display: none;">
-            <!-- Content injected via JS -->
+            <div id="countryDetailsContent" class="country-details-view" style="display: none; margin-top: 2rem;">
+                <!-- Content injected via JS -->
+            </div>
         </div>
     </div>
 </div>

@@ -445,9 +445,16 @@ HolidayWidget.renderHolidays = function (data) {
 
     // 4. Build HTML
     let html = `
-        <div class="holiday-results-header">
-            <h3>${this.selectedCountryName || data.countryCode} - ${data.year}</h3>
-            <span class="holiday-total-badge">${data.totalCount} Total Holidays</span>
+        <div class="holiday-results-header-modern">
+            <div class="header-content-modern">
+                <div class="header-titles">
+                    <h3>${this.selectedCountryName || data.countryCode}</h3>
+                    <span class="header-year">${data.year}</span>
+                </div>
+                <div class="header-badges">
+                    <span class="holiday-total-badge-modern">${data.totalCount} Holidays</span>
+                </div>
+            </div>
         </div>
     `;
 
@@ -456,7 +463,7 @@ HolidayWidget.renderHolidays = function (data) {
         html += `
             <div class="upcoming-highlights-section">
                 <h4 class="section-divider-title">✨ Upcoming Highlights</h4>
-                <div class="month-holidays">
+                <div class="holiday-grid-modern">
                     ${upcomingHolidays.map(h => this.renderHolidayCard(h, true)).join('')}
                 </div>
             </div>
@@ -468,8 +475,8 @@ HolidayWidget.renderHolidays = function (data) {
     for (const month in monthGrouped) {
         html += `
             <div class="holiday-month-group">
-                <h4 class="month-name">${month}</h4>
-                <div class="month-holidays">
+                <h4 class="month-name-sticky">${month}</h4>
+                <div class="holiday-grid-modern">
                     ${monthGrouped[month].map(h => this.renderHolidayCard(h)).join('')}
                 </div>
             </div>
@@ -482,11 +489,11 @@ HolidayWidget.renderHolidays = function (data) {
 HolidayWidget.renderHolidayCard = function (h, isHighlight = false) {
     const dt = new Date(h.date);
     const day = dt.getDate();
-    const monthShort = dt.toLocaleString('default', { month: 'short' });
+    const monthShort = dt.toLocaleString('default', { month: 'short' }).toUpperCase();
     const reminder = this.reminders.find(r => r.holidayName === h.name && r.holidayDate === h.date);
     const isActive = !!reminder;
 
-    let cardClass = `holiday-item-card`;
+    let cardClass = `holiday-card-modern glass-panel`;
     if (isActive) cardClass += ' has-reminder';
     if (h.category === 'upcoming') cardClass += ' is-upcoming';
     if (h.category === 'past') cardClass += ' is-past';
@@ -496,45 +503,38 @@ HolidayWidget.renderHolidayCard = function (h, isHighlight = false) {
 
     return `
         <div class="${cardClass}">
-            <div class="holiday-info">
-                <div class="h-name-row">
-                    <span class="holiday-name">${h.name}</span>
-                    <button class="reminder-toggle-btn ${isActive ? 'active' : ''}" 
+             <div class="h-card-left">
+                <div class="h-main-info">
+                    <span class="h-name">${h.name}</span>
+                    <span class="h-local-name">${h.localName || ''}</span>
+                </div>
+                 <div class="h-meta-row">
+                    ${badgeHtml ? `<span class="h-status-badge">${badgeHtml}</span>` : ''}
+                    <button class="reminder-icon-btn ${isActive ? 'active' : ''}" 
                             onclick="HolidayWidget.toggleReminder('${h.name.replace(/'/g, "\\'")}', '${h.date}')"
                             title="${isActive ? 'Disable Reminder' : 'Set Reminder'}">
                         ${isActive ? '🔔' : '🔕'}
                     </button>
+                    ${isActive ? `<span class="reminder-active-text">Reminder Set</span>` : ''}
                 </div>
-                <span class="holiday-local-name">${h.localName}</span>
-                
-                ${badgeHtml ? `<div class="holiday-timing-badge">${badgeHtml}</div>` : ''}
-
-                ${isActive ? `
-                    <div class="reminder-config">
-                        <label>Remind me:</label>
-                        <select onchange="HolidayWidget.setReminderOffset('${h.name.replace(/'/g, "\\'")}', '${h.date}', this.value)">
-                            <option value="1" ${reminder.reminderOffset === 1 ? 'selected' : ''}>1 day before</option>
-                            <option value="3" ${reminder.reminderOffset === 3 ? 'selected' : ''}>3 days before</option>
-                            <option value="7" ${reminder.reminderOffset === 7 ? 'selected' : ''}>1 week before</option>
-                        </select>
-                    </div>
-                ` : ''}
-            </div>
-            <div class="holiday-date-badge">
-                <span class="h-day">${day}</span>
-                <span class="h-month">${monthShort}</span>
-                <span class="h-dow">${h.dayOfWeek}</span>
-            </div>
+             </div>
+             
+             <div class="h-card-right">
+                <div class="date-block">
+                    <span class="db-month">${monthShort}</span>
+                    <span class="db-day">${day}</span>
+                </div>
+             </div>
         </div>
     `;
 };
 
 HolidayWidget.getHolidayBadge = function (daysUntil) {
-    if (daysUntil < 0) return null;
-    if (daysUntil === 0) return `<span class="h-badge today">Today</span>`;
-    if (daysUntil === 1) return `<span class="h-badge tomorrow">Tomorrow</span>`;
-    if (daysUntil <= 7) return `<span class="h-badge this-week">In ${daysUntil} days</span>`;
-    if (daysUntil <= 30) return `<span class="h-badge upcoming">In ${daysUntil} days</span>`;
+    if (daysUntil < 0) return `<span class="badge-text past">Passed</span>`;
+    if (daysUntil === 0) return `<span class="badge-text today">Today!</span>`;
+    if (daysUntil === 1) return `<span class="badge-text tomorrow">Tomorrow</span>`;
+    if (daysUntil <= 7) return `<span class="badge-text soon">In ${daysUntil} days</span>`;
+    if (daysUntil <= 30) return `<span class="badge-text upcoming">${daysUntil} days left</span>`;
     return null;
 };
 

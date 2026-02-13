@@ -148,64 +148,64 @@ class EmergencyWidget {
         // Simple mobile detection
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-        const servicesHtml = item.services.map(svc => {
-            const icon = this.getIconForType(svc.type);
-            const classType = svc.type || 'general';
-
-            // Logic:
-            // Mobile: Call Button (Primary) + Copy Button (Icon)
-            // Desktop: Number Text (Primary) + Copy Button (Primary Action)
-
-            let actionRow = '';
-
-            if (isMobile) {
-                // Mobile Layout: Big Call Button
-                actionRow = `
-                    <div class="action-row mobile">
-                        <a href="tel:${svc.number.replace(/\s/g, '')}" class="btn-action call" aria-label="Call ${svc.name}">
-                            📞 Call ${svc.number}
-                        </a>
-                        <button class="btn-action copy-icon-only" onclick="window.emergencyWidget.copyToClipboard('${svc.number}', this)" aria-label="Copy number">
-                            📋
-                        </button>
-                    </div>
-                `;
-            } else {
-                // Desktop Layout: Text + Copy Button
-                actionRow = `
-                    <div class="action-row desktop">
-                         <span class="number-text-large">${svc.number}</span>
-                         <button class="btn-action copy" onclick="window.emergencyWidget.copyToClipboard('${svc.number}', this)" aria-label="Copy number">
-                            📋 Copy
-                        </button>
-                    </div>
-                `;
+        const servicesHtml = item.services.flatMap(svc => {
+            // Heuristic: If service is "All Services" or "General", split into specific standard services
+            if (svc.name.toLowerCase() === 'all services' || svc.name.toLowerCase() === 'general') {
+                return ['Police', 'Fire', 'Ambulance'].map(type => ({
+                    name: type,
+                    number: svc.number,
+                    type: type.toLowerCase()
+                }));
             }
+            return [svc];
+        }).map(svc => {
+            const icon = this.getIconForType(svc.type);
+            const classType = svc.type ? svc.type.toLowerCase() : 'general';
 
             return `
-                <div class="emergency-number-box ${classType}">
-                    <span class="service-icon" aria-hidden="true">${icon}</span>
-                    <span class="service-name">${svc.name}</span>
-                    ${actionRow}
+                <div class="emergency-card-modern ${classType}">
+                    <div class="card-accent-strip"></div>
+                    <div class="card-content">
+                        <div class="ec-icon-circle">
+                            ${icon}
+                        </div>
+                        <div class="ec-info">
+                            <span class="ec-service-name">${svc.name}</span>
+                            <span class="ec-number">${svc.number}</span>
+                        </div>
+                        <div class="ec-actions">
+                            <a href="tel:${svc.number.replace(/\s/g, '')}" class="btn-ec-call">
+                                📞 Call
+                            </a>
+                            <button class="btn-ec-copy" onclick="window.emergencyWidget.copyToClipboard('${svc.number}', this)" title="Copy Number">
+                                📋
+                            </button>
+                        </div>
+                    </div>
                 </div>
             `;
         }).join('');
 
         this.resultsContainer.innerHTML = `
-            <div class="result-header-large animation-fade-in">
-                <button class="back-link" onclick="window.emergencyWidget.renderInitialState()" aria-label="Back to all countries">
-                    ← Back to All Countries
-                </button>
-                <div class="rh-main">
-                    <span class="rh-flag" aria-hidden="true">${item.flag}</span>
-                    <div class="rh-text">
-                        <h3>${item.country}</h3>
-                        <span class="service-count-badge">${item.services.length} Emergency Services Available</span>
+            <div class="emergency-detail-view animation-fade-in">
+                <div class="ed-header-modern">
+                     <button class="btn-back-text" onclick="window.emergencyWidget.renderInitialState()">
+                        ← Back
+                    </button>
+                    <div class="ed-country-info">
+                        <span class="ed-flag">${item.flag}</span>
+                        <h3 class="ed-country-name">${item.country}</h3>
                     </div>
                 </div>
-            </div>
-            <div class="emergency-numbers-grid animation-slide-up">
-                ${servicesHtml}
+                
+                <h4 class="ed-section-title">National Emergency Numbers</h4>
+                <div class="emergency-grid-modern">
+                    ${servicesHtml}
+                </div>
+                
+                <div class="ed-footer-note">
+                    <p>ℹ️ Always verify local emergency protocols when traveling.</p>
+                </div>
             </div>
         `;
     }
