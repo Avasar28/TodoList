@@ -38,37 +38,34 @@
         
         <!-- Area: Weather -->
         <div class="grid-area-weather">
-             <div class="insight-card widget-weather-live weather loading widget-primary" onclick="openDetails('weather')">
+             <div class="insight-card widget-weather-live weather loading" onclick="openDetails('weather')">
                 <div class="weather-live-indicator">
                     <span class="pulse-dot"></span> <span class="live-text">LIVE</span>
                 </div>
-                <div class="widget-content-vertical">
-                    <div class="weather-visual">
-                         <div class="insight-icon-huge" id="summaryWeatherIcon">@(string.IsNullOrEmpty(Model.Weather.Icon) ? "🌤️" : Model.Weather.Icon)</div>
-                    </div>
-                    <div class="weather-data-primary">
-                        <span class="insight-value-huge" id="summaryWeatherTemp">@(Model.Weather.Temperature > 0 ? Model.Weather.Temperature + "°" : "--°")</span>
-                        <span class="insight-label-lg" id="summaryWeatherDesc">@Model.Weather.Description</span>
-                    </div>
-                     <div class="weather-meta-row">
-                        <span class="meta-item" id="summaryWeatherHum">💧 @Model.Weather.Humidity%</span>
-                        <span class="meta-item" id="summaryWeatherWind">💨 @Model.Weather.WindSpeed km/h</span>
-                    </div>
+                <!-- Main Content Centered -->
+                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-top: 1rem;">
+                    <div class="insight-icon-huge" id="summaryWeatherIcon" style="margin-bottom: 0.5rem;">@(string.IsNullOrEmpty(Model.Weather.Icon) ? "🌤️" : Model.Weather.Icon)</div>
+                    <span class="insight-value-huge" id="summaryWeatherTemp">@(Model.Weather.Temperature > 0 ? Model.Weather.Temperature + "°" : "--°")</span>
+                    <span class="insight-label-lg" id="summaryWeatherDesc" style="font-size: 1rem; opacity: 0.9;">@Model.Weather.Description</span>
+                </div>
+                <!-- Footer -->
+                 <div class="weather-meta-row" style="margin-top: auto;">
+                    <span class="meta-item" id="summaryWeatherHum">💧 @Model.Weather.Humidity%</span>
+                    <span class="meta-item" id="summaryWeatherWind">💨 @Model.Weather.WindSpeed km/h</span>
                 </div>
             </div>
         </div>
 
         <!-- Area: Currency -->
         <div class="grid-area-currency">
-            <div class="insight-card widget-currency-live currency compact widget-primary" onclick="openDetails('currency')">
-                <div class="widget-header-row">
-                    <span class="widget-title-sm">FOREX MARKET</span>
-                    <span class="market-status open">OPEN</span>
+            <div class="insight-card widget-currency-live currency compact" onclick="openDetails('currency')">
+                <div class="widget-header-row" style="justify-content: center;">
+                    <span class="widget-title-sm" style="font-size: 0.9rem; opacity: 1;">Currency Converter</span>
                 </div>
                 <div class="currency-live-data">
                     <div class="pair-display">
                         <span class="curr-code">@Model.FromCurrency</span>
-                        <span class="arrow">→</span>
+                        <span class="arrow" style="opacity: 0.7;">→</span>
                         <span class="curr-code">@Model.ToCurrency</span>
                     </div>
                     <div class="rate-large" id="summaryCurrencyRate">
@@ -86,14 +83,13 @@
 
         <!-- Area: Time -->
         <div class="grid-area-time">
-            <div class="insight-card widget-time-live time compact widget-primary" onclick="openDetails('time')">
-                 <div class="widget-header-row">
-                    <span class="widget-title-sm">LOCAL TIME</span>
-                     <span class="zone-badge">My Location</span>
+            <div class="insight-card widget-time-live time compact" onclick="openDetails('time')">
+                 <div class="widget-header-row" style="justify-content: center;">
+                    <span class="widget-title-sm" style="font-size: 0.9rem; opacity: 1;">Time Converter</span>
                 </div>
                 <div class="time-digital-display">
                     <span class="digital-time" id="summaryTargetTime">--:--</span>
-                    <span class="time-diff-pill">Standard</span>
+                    <span class="time-diff-pill">Standard Time</span>
                 </div>
             </div>
         </div>
@@ -574,10 +570,20 @@
                 </div>
 
                 <div class="result-display" style="margin-top: 2rem;">
-                    <div class="result-header" data-translate="true">Converted Amount</div>
                     <div class="conversion-result-row">
-                        <div id="conversionResult" class="conversion-val" style="font-size: 3rem;">@Model.Currency.Rate</div>
-                        <div id="rateMovement" class="movement-badge @(Model.Currency.IsUp == null ? "d-none" : (Model.Currency.IsUp == true ? "up" : "down"))">
+                        <div class="result-input-group">
+                            <span class="result-amount-sm" id="displayInputAmount">1</span>
+                            <span class="result-currency-code" id="displayFromCode">@Model.FromCurrency</span>
+                        </div>
+                        
+                        <div class="result-equal-sign">=</div>
+                        
+                        <div class="result-output-group">
+                            <div id="conversionResult" class="result-val-huge">@Model.Currency.Rate</div>
+                            <span class="result-currency-code" id="displayToCode">@Model.ToCurrency</span>
+                        </div>
+
+                        <div id="rateMovement" class="movement-badge @(Model.Currency.IsUp == null ? "d-none" : (Model.Currency.IsUp == true ? "up" : "down"))" style="position: absolute; top: 1rem; right: 1rem;">
                             @(Model.Currency.IsUp == true ? "↑" : "↓")
                         </div>
                     </div>
@@ -709,13 +715,25 @@
                 </div>
 
                 <div class="result-display" style="margin-top: 2rem;">
-                    <div class="result-header" data-translate="true">Converted Time</div>
                     <div class="conversion-result-row">
-                        <div id="timeResultVal" class="conversion-val" data-no-translate="true">@Model.TimeConversion.TargetTime</div>
-                        <div id="timeAbbr" class="tz-abbr-badge">@Model.TimeConversion.TargetAbbr</div>
-                        <div id="timeDayChange" class="day-change-badge @(Model.TimeConversion.DayChange == "Same Day" ? "d-none" : "")" data-translate="true">@Model.TimeConversion.DayChange</div>
+                        <div class="time-equation">
+                             <div class="time-side source">
+                                <span class="time-label-sm">Source Time</span>
+                                <span class="time-val-md" id="displaySourceTime">--:--</span>
+                                <span class="time-sub-info" id="displaySourceBadge"></span>
+                             </div>
+                             <div class="arrow-separator">→</div>
+                             <div class="time-side target">
+                                 <span class="time-label-sm" style="color: var(--accent-color);">Target Time</span>
+                                 <span class="result-val-huge" id="timeResultVal" data-no-translate="true">@Model.TimeConversion.TargetTime</span>
+                                 <span class="time-sub-info">
+                                    <span id="timeAbbr" class="tz-abbr-badge">@Model.TimeConversion.TargetAbbr</span>
+                                    <span id="timeDayChange" class="day-change-badge @(Model.TimeConversion.DayChange == "Same Day" ? "d-none" : "")" data-translate="true">@Model.TimeConversion.DayChange</span>
+                                 </span>
+                             </div>
+                        </div>
                     </div>
-                    <div id="timeOffsetInfo" class="rate-info" data-translate="true">Difference: @Model.TimeConversion.OffsetDisplay hours</div>
+                    <div id="timeOffsetInfo" class="rate-info" data-translate="true" style="text-align: center; margin-top: 0.5rem; opacity: 0.7;">Difference: @Model.TimeConversion.OffsetDisplay hours</div>
                 </div>
             </div>
         </form>
@@ -1453,7 +1471,6 @@
                 summaryWidget.classList.remove('loading');
                 const rateEl = document.getElementById('summaryCurrencyRate');
                 if (rateEl) rateEl.textContent = data.rate;
-                const metaEl = document.getElementById('summaryTimeMeta'); // reused meta if exists or others
                 const subMetaEl = document.getElementById('summaryCurrencyMeta');
                 if (subMetaEl) subMetaEl.textContent = `1 ${data.from} = ${data.rate} ${data.to}`;
             }
@@ -1461,6 +1478,11 @@
             // Update Panel Result
             document.getElementById('baseRateInfo').textContent = `1 ${data.from} = ${data.rate} ${data.to}`;
             document.getElementById('currencyTimestamp').textContent = `Last Synced: ${data.lastUpdated}`;
+            
+            // Update New Result UI Elements
+            document.getElementById('displayFromCode').textContent = data.from;
+            document.getElementById('displayToCode').textContent = data.to;
+
             
             const movementBadge = document.getElementById('rateMovement');
             if (movementBadge) {
@@ -1482,9 +1504,30 @@
         function calculateResult() {
             if (!amountInput) return;
             const amount = parseFloat(amountInput.value) || 0;
-            const result = (amount * currentRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+            const fromCode = fromSelect?.value || 'USD';
+            const toCode = toSelect?.value || 'EUR';
+
+            // Format Input (with symbol)
+            const formattedInput = new Intl.NumberFormat('en-US', { 
+                style: 'currency', 
+                currency: fromCode,
+                maximumFractionDigits: 2
+            }).format(amount);
+
+            // Format Output (with symbol)
+            const resultVal = amount * currentRate;
+            const formattedOutput = new Intl.NumberFormat('en-US', { 
+                style: 'currency', 
+                currency: toCode,
+                maximumFractionDigits: 4
+            }).format(resultVal);
+
             const resultDisplay = document.getElementById('conversionResult');
-            if (resultDisplay) resultDisplay.textContent = result;
+            if (resultDisplay) resultDisplay.textContent = formattedOutput;
+            
+            // Update Input Display
+            const inputDisplay = document.getElementById('displayInputAmount');
+            if (inputDisplay) inputDisplay.textContent = formattedInput;
         }
 
         if (fromSelect) fromSelect.addEventListener('change', refreshCurrencyData);
@@ -1733,7 +1776,10 @@
 
         async function refreshTimeData() {
             console.log(">>> refreshTimeData() called");
-            if (!sourceSelect || !targetSelect) return;
+            if (!sourceSelect || !targetSelect) {
+                console.warn("Source or Target select missing");
+                return;
+            }
 
             const source = sourceSelect.value;
             const target = targetSelect.value;
@@ -1755,6 +1801,7 @@
             try {
                 const res = await fetch(`/Todo/GetTimeJson?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}&time=${encodeURIComponent(time)}`);
                 const data = await res.json();
+                console.log("Time Data Received:", data); // DEBUG
                 lastTimeData = data; // Cache it
                 updateTimeUI(data);
             } catch (e) {
@@ -1773,11 +1820,12 @@
         }
 
         function updateTimeUI(data) {
-            const is12h = document.getElementById('conversionFormatToggle')?.checked;
+            const is24h = document.getElementById('conversionFormatToggle')?.checked;
             
             // Format time helper
             const formatTime = (timeStr) => {
-                if (!is12h) return timeStr;
+                if (is24h) return timeStr; // Return 24h if checked
+                // Format to 12h
                 const [h, m] = timeStr.split(':');
                 const hours = parseInt(h);
                 const ampm = hours >= 12 ? 'PM' : 'AM';
@@ -1799,6 +1847,17 @@
                 if (resultVal) {
                     resultVal.textContent = formatTime(data.targetTime);
                 }
+
+                const sourceDisplay = document.getElementById('displaySourceTime');
+                if (sourceDisplay) {
+                     if (data.sourceTime) {
+                         sourceDisplay.textContent = formatTime(data.sourceTime);
+                     } else {
+                         sourceDisplay.textContent = "--:--"; 
+                     }
+                }
+
+
                 
                 const resultAbbr = document.getElementById('timeAbbr');
                 if (resultAbbr) resultAbbr.textContent = data.targetAbbr || 'UTC';
