@@ -156,7 +156,7 @@ namespace TodoListApp.Services
         public string IndependenceDay { get; set; } = "Not officially defined";
         public string NationalMotto { get; set; } = "Not officially defined";
         public string MajorEthnicGroups { get; set; } = "Data not publicly available";
-        public string WikipediaSummary { get; set; } = "Global summary is currently being retrieved...";
+        public string WikipediaSummary { get; set; } = string.Empty;
         public string LandArea { get; set; } = "Data not publicly available";
         public string WaterArea { get; set; } = "Data not publicly available";
 

@@ -2356,7 +2356,12 @@
         };
 
         // --- Data Preparation ---
-        const currs = Object.entries(c.currencies).map(([code, info]) => `${info.name || info.item1} (${info.symbol || info.item2 || code})`).join(', ');
+        const currs = Object.entries(c.currencies).map(([code, info]) => {
+            const name = info.name || info.item1;
+            const symbol = info.symbol || info.item2 || code;
+            const displayName = (name && name !== 'undefined') ? name : symbol;
+            return `${displayName} (${code})`;
+        }).join(', ');
         const langs = c.languages.filter(l => isValid(l)).join(', ');
         const pop = isValid(c.population) ? new Intl.NumberFormat().format(c.population) : "";
         const area = isValid(c.area) ? new Intl.NumberFormat().format(c.area) : "";
@@ -2553,7 +2558,7 @@
 
             <div class="country-summary-box">
                 <h3>About ${c.name}</h3>
-                <p class="wiki-extract">${c.wikipediaSummary || 'Fetching detailed historical and political summary...'}</p>
+                <p class="wiki-extract">${c.wikipediaSummary || 'Fetching brief country details...'}</p>
             </div>
 
             ${geoSection}

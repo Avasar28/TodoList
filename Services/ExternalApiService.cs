@@ -1112,6 +1112,17 @@ namespace TodoListApp.Services
                 }
             }
             catch { }
+
+            // Fallback: If no summary was retrieved (checking for empty or default values), generate a synthetic one.
+            // Note: The default was previously "Global summary...", now it's empty string. 
+            if (string.IsNullOrWhiteSpace(data.WikipediaSummary) || data.WikipediaSummary.Contains("Global summary"))
+            {
+                var popStr = data.Population > 1000000 ? $"{data.Population / 1000000.0:F1} million" : $"{data.Population:N0}";
+                var loc = !string.IsNullOrEmpty(data.Subregion) ? data.Subregion : data.Region;
+                var cap = !string.IsNullOrEmpty(data.Capital) ? data.Capital : "its capital city";
+                
+                data.WikipediaSummary = $"{data.Name} is a country located in {loc}. It has a population of approximately {popStr}. The capital city is {cap}, and the country is known for its {data.Region.ToLower()} climate and diverse culture.";
+            }
         }
 
         private CountryData MapToCountryData(JsonElement el)
