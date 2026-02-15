@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using TodoListApp.Models;
 using TodoListApp.Services;
 
 namespace TodoListApp.Controllers
@@ -10,18 +12,18 @@ namespace TodoListApp.Controllers
     public class PdfToolsController : Controller
     {
         private readonly IPdfService _pdfService;
-        private readonly IUserService _userService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public PdfToolsController(IPdfService pdfService, IUserService userService)
+        public PdfToolsController(IPdfService pdfService, UserManager<ApplicationUser> userManager)
         {
             _pdfService = pdfService;
-            _userService = userService;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()
         {
             var userId = User.Identity?.Name ?? string.Empty;
-            var isAdmin = User.HasClaim(c => c.Type == "IsAdmin" && c.Value == "True") || User.IsInRole("Admin");
+            var isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Admin");
 
             var history = await _pdfService.GetHistoryAsync(userId, isAdmin);
             
@@ -32,7 +34,7 @@ namespace TodoListApp.Controllers
             ViewBag.IsAdmin = isAdmin;
 
             // Get User Preferences
-            var user = _userService.GetAllUsers().FirstOrDefault(u => u.Email == userId);
+            var user = await _userManager.FindByNameAsync(userId);
             if (user != null)
             {
                  ViewBag.Favorites = user.Preferences.FavoritePdfTools;
@@ -48,36 +50,40 @@ namespace TodoListApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult ToggleFavorite(string toolType)
+        public async Task<IActionResult> ToggleFavorite(string toolType)
         {
             var userId = User.Identity?.Name ?? string.Empty;
-            var user = _userService.GetAllUsers().FirstOrDefault(u => u.Email == userId);
+            var user = await _userManager.FindByNameAsync(userId);
             
             if (user == null) return Json(new { success = false });
 
-            if (user.Preferences.FavoritePdfTools.Contains(toolType))
+            var prefs = user.Preferences;
+            if (prefs.FavoritePdfTools.Contains(toolType))
             {
-                user.Preferences.FavoritePdfTools.Remove(toolType);
+                prefs.FavoritePdfTools.Remove(toolType);
             }
             else
             {
-                user.Preferences.FavoritePdfTools.Add(toolType);
+                prefs.FavoritePdfTools.Add(toolType);
             }
 
-            _userService.UpdatePreferences(user.Id, user.Preferences);
+            user.Preferences = prefs;
+            await _userManager.UpdateAsync(user);
             return Json(new { success = true, favorites = user.Preferences.FavoritePdfTools });
         }
 
         [HttpPost]
-        public IActionResult ToggleAutoDelete(bool enabled)
+        public async Task<IActionResult> ToggleAutoDelete(bool enabled)
         {
             var userId = User.Identity?.Name ?? string.Empty;
-            var user = _userService.GetAllUsers().FirstOrDefault(u => u.Email == userId);
+            var user = await _userManager.FindByNameAsync(userId);
             
             if (user == null) return Json(new { success = false });
 
-            user.Preferences.AutoDeletePdfEnabled = enabled;
-            _userService.UpdatePreferences(user.Id, user.Preferences);
+            var prefs = user.Preferences;
+            prefs.AutoDeletePdfEnabled = enabled;
+            user.Preferences = prefs;
+            await _userManager.UpdateAsync(user);
             
             return Json(new { success = true, enabled = user.Preferences.AutoDeletePdfEnabled });
         }
@@ -86,7 +92,7 @@ namespace TodoListApp.Controllers
         public async Task<IActionResult> DeleteHistory([FromBody] List<Guid> ids)
         {
             var userId = User.Identity?.Name ?? string.Empty;
-            var isAdmin = User.HasClaim(c => c.Type == "IsAdmin" && c.Value == "True") || User.IsInRole("Admin");
+            var isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Admin");
 
             var result = await _pdfService.DeleteHistoryAsync(ids, userId, isAdmin);
             

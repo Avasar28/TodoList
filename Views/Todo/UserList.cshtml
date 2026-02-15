@@ -1,4 +1,4 @@
-@model IEnumerable<TodoListApp.Models.User>
+@model IEnumerable<TodoListApp.ViewModels.UserListViewModel>
 
 @{
     ViewData["Title"] = "User List";
@@ -15,10 +15,19 @@
         </a>
     </div>
 
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger mt-3" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; padding: 1rem; border-radius: 8px;">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="toast-container" id="toastContainer"></div>
+
     <div class="todo-card" style="margin-top: 2rem;">
         <div class="search-container-lite" style="margin-bottom: 1.5rem;">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.6;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" class="search-input-lite" placeholder="Search users by name or email..." id="userSearchInput" onkeyup="filterUsers()">
+            <input type="text" class="search-input-lite" placeholder="Search users by name, email or role..." id="userSearchInput" onkeyup="filterUsers()">
         </div>
 
         <table class="table table-hover" id="userTable">
@@ -27,6 +36,7 @@
                     <th class="text-left">User ID</th>
                     <th class="text-left">Full Name</th>
                     <th class="text-left">Email</th>
+                    <th class="text-left">Role</th>
                     <th class="text-left">Password Hash</th>
                     <th class="text-right">Actions</th>
                 </tr>
@@ -35,10 +45,34 @@
                 @foreach (var user in Model)
                 {
                     <tr>
-                        <td>@user.Id</td>
+                        <td>#@user.Id.Substring(0, 8)</td>
                         <td>@(user.Name ?? "N/A")</td>
                         <td>@user.Email</td>
-                        <td class="cell-truncate" title="@user.Password">@user.Password</td>
+                        <td>
+                            @if (User.IsInRole("SuperAdmin") || (User.IsInRole("Admin") && user.Role != "SuperAdmin" && user.Role != "Admin"))
+                            {
+                                <select class="role-select-compact" onchange="changeUserRole('@user.Id', this.value)">
+                                    @foreach (var r in new[] { "SuperAdmin", "Admin", "Manager", "PrivateUser", "NormalUser" })
+                                    {
+                                        <option value="@r" selected="@(user.Role == r ? "selected" : null)">@r</option>
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                var badgeClass = user.Role.ToLower() switch {
+                                    "superadmin" => "role-badge-superadmin",
+                                    "admin" => "role-badge-admin",
+                                    "manager" => "role-badge-manager",
+                                    "privateuser" => "role-badge-privateuser",
+                                    _ => "role-badge-normaluser"
+                                };
+                                <span class="role-badge @badgeClass">@user.Role</span>
+                            }
+                        </td>
+                        <td class="cell-truncate" title="@user.PasswordHash">
+                            @(string.IsNullOrEmpty(user.PasswordHash) ? "No Hash" : "********")
+                        </td>
                         <td class="text-right">
                             <a asp-action="EditUser" asp-route-id="@user.Id" class="btn-edit-unique" style="margin-right: 5px;">Edit</a>
                             <form asp-action="DeleteUser" asp-route-id="@user.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure?');">
@@ -53,6 +87,30 @@
 </div>
 
 <script>
+    async function changeUserRole(userId, newRole) {
+        try {
+            const formData = new FormData();
+            formData.append('userId', userId);
+            formData.append('newRole', newRole);
+
+            const response = await fetch('/Todo/ChangeRole', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                showToast(result.message, 'success');
+            } else {
+                showToast(result.message, 'error');
+                // Optional: reset dropdown to previous value if failed
+                setTimeout(() => location.reload(), 2000);
+            }
+        } catch (error) {
+            showToast('An error occurred while updating the role.', 'error');
+        }
+    }
+
     function filterUsers() {
         var input, filter, table, tr, td, i, txtValue;
         input = document.getElementById("userSearchInput");
@@ -61,17 +119,17 @@
         tr = table.getElementsByTagName("tr");
 
         for (i = 0; i < tr.length; i++) {
-            // Search Name (col 1) and Email (col 2)
-            // Note: Indices depend on table structure. 
-            // Previous view showed: ID(0), Name(1), Email(2), Password(3), Actions(4)
             var tdName = tr[i].getElementsByTagName("td")[1];
             var tdEmail = tr[i].getElementsByTagName("td")[2];
+            var tdRole = tr[i].getElementsByTagName("td")[3];
             
-            if (tdName || tdEmail) {
+            if (tdName || tdEmail || tdRole) {
                 var txtValueName = tdName ? (tdName.textContent || tdName.innerText) : "";
                 var txtValueEmail = tdEmail ? (tdEmail.textContent || tdEmail.innerText) : "";
+                var txtValueRole = tdRole ? (tdRole.textContent || tdRole.innerText) : "";
                 
-                if (txtValueName.toUpperCase().indexOf(filter) > -1 || txtValueEmail.toUpperCase().indexOf(filter) > -1) {
+                var combined = (txtValueName + " " + txtValueEmail + " " + txtValueRole).toUpperCase();
+                if (combined.indexOf(filter) > -1) {
                     tr[i].style.display = "";
                 } else {
                     tr[i].style.display = "none";

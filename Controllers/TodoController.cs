@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TodoListApp.Models;
@@ -11,21 +12,25 @@ namespace TodoListApp.Controllers
     {
         private readonly ITodoService _todoService;
         private readonly IExternalApiService _externalApiService;
-        private readonly IUserService _userService;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public TodoController(ITodoService todoService, IExternalApiService externalApiService, IUserService userService, IWebHostEnvironment webHostEnvironment)
+        public TodoController(
+            ITodoService todoService, 
+            IExternalApiService externalApiService, 
+            UserManager<ApplicationUser> userManager, 
+            IWebHostEnvironment webHostEnvironment)
         {
             _todoService = todoService;
             _externalApiService = externalApiService;
-            _userService = userService;
+            _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
         }
 
         public async Task<IActionResult> Dashboard(string? city, string? fromCurrency, string? toCurrency, string? sourceTime, string? targetTime)
         {
             var userId = GetUserId();
-            var user = _userService.GetUser(userId);
+            var user = await _userManager.FindByIdAsync(userId);
             
             // Apply User Preferences if params are missing
             if (user != null)
@@ -205,12 +210,12 @@ namespace TodoListApp.Controllers
             return Json(data);
         }
 
-        private int GetUserId()
+        private string GetUserId()
         {
             var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (idClaim != null && int.TryParse(idClaim.Value, out var id))
+            if (idClaim != null)
             {
-                return id;
+                return idClaim.Value;
             }
             throw new Exception("User ID not found");
         }
@@ -242,62 +247,95 @@ namespace TodoListApp.Controllers
             return View(items);
         }
 
-        public IActionResult UserList()
+        [Authorize(Roles = "SuperAdmin,Admin")]
+        public async Task<IActionResult> UserList()
         {
-            var users = _userService.GetAllUsers();
-            return View(users);
+            var users = _userManager.Users.ToList();
+            var model = new List<ViewModels.UserListViewModel>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                model.Add(new ViewModels.UserListViewModel
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Email = user.Email!,
+                    PasswordHash = user.PasswordHash,
+                    Role = roles.FirstOrDefault() ?? "NormalUser"
+                });
+            }
+
+            return View(model);
         }
 
         [HttpGet]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public IActionResult CreateUser()
         {
             return View(new ViewModels.AdminCreateUserViewModel());
         }
 
         [HttpPost]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> CreateUser(ViewModels.AdminCreateUserViewModel model, [FromServices] IEmailService emailService)
         {
             if (!ModelState.IsValid)
             {
-                return View(model);
+                return Json(new { success = false, message = "Invalid data provided." });
+            }
+
+            // Permission Check: Admin cannot create SuperAdmin
+            if (model.Role == "SuperAdmin" && !User.IsInRole("SuperAdmin"))
+            {
+                return Json(new { success = false, message = "Insufficient permissions to create a SuperAdmin." });
             }
 
             // Check if user already exists
-            if (_userService.UserExists(model.Email)) 
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null) 
             {
-                ModelState.AddModelError(string.Empty, "Email already exists");
-                return View(model);
+                return Json(new { success = false, message = "Email already exists." });
             }
 
             // Generate 6-digit OTP
             var otp = Helpers.OtpHelper.Generate6DigitOtp();
             var expiry = DateTime.UtcNow.AddMinutes(10);
             
-            // Store EVERYTHING in session (Email, Password, OTP, Expiry)
-            // Using same keys as AccountController.Signup so VerifyOtp works
+            // Store EVERYTHING in session (Email, Password, Role, OTP, Expiry)
             HttpContext.Session.SetString("SignupEmail", model.Email);
             HttpContext.Session.SetString("SignupPassword", model.Password);
             HttpContext.Session.SetString("SignupFullName", model.Name);
+            HttpContext.Session.SetString("SignupRole", model.Role);
             HttpContext.Session.SetString("SignupOtp", otp);
-            HttpContext.Session.SetString("SignupOtpExpiry", expiry.ToString("O")); // ISO 8601
+            HttpContext.Session.SetString("SignupOtpExpiry", expiry.ToString("O"));
 
             // Send OTP email
             await emailService.SendEmailAsync(model.Email, "Verify Your Email", Helpers.OtpHelper.GetOtpEmailBody(otp));
 
-            return RedirectToAction("VerifyOtp", "Account");
+            return Json(new { success = true, message = "OTP sent successfully!", redirectUrl = Url.Action("VerifyOtp", "Account") });
         }
 
         [HttpGet]
-        public IActionResult EditUser(int id)
+        [Authorize(Roles = "SuperAdmin,Admin")]
+        public async Task<IActionResult> EditUser(string id)
         {
-            var user = _userService.GetUser(id);
+            var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
             return View(user);
         }
 
         [HttpPost]
-        public IActionResult EditUser(TodoListApp.Models.User user, string? newPassword, string? confirmPassword)
+        [Authorize(Roles = "SuperAdmin,Admin")]
+        public async Task<IActionResult> EditUser(ApplicationUser user, string? newPassword, string? confirmPassword)
         {
+            var existingUser = await _userManager.FindByIdAsync(user.Id);
+            if (existingUser == null) return NotFound();
+
+            existingUser.Email = user.Email;
+            existingUser.UserName = user.Email;
+            existingUser.Name = user.Name;
+
             // Handle Password Change
             if (!string.IsNullOrEmpty(newPassword))
             {
@@ -306,35 +344,91 @@ namespace TodoListApp.Controllers
                     ModelState.AddModelError("ConfirmPassword", "Passwords do not match.");
                     return View(user);
                 }
-                // Hash the password before saving!
-                user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
-            }
-            else
-            {
-                // Keep existing password (hidden field value)
-                // If the hidden field was modified or empty, we might have an issue, 
-                // but usually it retains the old value.
-                // Alternatively, fetch from DB to be safe if 'user.Password' comes back null/empty.
-                if (string.IsNullOrEmpty(user.Password))
+                
+                var token = await _userManager.GeneratePasswordResetTokenAsync(existingUser);
+                var result = await _userManager.ResetPasswordAsync(existingUser, token, newPassword);
+                if (!result.Succeeded)
                 {
-                     var existingUser = _userService.GetUser(user.Id);
-                     if (existingUser != null) user.Password = existingUser.Password;
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError("", error.Description);
+                    }
+                    return View(user);
                 }
             }
 
-            if (_userService.UpdateUser(user))
+            var updateResult = await _userManager.UpdateAsync(existingUser);
+            if (updateResult.Succeeded)
             {
                 return RedirectToAction(nameof(UserList));
             }
-            ModelState.AddModelError("", "Update failed");
+
+            foreach (var error in updateResult.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
             return View(user);
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPost]
-        public IActionResult DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(string id)
         {
-            _userService.DeleteUser(id);
+            var user = await _userManager.FindByIdAsync(id);
+            if (user != null)
+            {
+                // Deletion rules
+                var roles = await _userManager.GetRolesAsync(user);
+                bool targetIsAdmin = roles.Contains("Admin") || roles.Contains("SuperAdmin");
+
+                if (targetIsAdmin && !User.IsInRole("SuperAdmin"))
+                {
+                    TempData["ErrorMessage"] = "Only SuperAdmins can delete Admin or SuperAdmin users.";
+                    return RedirectToAction(nameof(UserList));
+                }
+
+                await _userManager.DeleteAsync(user);
+            }
             return RedirectToAction(nameof(UserList));
+        }
+
+        [Authorize(Roles = "SuperAdmin,Admin")]
+        [HttpPost]
+        public async Task<IActionResult> ChangeRole(string userId, string newRole)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return Json(new { success = false, message = "User not found." });
+
+            // Permission Check: Only SuperAdmin can change roles of Admin/SuperAdmin
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            bool targetIsAdmin = currentRoles.Contains("Admin") || currentRoles.Contains("SuperAdmin");
+
+            if (targetIsAdmin && !User.IsInRole("SuperAdmin"))
+            {
+                return Json(new { success = false, message = "Insufficient permissions to change an administrator's role." });
+            }
+
+            // Also prevent non-SuperAdmins from promoting someone to SuperAdmin
+            if (newRole == "SuperAdmin" && !User.IsInRole("SuperAdmin"))
+            {
+                return Json(new { success = false, message = "Only SuperAdmins can promote users to SuperAdmin." });
+            }
+
+            // Update Roles
+            var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+            if (!removeResult.Succeeded)
+            {
+                return Json(new { success = false, message = "Failed to clear existing roles." });
+            }
+
+            var addResult = await _userManager.AddToRoleAsync(user, newRole);
+            if (addResult.Succeeded)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AUDIT] User {User.Identity?.Name} changed role of {user.Email} to {newRole}");
+                return Json(new { success = true, message = $"Role successfully updated to {newRole}." });
+            }
+
+            return Json(new { success = false, message = "Failed to assign new role." });
         }
 
         [HttpPost]

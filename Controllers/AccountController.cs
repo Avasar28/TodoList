@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TodoListApp.Models;
@@ -8,13 +9,19 @@ namespace TodoListApp.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly IUserService _userService;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _config;
 
-        public AccountController(IUserService userService, IEmailService emailService, IConfiguration config)
+        public AccountController(
+            UserManager<ApplicationUser> userManager, 
+            SignInManager<ApplicationUser> signInManager, 
+            IEmailService emailService, 
+            IConfiguration config)
         {
-            _userService = userService;
+            _userManager = userManager;
+            _signInManager = signInManager;
             _emailService = emailService;
             _config = config;
         }
@@ -33,27 +40,9 @@ namespace TodoListApp.Controllers
                 return View(model);
             }
 
-            var user = _userService.ValidateUser(model.Email, model.Password);
-            if (user != null)
+            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, isPersistent: false, lockoutOnFailure: false);
+            if (result.Succeeded)
             {
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, user.Email),
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.GivenName, user.Name ?? user.Email), // Use Name or fallback to Email
-                    new Claim("IsAdmin", user.IsAdmin.ToString())
-                };
-
-                if (user.IsAdmin)
-                {
-                   claims.Add(new Claim(ClaimTypes.Role, "Admin"));
-                }
-
-                var identity = new ClaimsIdentity(claims, "CookieAuth");
-                var principal = new ClaimsPrincipal(identity);
-
-                await HttpContext.SignInAsync("CookieAuth", principal);
-
                 return RedirectToAction("Dashboard", "Todo");
             }
 
@@ -76,7 +65,8 @@ namespace TodoListApp.Controllers
             }
 
             // Check if user already exists
-            if (_userService.UserExists(model.Email)) 
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null) 
             {
                 ModelState.AddModelError(string.Empty, "Email already exists");
                 return View(model);
@@ -109,7 +99,7 @@ namespace TodoListApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult VerifyOtp(ViewModels.VerifyOtpViewModel model)
+        public async Task<IActionResult> VerifyOtp(ViewModels.VerifyOtpViewModel model)
         {
             var email = HttpContext.Session.GetString("SignupEmail");
             var password = HttpContext.Session.GetString("SignupPassword");
@@ -126,20 +116,39 @@ namespace TodoListApp.Controllers
 
             if (model.Otp == sessionOtp && DateTime.UtcNow <= sessionExpiry)
             {
+                var role = HttpContext.Session.GetString("SignupRole") ?? "NormalUser";
+
                 // OTP verified! Now actually create the user.
-                if (_userService.RegisterUser(email, password, fullName, isVerified: true))
+                var user = new ApplicationUser 
+                { 
+                    UserName = email, 
+                    Email = email, 
+                    Name = fullName,
+                    EmailConfirmed = true 
+                };
+
+                var result = await _userManager.CreateAsync(user, password);
+                if (result.Succeeded)
                 {
+                    // Assign the selected role
+                    await _userManager.AddToRoleAsync(user, role);
+
                     // Clear session and redirect to login
                     HttpContext.Session.Remove("SignupEmail");
                     HttpContext.Session.Remove("SignupPassword");
                     HttpContext.Session.Remove("SignupFullName");
+                    HttpContext.Session.Remove("SignupRole");
                     HttpContext.Session.Remove("SignupOtp");
                     HttpContext.Session.Remove("SignupOtpExpiry");
 
                     TempData["SuccessMessage"] = "Account created and email verified successfully! You can now login.";
                     return RedirectToAction("Login");
                 }
-                ModelState.AddModelError(string.Empty, "Registration failed. Please try again.");
+                
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
             }
             else if (DateTime.UtcNow > sessionExpiry)
             {
@@ -150,13 +159,13 @@ namespace TodoListApp.Controllers
                 ModelState.AddModelError(string.Empty, "Invalid OTP code.");
             }
             
-            model.Email = email;
+            model.Email = email ?? string.Empty;
             return View(model);
         }
 
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync("CookieAuth");
+            await _signInManager.SignOutAsync();
             return RedirectToAction("Login");
         }
 
@@ -174,9 +183,11 @@ namespace TodoListApp.Controllers
                 return View(model);
             }
 
-            var token = _userService.GenerateResetToken(model.Email);
-            if (token != null)
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user != null)
             {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                
                 // Try to get BaseUrl from config, fallback to current request context
                 var baseUrl = _config["BaseUrl"]?.TrimEnd('/');
                 var actionUrl = Url.Action("ResetPassword", "Account", new { email = model.Email, token = token });
@@ -194,18 +205,6 @@ namespace TodoListApp.Controllers
                         Request.Host.Value)!;
                 }
 
-                Console.WriteLine("==================================================");
-                Console.WriteLine("   PASSWORD RESET LINK GENERATED");
-                Console.WriteLine("==================================================");
-                Console.WriteLine($"Configured BaseUrl: {baseUrl ?? "NONE (using auto-detection)"}");
-                Console.WriteLine($"Actual Browser URL: {Request.Scheme}://{Request.Host}");
-                Console.WriteLine($"Generated Link:     {resetLink}");
-                Console.WriteLine("--------------------------------------------------");
-                Console.WriteLine("TIP: If clicking the link fails, check if the PORT");
-                Console.WriteLine("matches YOUR browser. If your browser forces HTTPS,");
-                Console.WriteLine("change 'http' to 'https' and port 5153 to 7130.");
-                Console.WriteLine("==================================================");
-                
                 await _emailService.SendEmailAsync(model.Email, "Reset Your Password", Helpers.OtpHelper.GetResetPasswordEmailBody(resetLink));
             }
 
@@ -225,20 +224,33 @@ namespace TodoListApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult ResetPassword(ViewModels.ResetPasswordViewModel model)
+        public async Task<IActionResult> ResetPassword(ViewModels.ResetPasswordViewModel model)
         {
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            if (_userService.ResetPasswordWithToken(model.Email, model.Token, model.NewPassword))
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user != null)
             {
-                TempData["SuccessMessage"] = "Your password has been reset successfully. Please login.";
-                return RedirectToAction("Login");
+                var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+                if (result.Succeeded)
+                {
+                    TempData["SuccessMessage"] = "Your password has been reset successfully. Please login.";
+                    return RedirectToAction("Login");
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Invalid email address.");
             }
 
-            ModelState.AddModelError(string.Empty, "Invalid or expired reset token. Please request a new one.");
             return View(model);
         }
     }

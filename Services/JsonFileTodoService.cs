@@ -39,14 +39,14 @@ namespace TodoListApp.Services
             File.WriteAllText(_filePath, json);
         }
 
-        public IEnumerable<TodoItem> GetAll(int userId)
+        public IEnumerable<TodoItem> GetAll(string userId)
         {
             return ReadFromFile()
                 .Where(x => x.UserId == userId)
                 .OrderByDescending(t => t.CreatedAt);
         }
 
-        public TodoItem? GetById(Guid id, int userId)
+        public TodoItem? GetById(Guid id, string userId)
         {
             return ReadFromFile().FirstOrDefault(x => x.Id == id && x.UserId == userId);
         }
@@ -61,7 +61,7 @@ namespace TodoListApp.Services
             WriteToFile(items);
         }
 
-        public void Update(TodoItem item, int userId)
+        public void Update(TodoItem item, string userId)
         {
             var items = ReadFromFile();
             var existing = items.FirstOrDefault(x => x.Id == item.Id && x.UserId == userId);
@@ -75,7 +75,7 @@ namespace TodoListApp.Services
             }
         }
 
-        public void Delete(Guid id, int userId)
+        public void Delete(Guid id, string userId)
         {
             var items = ReadFromFile();
             var itemToRemove = items.FirstOrDefault(x => x.Id == id && x.UserId == userId);
@@ -86,7 +86,7 @@ namespace TodoListApp.Services
             }
         }
 
-        public void ToggleComplete(Guid id, int userId)
+        public void ToggleComplete(Guid id, string userId)
         {
             var items = ReadFromFile();
             var item = items.FirstOrDefault(x => x.Id == id && x.UserId == userId);

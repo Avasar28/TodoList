@@ -22,5 +22,8 @@ namespace TodoListApp.ViewModels
         [Compare("Password", ErrorMessage = "Passwords do not match")]
         [Display(Name = "Confirm Password")]
         public string ConfirmPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Please select a role")]
+        public string Role { get; set; } = "NormalUser";
     }
 }

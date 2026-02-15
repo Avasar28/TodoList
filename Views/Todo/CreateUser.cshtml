@@ -11,38 +11,65 @@
             <p class="auth-hero-subtitle">Add a new member to your team.</p>
         </div>
 
-        <form asp-action="CreateUser" method="post" class="auth-form">
+        <form id="createUserForm" class="auth-form">
             <div asp-validation-summary="ModelOnly" class="text-danger" style="font-size: 0.9rem;"></div>
 
-            <div class="form-group mb-3">
-                <label asp-for="Name">Full Name</label>
-                <input asp-for="Name" class="form-control" placeholder="e.g. Sarah Smith" oninput="validateForm()" />
-                <span asp-validation-for="Name" class="text-danger small"></span>
-            </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="Email">Email Address</label>
-                <input asp-for="Email" class="form-control" placeholder="name@company.com" oninput="validateForm()" />
-                <span asp-validation-for="Email" class="text-danger small"></span>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="mb-3">
-                <div class="form-group">
-                    <label asp-for="Password">Password</label>
-                    <input asp-for="Password" type="password" class="form-control" placeholder="Min 8 chars" oninput="validateForm()" />
-                    <small class="text-muted" style="font-size: 0.75rem; margin-top: 4px;">Min 8 chars, mixed case & symbols</small>
-                    <span asp-validation-for="Password" class="text-danger small"></span>
+            <div class="form-section">
+                <div class="form-section-title">Account Information</div>
+                
+                <div class="form-group mb-3">
+                    <label asp-for="Name">Full Name</label>
+                    <input asp-for="Name" class="form-control" placeholder="e.g. Sarah Smith" oninput="validateForm()" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
                 </div>
 
-                <div class="form-group">
-                    <label asp-for="ConfirmPassword">Confirm</label>
-                    <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Repeat" oninput="validateForm()" />
-                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                <div class="form-group mb-3">
+                    <label asp-for="Email">Email Address</label>
+                    <input asp-for="Email" class="form-control" placeholder="name@company.com" oninput="validateForm()" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
                 </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label asp-for="Password">Password</label>
+                        <input asp-for="Password" type="password" class="form-control" placeholder="Min 8 chars" oninput="validateForm()" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ConfirmPassword">Confirm</label>
+                        <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Repeat" oninput="validateForm()" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section-title">System Role</div>
+                <div class="role-selection-grid">
+                    @foreach (var role in new[] { 
+                        new { Name = "SuperAdmin", Desc = "Full system control", Tips = "Can manage all users, view dashboard analytics, and modify system settings." },
+                        new { Name = "Admin", Desc = "User management control", Tips = "Can create, edit, and delete users and view global PDF history. Cannot delete SuperAdmins." },
+                        new { Name = "Manager", Desc = "System monitoring", Tips = "Can view user lists and reports. Cannot modify user accounts or system settings." },
+                        new { Name = "PrivateUser", Desc = "Restricted privacy mode", Tips = "Can only access their own data. Completely invisible to other non-admin users." },
+                        new { Name = "NormalUser", Desc = "Standard level access", Tips = "Default access to dashboard, todo items, and PDF tools for their own data." }
+                    })
+                    {
+                        <label class="role-card">
+                            <input type="radio" asp-for="Role" value="@role.Name" checked="@(role.Name == "NormalUser" ? "checked" : null)" onchange="validateForm()" />
+                            <div class="role-card-content">
+                                <span class="role-info-trigger" data-tooltip="@role.Tips">ⓘ</span>
+                                <span class="role-name">@role.Name</span>
+                                <span class="role-description">@role.Desc</span>
+                            </div>
+                        </label>
+                    }
+                </div>
+                <span asp-validation-for="Role" class="text-danger small"></span>
             </div>
 
             <div style="margin-top: 1rem;">
-                <button type="submit" class="btn-auth-primary" id="btnSubmit" disabled style="opacity: 0.6; cursor: not-allowed;">Create User Profile</button>
+                <button type="submit" class="btn-auth-primary" id="btnSubmit" disabled style="opacity: 0.6; cursor: not-allowed;">Confirm & Create User</button>
                 <a asp-action="UserList" style="display: block; margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem; text-decoration: none; font-weight: 500;">
                     ← Back to User List
                 </a>
@@ -51,6 +78,46 @@
     </div>
 
 <script>
+    document.getElementById("createUserForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById("btnSubmit");
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = "Processing...";
+        btn.style.opacity = "0.7";
+
+        const formData = new FormData(this);
+        const errorDiv = document.getElementById("formErrorMessage");
+        errorDiv.style.display = "none";
+
+        try {
+            const response = await fetch('@Url.Action("CreateUser", "Todo")', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast("User account initiated. Redirecting...", "success");
+                setTimeout(() => {
+                    window.location.href = result.redirectUrl;
+                }, 1500);
+            } else {
+                showToast(result.message || "An error occurred.", "error");
+                btn.disabled = false;
+                btn.innerText = originalText;
+                btn.style.opacity = "1";
+            }
+        } catch (error) {
+            showToast("Connection error. Please try again.", "error");
+            btn.disabled = false;
+            btn.innerText = originalText;
+            btn.style.opacity = "1";
+        }
+    });
+
     function validateForm() {
         var name = document.getElementById("Name").value;
         var email = document.getElementById("Email").value;
@@ -58,10 +125,20 @@
         var confirm = document.getElementById("ConfirmPassword").value;
         var btn = document.getElementById("btnSubmit");
 
+        var roleRadios = document.getElementsByName("Role");
+        var roleSelected = false;
+        for (var i = 0; i < roleRadios.length; i++) {
+            if (roleRadios[i].checked) {
+                roleSelected = true;
+                break;
+            }
+        }
+
         var isValid = name.length > 0 && 
                       email.length > 0 && 
                       password.length >= 8 && 
-                      password === confirm;
+                      password === confirm &&
+                      roleSelected;
 
         if (isValid) {
             btn.disabled = false;

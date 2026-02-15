@@ -20,6 +20,6 @@ namespace TodoListApp.Models
         [Required]
         public string Priority { get; set; } = "Medium"; // Low, Medium, High
         
-        public int UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
     }
 }

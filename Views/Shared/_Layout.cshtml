@@ -16,7 +16,10 @@
                 <a asp-controller="Todo" asp-action="Dashboard" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" data-translate="true">Dashboard</a>
                 <a asp-controller="Todo" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "Todo" ? "active" : "")" data-translate="true">My Tasks</a>
                 <a asp-controller="TimeTracker" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "TimeTracker" ? "active" : "")" data-translate="true">Time Tracker</a>
-                <a asp-controller="Todo" asp-action="UserList" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "UserList" ? "active" : "")" data-translate="true">User List</a>
+                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Todo" asp-action="UserList" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "UserList" ? "active" : "")" data-translate="true">User List</a>
+                }
             </div>
             <div class="user-info">
                 <select id="googleLangSwitcher" class="form-select form-select-sm language-picker" style="display:inline-block; width:auto; margin: 0 10px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: inherit;">
@@ -39,11 +42,31 @@
         </div>
     }
 
+    <div class="toast-container" id="toastContainer"></div>
     <div class="main-content-wrapper">
         <main role="main">
             @RenderBody()
         </main>
     </div>
+    <script>
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <span class="toast-icon">${type === 'success' ? '✅' : '❌'}</span>
+                <span class="toast-message">${message}</span>
+            `;
+            container.appendChild(toast);
+            toast.offsetHeight;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+    </script>
     <script src="~/js/translation-system.js" asp-append-version="true"></script>
     <script src="~/js/theme-toggle.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

@@ -6,11 +6,11 @@ namespace TodoListApp.Services
 {
     public interface ITodoService
     {
-        IEnumerable<TodoItem> GetAll(int userId);
-        TodoItem? GetById(Guid id, int userId);
+        IEnumerable<TodoItem> GetAll(string userId);
+        TodoItem? GetById(Guid id, string userId);
         void Create(TodoItem item);
-        void Update(TodoItem item, int userId);
-        void Delete(Guid id, int userId);
-        void ToggleComplete(Guid id, int userId);
+        void Update(TodoItem item, string userId);
+        void Delete(Guid id, string userId);
+        void ToggleComplete(Guid id, string userId);
     }
 }

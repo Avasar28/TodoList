@@ -1,4 +1,4 @@
-@model TodoListApp.Models.User
+@model TodoListApp.Models.ApplicationUser
 
 @{
     ViewData["Title"] = "Edit User";
@@ -14,7 +14,6 @@
         <form asp-action="EditUser" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
-            <input type="hidden" asp-for="Password" /> <!-- Preserve password -->
 
             <div class="form-group">
                 <label asp-for="Name">Full Name</label>
