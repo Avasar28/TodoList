@@ -144,20 +144,37 @@ HolidayWidget.checkReminders = function () {
     if (this.reminders.length === 0) return;
 
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
+    // Round down to minutes for comparison
+    const currentMinutes = Math.floor(now.getTime() / 60000);
+
+    console.log(`Checking Reminders at ${now.toLocaleTimeString()} (CurrentMins: ${currentMinutes})`);
 
     this.reminders.forEach(r => {
         if (r.notified) return;
 
-        // Calculate reminder date
-        const holidayDate = new Date(r.holidayDate);
-        const notifyDate = new Date(holidayDate);
-        notifyDate.setDate(holidayDate.getDate() - r.reminderOffset);
+        // Migration for old reminders (if any exist without specific date/time)
+        if (!r.reminderDate || !r.reminderTime) {
+            // Default to 1 day before at 9:00 AM if migrating
+            const hDate = new Date(r.holidayDate);
+            hDate.setDate(hDate.getDate() - (r.reminderOffset || 1));
+            r.reminderDate = hDate.toISOString().split('T')[0];
+            r.reminderTime = "09:00";
+            delete r.reminderOffset;
+            this.saveReminders();
+        }
 
-        const notifyStr = notifyDate.toISOString().split('T')[0];
+        // Parse reminder datetime
+        const reminderDateTimeStr = `${r.reminderDate}T${r.reminderTime}`;
+        const reminderTime = new Date(reminderDateTimeStr);
+        const reminderMinutes = Math.floor(reminderTime.getTime() / 60000);
 
-        if (todayStr === notifyStr) {
-            this.showNotification(`Upcoming Holiday: ${r.holidayName}`, ` is in ${r.reminderOffset} day(s)!`);
+        console.log(`- Reminder for ${r.holidayName}: Target ${reminderDateTimeStr} (TargetMins: ${reminderMinutes}), Diff: ${currentMinutes - reminderMinutes}`);
+
+        if (currentMinutes >= reminderMinutes) {
+            // Only notify if it's within the last 24 hours to avoid spamming old missed reminders
+            // or just notify. Let's notify.
+            console.log(`  -> Triggering Notification!`);
+            this.showNotification(`Upcoming Holiday: ${r.holidayName}`, `Reminder set for ${r.reminderDate} ${r.reminderTime}`);
             r.notified = true;
             this.saveReminders();
         }
@@ -168,6 +185,8 @@ HolidayWidget.showNotification = async function (title, body) {
     const permission = await this.requestNotificationPermission();
     if (permission === 'granted') {
         new Notification(title, { body, icon: '/favicon.ico' });
+    } else {
+        console.warn("Notification permission not granted:", permission);
     }
 };
 
@@ -178,29 +197,48 @@ HolidayWidget.toggleReminder = function (name, date) {
         // Remove
         this.reminders.splice(existingIndex, 1);
     } else {
-        // Add
+        // Add new with default: 1 day before at 09:00 AM
+        const hDate = new Date(date);
+        hDate.setDate(hDate.getDate() - 1);
+
+        const defaultDate = hDate.toISOString().split('T')[0];
+        const defaultTime = "09:00";
+
+        console.log(`Adding reminder for ${name} on ${defaultDate} at ${defaultTime}`);
+
         this.reminders.push({
             holidayName: name,
             holidayDate: date,
-            reminderOffset: 1, // Default 1 day before
+            reminderDate: defaultDate,
+            reminderTime: defaultTime,
             notified: false
         });
         this.requestNotificationPermission();
     }
 
     this.saveReminders();
-    // Re-render to update UI (simplest way, though wasteful)
     if (this.holidaysData) {
-        this.renderHolidays(this.holidaysData); // Rerender to show bell status
+        this.renderHolidays(this.holidaysData); // Rerender to show/hide config
     }
 };
 
-HolidayWidget.setReminderOffset = function (name, date, offset) {
+HolidayWidget.updateReminderDate = function (name, date, newDate) {
     const reminder = this.reminders.find(r => r.holidayName === name && r.holidayDate === date);
     if (reminder) {
-        reminder.reminderOffset = parseInt(offset);
-        reminder.notified = false; // Reset notification status if changed
+        reminder.reminderDate = newDate;
+        reminder.notified = false; // Reset status so it can trigger again if moved to future
         this.saveReminders();
+        console.log(`Updated reminder date for ${name} to ${newDate}`);
+    }
+};
+
+HolidayWidget.updateReminderTime = function (name, date, newTime) {
+    const reminder = this.reminders.find(r => r.holidayName === name && r.holidayDate === date);
+    if (reminder) {
+        reminder.reminderTime = newTime;
+        reminder.notified = false;
+        this.saveReminders();
+        console.log(`Updated reminder time for ${name} to ${newTime}`);
     }
 };
 
@@ -405,9 +443,19 @@ HolidayWidget.renderHolidays = function (data) {
 
     // 4. Build HTML
     let html = `
-        <div class="holiday-results-header">
-            <h3>${this.selectedCountryName || data.countryCode} - ${data.year}</h3>
-            <span class="holiday-total-badge">${data.totalCount} Total Holidays</span>
+        <div class="holiday-results-header-modern">
+            <div class="header-content-modern">
+                <div class="header-titles">
+                    <h3>${this.selectedCountryName || data.countryCode}</h3>
+                    <span class="header-year">${data.year}</span>
+                </div>
+                <div class="header-badges">
+                    <span class="holiday-total-badge-modern">${data.totalCount} Holidays</span>
+                </div>
+            </div>
+             <button onclick="HolidayWidget.showNotification('Test Notification', 'This is a test to verify permissions.')" style="margin-top: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
+                🔔 Test Notification
+            </button>
         </div>
     `;
 
@@ -416,7 +464,7 @@ HolidayWidget.renderHolidays = function (data) {
         html += `
             <div class="upcoming-highlights-section">
                 <h4 class="section-divider-title">✨ Upcoming Highlights</h4>
-                <div class="month-holidays">
+                <div class="holiday-grid-modern">
                     ${upcomingHolidays.map(h => this.renderHolidayCard(h, true)).join('')}
                 </div>
             </div>
@@ -428,8 +476,8 @@ HolidayWidget.renderHolidays = function (data) {
     for (const month in monthGrouped) {
         html += `
             <div class="holiday-month-group">
-                <h4 class="month-name">${month}</h4>
-                <div class="month-holidays">
+                <h4 class="month-name-sticky">${month}</h4>
+                <div class="holiday-grid-modern">
                     ${monthGrouped[month].map(h => this.renderHolidayCard(h)).join('')}
                 </div>
             </div>
@@ -439,52 +487,141 @@ HolidayWidget.renderHolidays = function (data) {
     container.innerHTML = html;
 };
 
+// ... existing renderHolidayCard ...
+
+// Add explicit check triggers on update
+HolidayWidget.toggleReminder = function (name, date) {
+    const existingIndex = this.reminders.findIndex(r => r.holidayName === name && r.holidayDate === date);
+
+    if (existingIndex >= 0) {
+        // Remove
+        this.reminders.splice(existingIndex, 1);
+    } else {
+        // Add new with default: 1 day before at 09:00 AM
+        const hDate = new Date(date);
+        hDate.setDate(hDate.getDate() - 1);
+
+        const defaultDate = hDate.toISOString().split('T')[0];
+        const defaultTime = "09:00";
+
+        console.log(`Adding reminder for ${name} on ${defaultDate} at ${defaultTime}`);
+
+        this.reminders.push({
+            holidayName: name,
+            holidayDate: date,
+            reminderDate: defaultDate,
+            reminderTime: defaultTime,
+            notified: false
+        });
+        this.requestNotificationPermission();
+    }
+
+    this.saveReminders();
+    if (this.holidaysData) {
+        this.renderHolidays(this.holidaysData);
+    }
+
+    // Force check immediately to see if it should trigger now/soon
+    setTimeout(() => this.checkReminders(), 500);
+};
+
+
+HolidayWidget.updateReminderDate = function (name, date, newDate) {
+    const reminder = this.reminders.find(r => r.holidayName === name && r.holidayDate === date);
+    if (reminder) {
+        reminder.reminderDate = newDate;
+        reminder.notified = false;
+        this.saveReminders();
+        console.log(`Updated reminder date for ${name} to ${newDate}`);
+        setTimeout(() => this.checkReminders(), 500);
+    }
+};
+
+HolidayWidget.updateReminderTime = function (name, date, newTime) {
+    const reminder = this.reminders.find(r => r.holidayName === name && r.holidayDate === date);
+    if (reminder) {
+        reminder.reminderTime = newTime;
+        reminder.notified = false;
+        this.saveReminders();
+        console.log(`Updated reminder time for ${name} to ${newTime}`);
+        setTimeout(() => this.checkReminders(), 500);
+    }
+};
+
+// Fallback Init
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof HolidayWidget !== 'undefined' && !window.holidayWidgetInitialized) {
+        // HolidayWidget.init(); // Can cause double init if dashboard calls it too.
+        // Let's just log
+        console.log("HolidayWidget loaded.");
+    }
+});
+
+
 HolidayWidget.renderHolidayCard = function (h, isHighlight = false) {
     const dt = new Date(h.date);
     const day = dt.getDate();
-    const monthShort = dt.toLocaleString('default', { month: 'short' });
+    const monthShort = dt.toLocaleString('default', { month: 'short' }).toUpperCase();
     const reminder = this.reminders.find(r => r.holidayName === h.name && r.holidayDate === h.date);
     const isActive = !!reminder;
+    const isPast = h.category === 'past';
 
-    let cardClass = `holiday-item-card`;
+    let cardClass = `holiday-card-modern glass-panel`;
     if (isActive) cardClass += ' has-reminder';
     if (h.category === 'upcoming') cardClass += ' is-upcoming';
-    if (h.category === 'past') cardClass += ' is-past';
+    if (isPast) cardClass += ' is-past';
     if (isHighlight) cardClass += ' highlight-card';
 
     const badgeHtml = this.getHolidayBadge(h.daysUntil);
+    const cardStyle = isPast ? 'opacity: 0.6; filter: grayscale(0.8); pointer-events: none;' : '';
+    // We want to allow clicking to see tooltip if exists? No, tooltips are on calendar view. Not here. 
+    // But maybe we want to allow seeing it but not interacting? 
+    // pointer-events: none blocks everything. Maybe just opacity and hide buttons.
 
     return `
-        <div class="${cardClass}">
-            <div class="holiday-info">
-                <div class="h-name-row">
-                    <span class="holiday-name">${h.name}</span>
-                    <button class="reminder-toggle-btn ${isActive ? 'active' : ''}" 
-                            onclick="HolidayWidget.toggleReminder('${h.name.replace(/'/g, "\\'")}', '${h.date}')"
-                            title="${isActive ? 'Disable Reminder' : 'Set Reminder'}">
-                        ${isActive ? '🔔' : '🔕'}
-                    </button>
+        <div class="${cardClass}" style="${isPast ? 'opacity: 0.5; filter: grayscale(1);' : ''}">
+             <div class="h-card-left">
+                <div class="h-main-info">
+                    <span class="h-name">${h.name}</span>
+                    <span class="h-local-name">${h.localName || ''}</span>
                 </div>
-                <span class="holiday-local-name">${h.localName}</span>
-                
-                ${badgeHtml ? `<div class="holiday-timing-badge">${badgeHtml}</div>` : ''}
+                 <div class="h-meta-row">
+                    ${badgeHtml ? `<span class="h-status-badge">${badgeHtml}</span>` : ''}
+                    
+                    ${!isPast ? `
+                        <button class="reminder-icon-btn ${isActive ? 'active' : ''}" 
+                                onclick="HolidayWidget.toggleReminder('${h.name.replace(/'/g, "\\'")}', '${h.date}')"
+                                title="${isActive ? 'Disable Reminder' : 'Set Reminder'}">
+                            ${isActive ? '🔔' : '🔕'}
+                        </button>
+                    ` : `<span style="font-size:0.8rem; opacity:0.7;">Ended</span>`}
 
-                ${isActive ? `
-                    <div class="reminder-config">
-                        <label>Remind me:</label>
-                        <select onchange="HolidayWidget.setReminderOffset('${h.name.replace(/'/g, "\\'")}', '${h.date}', this.value)">
-                            <option value="1" ${reminder.reminderOffset === 1 ? 'selected' : ''}>1 day before</option>
-                            <option value="3" ${reminder.reminderOffset === 3 ? 'selected' : ''}>3 days before</option>
-                            <option value="7" ${reminder.reminderOffset === 7 ? 'selected' : ''}>1 week before</option>
-                        </select>
+                    ${isActive ? `<span class="reminder-active-text">Reminder Set</span>` : ''}
+                </div>
+                ${isActive && !isPast ? `
+                    <div class="reminder-config" style="margin-top: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                             <label style="font-size: 0.75rem; margin:0; opacity: 0.7;">Date:</label>
+                             <input type="date" value="${reminder.reminderDate}" 
+                                   onchange="HolidayWidget.updateReminderDate('${h.name.replace(/'/g, "\\'")}', '${h.date}', this.value)"
+                                   style="flex:1; margin-left:8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 4px; padding: 4px 6px; font-size: 0.85rem; font-family: inherit;">
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                             <label style="font-size: 0.75rem; margin:0; opacity: 0.7;">Time:</label>
+                             <input type="time" value="${reminder.reminderTime}" 
+                                   onchange="HolidayWidget.updateReminderTime('${h.name.replace(/'/g, "\\'")}', '${h.date}', this.value)"
+                                   style="flex:1; margin-left:8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 4px; padding: 4px 6px; font-size: 0.85rem; font-family: inherit;">
+                        </div>
                     </div>
                 ` : ''}
-            </div>
-            <div class="holiday-date-badge">
-                <span class="h-day">${day}</span>
-                <span class="h-month">${monthShort}</span>
-                <span class="h-dow">${h.dayOfWeek}</span>
-            </div>
+             </div>
+             
+             <div class="h-card-right">
+                <div class="date-block">
+                    <span class="db-month">${monthShort}</span>
+                    <span class="db-day">${day}</span>
+                </div>
+             </div>
         </div>
     `;
 };
