@@ -799,6 +799,160 @@ h1 {
   box-shadow: var(--shadow-hover);
 }
 
+/* --- PDF Tools Premium Redesign --- */
+
+/* 1. Page Container */
+.pdf-page-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 32px;
+  /* Super rounded */
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* 2. Header Stats Panel */
+.pdf-stat-panel {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  padding: 1.25rem;
+  border: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.pdf-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.stat-value {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* 3. Tool Grid Navigation */
+.pdf-tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.tool-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.tool-card:hover,
+.tool-card.active {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-color);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.3);
+}
+
+.tool-card.active {
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.15) 0%, rgba(var(--accent-rgb), 0.05) 100%);
+  box-shadow: 0 0 0 2px var(--accent-color);
+}
+
+.tool-icon-wrapper {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  font-size: 1.75rem;
+  color: var(--accent-color);
+  transition: transform 0.4s ease;
+}
+
+.tool-card:hover .tool-icon-wrapper {
+  transform: scale(1.1) rotate(5deg);
+  background: var(--accent-color);
+  color: var(--bg-base);
+  /* Contrast */
+}
+
+.tool-card.active .tool-icon-wrapper {
+  background: var(--accent-color);
+  color: var(--bg-base);
+}
+
+.tool-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.tool-desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* 4. Workspace Area */
+#pdf-workspace {
+  scroll-margin-top: 100px;
+  /* Offset for header/navbar */
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 24px;
+  padding: 2rem;
+  border: 1px dashed var(--glass-border);
+  transition: all 0.3s ease;
+}
+
+#pdf-workspace:hover {
+  background: rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Modern Switch Override */
+.form-check-input.premium-switch {
+  width: 3rem;
+  height: 1.5rem;
+  border-radius: 2rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+  transition: background-position .15s ease-in-out, background-color .3s;
+}
+
+.form-check-input.premium-switch:checked {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
 .todo-item.completed {
   opacity: 0.5;
   background: transparent;
@@ -9140,4 +9294,621 @@ input:checked+.slider:before {
 .result-message {
   color: var(--success-color);
   font-weight: 500;
+}/* --- Phase 9: Premium Polish --- */
+
+/* 1. Premium Drop Zone */
+.premium-drop-zone {
+    border: 2px dashed var(--glass-border);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 4rem 2rem;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.premium-drop-zone:hover,
+.premium-drop-zone.drag-over {
+    border-color: var(--accent-color);
+    background: rgba(var(--accent-rgb), 0.08);
+    transform: scale(1.01);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.2);
+}
+
+.premium-drop-zone i {
+    font-size: 3.5rem;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.premium-drop-zone:hover i,
+.premium-drop-zone.drag-over i {
+    color: var(--accent-color);
+    transform: scale(1.1) translateY(-5px);
+}
+
+.drop-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.drop-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+/* 2. Premium Buttons */
+.btn-premium-primary {
+    background: var(--accent-gradient);
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    color: var(--bg-base);
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(110, 203, 198, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-premium-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(110, 203, 198, 0.5);
+    color: var(--bg-base);
+}
+
+.btn-premium-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-premium-secondary {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-premium-secondary:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+}
+
+/* 3. Premium Progress Bar */
+.progress-premium-container {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 50px;
+    /* Pill shape */
+    height: 24px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--glass-border);
+}
+
+.progress-premium-bar {
+    height: 100%;
+    background: var(--accent-gradient);
+    border-radius: 50px;
+    width: 0%;
+    transition: width 0.4s ease;
+    box-shadow: 0 0 10px rgba(110, 203, 198, 0.5);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.progress-percent-text {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--bg-base);
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    z-index: 2;
+}
+/* --- Phase 10: Notification & History Polish --- */
+
+/* 1. Modern Toast Alerts */
+.toast-container-premium {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    pointer-events: none;
+}
+
+.toast-premium {
+    min-width: 320px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    color: var(--text-primary);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transform: translateX(120%);
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    pointer-events: auto;
+}
+
+.toast-premium.show {
+    transform: translateX(0);
+}
+
+.toast-premium.success {
+    border-left: 6px solid var(--success-color);
+}
+
+.toast-premium.error {
+    border-left: 6px solid var(--danger-color);
+}
+
+.toast-premium.info {
+    border-left: 6px solid var(--accent-color);
+}
+
+.toast-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.toast-premium.success .toast-icon {
+    background: rgba(52, 211, 153, 0.1);
+    color: var(--success-color);
+}
+
+.toast-premium.error .toast-icon {
+    background: rgba(248, 113, 113, 0.1);
+    color: var(--danger-color);
+}
+
+.toast-premium.info .toast-icon {
+    background: rgba(110, 203, 198, 0.1);
+    color: var(--accent-color);
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.2rem;
+}
+
+.toast-message {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* 2. Redesigned Modals */
+.modal-content-premium {
+    background: var(--neutral-surface);
+    backdrop-filter: blur(25px);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+}
+
+.modal-header-premium {
+    border-bottom: 1px solid var(--glass-border);
+    padding: 1.5rem 2rem;
+    text-align: center;
+}
+
+.modal-body-premium {
+    padding: 2.5rem 2rem;
+    text-align: center;
+}
+
+.modal-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    margin: 0 auto 1.5rem;
+}
+
+.modal-title-premium {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.modal-text-premium {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.modal-footer-premium {
+    border-top: 1px solid var(--glass-border);
+    padding: 1.5rem 2rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: stretch;
+}
+
+.btn-danger-premium {
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    border: none;
+    border-radius: 14px;
+    padding: 0.8rem 2rem;
+    color: white;
+    font-weight: 700;
+    flex: 1;
+    transition: all 0.3s ease;
+}
+
+.btn-danger-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+.btn-secondary-premium {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    padding: 0.8rem 2rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    flex: 1;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary-premium:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+/* 3. Card-based History Section */
+.history-grid-premium {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.history-card-premium {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 1.25rem 1.75rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 1.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.history-card-premium:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateX(8px);
+    border-color: var(--accent-color);
+}
+
+.history-card-premium::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    background: var(--accent-gradient);
+    border-radius: 0 4px 4px 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.history-card-premium:hover::before {
+    opacity: 1;
+}
+
+.history-icon-box {
+    width: 54px;
+    height: 54px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--accent-color);
+}
+
+.history-info-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.history-filename {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 400px;
+}
+
+.history-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.badge-tool-premium {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--bg-base);
+    background: var(--accent-gradient);
+    padding: 0.15rem 0.6rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.history-meta-item {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.history-actions-premium {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn-icon-premium {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-icon-premium:hover {
+    background: var(--accent-color);
+    color: var(--bg-base);
+    border-color: var(--accent-color);
+    transform: scale(1.1);
+}
+
+.btn-icon-premium.delete:hover {
+    background: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+/* History Empty State */
+.history-empty-state {
+    text-align: center;
+    padding: 5rem 2rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 2px dashed var(--glass-border);
+    border-radius: 24px;
+    margin-top: 1rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--text-secondary);
+    opacity: 0.3;
+    margin-bottom: 1.5rem;
+}
+
+.empty-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+/* --- Phase 11: Polish & Responsiveness --- */
+
+/* 1. Global Spacing & Typography Refinement */
+:root {
+    --section-gap: 3.5rem;
+    /* ~56px */
+    --element-gap: 2rem;
+    /* ~32px */
+}
+
+.pdf-page-container {
+    padding-top: var(--section-gap);
+    padding-bottom: var(--section-gap);
+}
+
+.pdf-tool-grid {
+    margin-bottom: var(--section-gap);
+    gap: 1.5rem;
+}
+
+#pdf-workspace {
+    margin-top: var(--section-gap);
+    padding: 2.5rem;
+}
+
+h1.display-5 {
+    font-weight: 800 !important;
+    letter-spacing: -0.03em;
+    font-family: 'Outfit', sans-serif;
+}
+
+h4,
+.tool-title,
+.modal-title-premium,
+.workspace-title {
+    font-weight: 700 !important;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* 2. Micro-Animations & Active States */
+
+/* Cards Hover Pop */
+.tool-card,
+.history-card-premium {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.tool-card:hover,
+.history-card-premium:hover {
+    transform: translateY(-8px) scale(1.02) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(110, 203, 198, 0.2) !important;
+}
+
+.tool-card.active {
+    border-color: var(--accent-color) !important;
+    box-shadow: 0 0 25px rgba(110, 203, 198, 0.3) !important;
+    background: rgba(110, 203, 198, 0.08) !important;
+}
+
+/* Button Press Animation */
+.btn-premium-primary:active,
+.btn-premium-secondary:active,
+.btn-danger-premium:active,
+.btn-secondary-premium:active,
+.btn-icon-premium:active {
+    transform: scale(0.95) translateY(0) !important;
+    transition: transform 0.1s ease !important;
+}
+
+/* Workspace Fade-In */
+@keyframes workspaceFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.workspace-animate {
+    animation: workspaceFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* 3. Responsive Optimization */
+
+@media (max-width: 991.98px) {
+    .pdf-tool-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767.98px) {
+    :root {
+        --section-gap: 2rem;
+    }
+
+    .pdf-page-container {
+        padding: 1.5rem 1rem;
+    }
+
+    .pdf-tool-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #pdf-workspace {
+        padding: 1.5rem;
+    }
+
+    .pdf-controls {
+        flex-direction: column;
+    }
+
+    .btn-premium-primary,
+    .btn-premium-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .history-card-premium {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .history-card-premium .d-flex {
+        justify-content: center;
+    }
+
+    .history-info-box {
+        align-items: center;
+    }
+
+    .history-meta-row {
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .history-actions-premium {
+        justify-content: center;
+        margin-top: 0.5rem;
+        border-top: 1px solid var(--glass-border);
+        padding-top: 1rem;
+    }
+
+    .history-filename {
+        max-width: 100%;
+    }
+}
+
+/* History Collapsible (Mobile) */
+.history-collapse-trigger {
+    display: none;
+    cursor: pointer;
+}
+
+@media (max-width: 767.98px) {
+    .history-collapse-trigger {
+        display: block;
+        margin-left: auto;
+    }
 }

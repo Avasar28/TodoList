@@ -48,7 +48,7 @@ namespace TodoListApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult ToggleFavorite([FromBody] string toolType)
+        public IActionResult ToggleFavorite(string toolType)
         {
             var userId = User.Identity?.Name ?? string.Empty;
             var user = _userService.GetAllUsers().FirstOrDefault(u => u.Email == userId);
@@ -69,7 +69,7 @@ namespace TodoListApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult ToggleAutoDelete([FromBody] bool enabled)
+        public IActionResult ToggleAutoDelete(bool enabled)
         {
             var userId = User.Identity?.Name ?? string.Empty;
             var user = _userService.GetAllUsers().FirstOrDefault(u => u.Email == userId);
@@ -167,8 +167,9 @@ namespace TodoListApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SplitPdf(IFormFile file, string pageRange, bool splitAll)
+        public async Task<IActionResult> SplitPdf(List<IFormFile> files, string pageRange, bool splitAll)
         {
+            var file = files?.FirstOrDefault();
             if (file == null)
                 return Json(new { success = false, message = "No file selected" });
 
@@ -193,18 +194,18 @@ namespace TodoListApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ImageToPdf(List<IFormFile> images)
+        public async Task<IActionResult> ImagesToPdf(List<IFormFile> files)
         {
-            if (images == null || images.Count == 0)
+            if (files == null || files.Count == 0)
                 return Json(new { success = false, message = "No images selected" });
 
-            long totalSize = images.Sum(f => f.Length);
+            long totalSize = files.Sum(f => f.Length);
             var (allowed, msg) = await CheckStorageLimit(totalSize);
             if (!allowed) return Json(new { success = false, message = msg });
 
             try
             {
-                var outputPath = await _pdfService.ImagesToPdfAsync(images);
+                var outputPath = await _pdfService.ImagesToPdfAsync(files);
 
                 return Json(new
                 {
@@ -220,8 +221,9 @@ namespace TodoListApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CompressPdf(IFormFile file, string compressionLevel)
+        public async Task<IActionResult> CompressPdf(List<IFormFile> files, string compressionLevel)
         {
+            var file = files?.FirstOrDefault();
             if (file == null)
                 return Json(new { success = false, message = "No file selected" });
 
