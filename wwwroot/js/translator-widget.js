@@ -7,6 +7,7 @@
  * - Copy/Speak Interaction
  */
 const TranslatorWidget = (function () {
+    console.log("TranslatorWidget: Script loaded and IIFE started.");
     const CONFIG = {
         API_ENDPOINT: '/api/Translation/batch',
         DEBOUNCE_MS: 1000
@@ -142,6 +143,7 @@ const TranslatorWidget = (function () {
     let targetWrapper, targetSearch, targetOptionsList, targetLabel, targetHidden;
 
     function init() {
+        console.log("TranslatorWidget: Loaded with " + languages.length + " languages.");
         sourceInput = document.getElementById('transSourceText');
         targetInput = document.getElementById('transTargetText');
         swapBtn = document.getElementById('transSwapBtn');
@@ -155,46 +157,113 @@ const TranslatorWidget = (function () {
         initDropdown('source', languages);
         initDropdown('target', languages.filter(l => l.code !== 'auto'));
 
+        // --- FALLBACK INITIALIZATION ---
+        initFallbackSelect('source', languages);
+        initFallbackSelect('target', languages.filter(l => l.code !== 'auto'));
+
         setupEventListeners();
+    }
+
+    function initFallbackSelect(type, langList) {
+        const select = document.getElementById(`${type}LangFallback`);
+        if (!select) return;
+
+        // Clear existing (except first if needed, but we'll rebuild)
+        select.innerHTML = '';
+
+        langList.forEach(l => {
+            const opt = document.createElement('option');
+            opt.value = l.code;
+            opt.textContent = `${l.name} (${l.native})`;
+            if (type === 'target' && l.code === 'en') opt.selected = true;
+            if (type === 'source' && l.code === 'auto') opt.selected = true;
+            select.appendChild(opt);
+        });
+
+        select.addEventListener('change', (e) => {
+            const val = e.target.value;
+            // Update State
+            if (type === 'source') {
+                state.sourceLang = val;
+                triggerTranslation();
+            } else {
+                state.targetLang = val;
+                triggerTranslation();
+            }
+            // Also update custom UI hidden input
+            document.getElementById(`trans${type.charAt(0).toUpperCase() + type.slice(1)}Lang`).value = val;
+        });
     }
 
     function initDropdown(type, langList) {
         const wrapper = document.getElementById(`${type}LangWrapper`);
         const searchInput = document.getElementById(`${type}Search`);
-        const optionsList = document.getElementById(`${type}OptionsList`);
-        const label = document.getElementById(`${type}LangLabel`);
-        const hiddenInput = document.getElementById(`trans${type.charAt(0).toUpperCase() + type.slice(1)}Lang`);
+        // Use NEW ID to ensure fresh binding
+        const optionsList = document.getElementById(`${type}OptionsListNew`);
 
-        if (!wrapper) return;
+        console.log(`Init Dropdown [${type}]: Wrapper=${!!wrapper}, List=${!!optionsList}, Items=${langList.length}`);
+
+        if (!wrapper) {
+            console.error(`Link Error: Wrapper for ${type} not found!`);
+            return;
+        }
 
         // Store references
         if (type === 'source') {
             sourceWrapper = wrapper;
             sourceSearch = searchInput;
             sourceOptionsList = optionsList;
-            sourceLabel = label;
-            sourceHidden = hiddenInput;
+            sourceLabel = document.getElementById(`${type}LangLabel`);
+            sourceHidden = document.getElementById(`trans${type.charAt(0).toUpperCase() + type.slice(1)}Lang`);
         } else {
             targetWrapper = wrapper;
             targetSearch = searchInput;
             targetOptionsList = optionsList;
-            targetLabel = label;
-            targetHidden = hiddenInput;
+            targetLabel = document.getElementById(`${type}LangLabel`);
+            targetHidden = document.getElementById(`trans${type.charAt(0).toUpperCase() + type.slice(1)}Lang`);
         }
 
         // Render Options
-        renderOptions(optionsList, langList, hiddenInput.value);
+        renderOptions(optionsList, langList, document.getElementById(`trans${type.charAt(0).toUpperCase() + type.slice(1)}Lang`).value);
 
         // Event: Toggle
-        wrapper.querySelector('.custom-select-trigger').addEventListener('click', (e) => {
-            closeAllDropdowns(wrapper); // Close others
-            wrapper.classList.toggle('open');
-            if (wrapper.classList.contains('open')) {
-                searchInput.focus();
-                searchInput.value = '';
-                filterOptions(optionsList, langList, ''); // Reset filter
-            }
-        });
+        const trigger = wrapper.querySelector('.custom-select-trigger');
+        const customOptions = wrapper.querySelector('.custom-options');
+
+        if (trigger) {
+            trigger.addEventListener('click', (e) => {
+                console.log(`Dropdown Clicked: ${type}`);
+
+                const wasOpen = wrapper.classList.contains('open');
+                closeAllDropdowns(wrapper); // Close others
+
+                if (!wasOpen) {
+                    wrapper.classList.add('open');
+                    // Force Styles
+                    if (customOptions) {
+                        customOptions.style.opacity = '1';
+                        customOptions.style.visibility = 'visible';
+                        customOptions.style.transform = 'translateY(0)';
+                        customOptions.style.display = 'block';
+                    }
+
+                    searchInput.focus();
+                    searchInput.value = '';
+                    filterOptions(optionsList, langList, ''); // Reset filter
+                } else {
+                    wrapper.classList.remove('open');
+                    // Reset Styles
+                    if (customOptions) {
+                        customOptions.style.opacity = '';
+                        customOptions.style.visibility = '';
+                        customOptions.style.transform = '';
+                        customOptions.style.display = '';
+                    }
+                }
+            });
+        } else {
+            console.error(`Link Error: Trigger for ${type} not found!`);
+        }
 
         // Event: Search
         searchInput.addEventListener('input', (e) => {
@@ -206,13 +275,34 @@ const TranslatorWidget = (function () {
             const option = e.target.closest('.custom-option');
             if (!option) return;
 
+            console.log("Option Clicked:", option.dataset.name);
+
             const value = option.dataset.value;
             const name = option.dataset.name;
 
             // Update UI
-            hiddenInput.value = value;
-            label.textContent = name;
+            // FIX: Re-select hidden input as local variable was removed
+            const hiddenInput = document.getElementById(`trans${type.charAt(0).toUpperCase() + type.slice(1)}Lang`);
+            if (hiddenInput) hiddenInput.value = value;
+
+            // Also update the FALLBACK select if it exists, to keep in sync
+            const fallbackSelect = document.getElementById(`${type}LangFallback`);
+            if (fallbackSelect) fallbackSelect.value = value;
+
+            // Update Label
+            const labelEl = type === 'source' ? document.getElementById('sourceLangLabel') : document.getElementById('targetLangLabel');
+            if (labelEl) labelEl.textContent = name;
+
+            // Close and Reset Styles
             wrapper.classList.remove('open');
+            closeAllDropdowns(wrapper); // Ensure cleanup
+
+            // Force reset of THIS wrapper's custom options specifically just in case
+            if (customOptions) {
+                customOptions.style.display = '';
+                customOptions.style.visibility = '';
+                customOptions.style.opacity = '';
+            }
 
             // Update selected class
             Array.from(optionsList.children).forEach(c => c.classList.remove('selected'));
@@ -231,13 +321,19 @@ const TranslatorWidget = (function () {
     }
 
     function renderOptions(container, list, selectedValue) {
-        container.innerHTML = list.map(l => `
+        if (!container) {
+            console.error("Render Error: Container is null");
+            return;
+        }
+        const html = list.map(l => `
             <div class="custom-option ${l.code === selectedValue ? 'selected' : ''}" 
                  data-value="${l.code}" 
                  data-name="${l.name}">
                  ${l.name} <span style="opacity:0.5; font-size:0.8em; margin-left:4px;">${l.native}</span>
             </div>
         `).join('');
+        container.innerHTML = html;
+        console.log(`Rendered Options: Length=${html.length}, First 50 chars=${html.substring(0, 50)}...`);
     }
 
     function filterOptions(container, list, query) {
@@ -258,7 +354,16 @@ const TranslatorWidget = (function () {
 
     function closeAllDropdowns(except = null) {
         document.querySelectorAll('.custom-select-wrapper').forEach(w => {
-            if (w !== except) w.classList.remove('open');
+            if (w !== except) {
+                w.classList.remove('open');
+                const customOptions = w.querySelector('.custom-options');
+                if (customOptions) {
+                    customOptions.style.opacity = '';
+                    customOptions.style.visibility = '';
+                    customOptions.style.transform = '';
+                    customOptions.style.display = '';
+                }
+            }
         });
     }
 
@@ -680,7 +785,8 @@ const TranslatorWidget = (function () {
     function setupConversationDropdown(side, langList) {
         const wrapper = document.getElementById(`convLang${side}Wrapper`);
         const searchInput = document.getElementById(`convSearch${side}`);
-        const optionsList = document.getElementById(`convOptionsList${side}`);
+        // Use NEW ID
+        const optionsList = document.getElementById(`convOptionsList${side}New`);
         const label = document.getElementById(`convLang${side}Label`);
         const hiddenInput = document.getElementById(`convLang${side}`);
 
@@ -690,15 +796,39 @@ const TranslatorWidget = (function () {
         renderOptions(optionsList, langList, hiddenInput.value);
 
         // Event: Toggle
-        wrapper.querySelector('.custom-select-trigger').addEventListener('click', (e) => {
-            closeAllDropdowns(wrapper); // Close others
-            wrapper.classList.toggle('open');
-            if (wrapper.classList.contains('open')) {
-                searchInput.focus();
-                searchInput.value = '';
-                filterOptions(optionsList, langList, ''); // Reset filter
-            }
-        });
+        const trigger = wrapper.querySelector('.custom-select-trigger');
+        const customOptions = wrapper.querySelector('.custom-options');
+
+        if (trigger) {
+            trigger.addEventListener('click', (e) => {
+                const wasOpen = wrapper.classList.contains('open');
+                closeAllDropdowns(wrapper); // Close others
+
+                if (!wasOpen) {
+                    wrapper.classList.add('open');
+                    // Force Styles
+                    if (customOptions) {
+                        customOptions.style.opacity = '1';
+                        customOptions.style.visibility = 'visible';
+                        customOptions.style.transform = 'translateY(0)';
+                        customOptions.style.display = 'block';
+                    }
+
+                    searchInput.focus();
+                    searchInput.value = '';
+                    filterOptions(optionsList, langList, ''); // Reset filter
+                } else {
+                    wrapper.classList.remove('open');
+                    // Reset Styles
+                    if (customOptions) {
+                        customOptions.style.opacity = '';
+                        customOptions.style.visibility = '';
+                        customOptions.style.transform = '';
+                        customOptions.style.display = '';
+                    }
+                }
+            });
+        }
 
         // Event: Search
         searchInput.addEventListener('input', (e) => {
@@ -716,7 +846,15 @@ const TranslatorWidget = (function () {
             // Update UI
             hiddenInput.value = value;
             label.textContent = name;
+
             wrapper.classList.remove('open');
+            closeAllDropdowns(wrapper); // Ensure cleanup
+            // Force reset of THIS wrapper
+            if (customOptions) {
+                customOptions.style.display = '';
+                customOptions.style.visibility = '';
+                customOptions.style.opacity = '';
+            }
 
             // Update selected class
             Array.from(optionsList.children).forEach(c => c.classList.remove('selected'));

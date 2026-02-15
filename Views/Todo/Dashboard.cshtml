@@ -904,7 +904,7 @@
                                     <div class="search-container">
                                         <input type="text" class="dropdown-search" placeholder="Search..." id="sourceSearch">
                                     </div>
-                                    <div class="options-list" id="sourceOptionsList"></div>
+                                    <div class="options-list" id="sourceOptionsListNew" style="max-height: 300px; overflow-y: auto; background: rgba(30, 41, 59, 0.95); min-height: 50px;"></div>
                                 </div>
                                 <input type="hidden" id="transSourceLang" value="auto">
                           </div>
@@ -938,7 +938,7 @@
                                     <div class="search-container">
                                         <input type="text" class="dropdown-search" placeholder="Search..." id="targetSearch">
                                     </div>
-                                    <div class="options-list" id="targetOptionsList"></div>
+                                    <div class="options-list" id="targetOptionsListNew" style="max-height: 300px; overflow-y: auto; background: rgba(30, 41, 59, 0.95); min-height: 50px;"></div>
                                 </div>
                                 <input type="hidden" id="transTargetLang" value="en">
                           </div>
@@ -980,7 +980,7 @@
                                 <div class="search-container">
                                     <input type="text" class="dropdown-search" placeholder="Search..." id="convSearchA">
                                 </div>
-                                <div class="options-list" id="convOptionsListA"></div>
+                                <div class="options-list" id="convOptionsListANew" style="max-height: 300px; overflow-y: auto; background: rgba(30, 41, 59, 0.95); min-height: 50px;"></div>
                             </div>
                             <input type="hidden" id="convLangA" value="en">
                         </div>
@@ -1013,7 +1013,7 @@
                                 <div class="search-container">
                                     <input type="text" class="dropdown-search" placeholder="Search..." id="convSearchB">
                                 </div>
-                                <div class="options-list" id="convOptionsListB"></div>
+                                <div class="options-list" id="convOptionsListBNew" style="max-height: 300px; overflow-y: auto; background: rgba(30, 41, 59, 0.95); min-height: 50px;"></div>
                             </div>
                             <input type="hidden" id="convLangB" value="es">
                         </div>
@@ -1081,7 +1081,7 @@
     <script src="~/js/habit-tracker.js"></script>
     <script src="~/js/emergency-widget.js"></script>
     <script src="~/js/holiday-widget.js" asp-append-version="true"></script> <!-- Updated to main widget file with reminder fixes -->
-    <script src="~/js/translator-widget.js"></script>
+    <script src="~/js/translator-widget.js" asp-append-version="true"></script>
     
     <script>
         // --- Widget Detail Management ---
@@ -2636,6 +2636,8 @@
             if (typeof HolidayWidget !== 'undefined') HolidayWidget.init();
             if (typeof HabitTracker !== 'undefined') window.habitTracker = new HabitTracker();
             if (typeof EmergencyWidget !== 'undefined') window.emergencyWidget = new EmergencyWidget();
+            
+            console.log("TranslatorWidget Type:", typeof TranslatorWidget);
             if (typeof TranslatorWidget !== 'undefined') TranslatorWidget.init();
 
             console.log("=== INITIALIZATION COMPLETE ===");
