@@ -12,5 +12,8 @@ namespace TodoListApp.Services
         Task<string> ImagesToPdfAsync(List<IFormFile> images);
         Task<string> CompressPdfAsync(IFormFile file, string compressionLevel);
         Task<List<PdfFileHistory>> GetHistoryAsync(string userId, bool isAdmin);
+        Task<PdfMetadata> GetPdfMetadataAsync(IFormFile file);
+        Task<long> GetUserStorageUsageAsync(string userId);
+        Task<bool> DeleteHistoryAsync(List<Guid> ids, string userId, bool isAdmin);
     }
 }

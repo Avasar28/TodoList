@@ -34,5 +34,9 @@ namespace TodoListApp.Models
         
         public List<string> FavoriteCities { get; set; } = new List<string>();
         public List<string> FavoriteCurrencyPairs { get; set; } = new List<string>(); // Format: "USD-EUR"
+        
+        // PDF Tools
+        public List<string> FavoritePdfTools { get; set; } = new List<string>();
+        public bool AutoDeletePdfEnabled { get; set; } = true;
     }
 }

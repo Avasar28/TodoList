@@ -229,5 +229,94 @@ namespace TodoListApp.Services
                 .OrderByDescending(h => h.CreatedAt)
                 .ToListAsync();
         }
+
+        public async Task<PdfMetadata> GetPdfMetadataAsync(IFormFile file)
+        {
+            ValidateFiles(new List<IFormFile> { file }, ".pdf");
+
+            var metadata = new PdfMetadata
+            {
+                FileSize = file.Length,
+                PageCount = 0,
+                IsEncrypted = false,
+                Version = "Unknown",
+                Dimensions = "Unknown"
+            };
+
+            try
+            {
+                using var stream = file.OpenReadStream();
+                // Try open import first to read without modifying
+                using var document = PdfReader.Open(stream, PdfDocumentOpenMode.Import);
+                metadata.PageCount = document.PageCount;
+                metadata.Version = (document.Version / 10.0).ToString("F1");
+                
+                if (document.PageCount > 0)
+                {
+                    var page = document.Pages[0];
+                    metadata.Dimensions = $"{page.Width.Point:F0}x{page.Height.Point:F0} pt";
+                }
+            }
+            catch (PdfReaderException)
+            {
+                // Likely password protected if valid PDF structure but can't be opened
+                metadata.IsEncrypted = true;
+            }
+            catch(Exception)
+            {
+                // General error or invalid file, just return basic info
+            }
+
+            return await Task.FromResult(metadata);
+        }
+
+        public async Task<long> GetUserStorageUsageAsync(string userId)
+        {
+            if (string.IsNullOrEmpty(userId)) return 0;
+
+            return await _context.PdfFiles
+                .Where(h => h.UserId == userId)
+                .SumAsync(h => h.FileSize);
+        }
+
+        public async Task<bool> DeleteHistoryAsync(List<Guid> ids, string userId, bool isAdmin)
+        {
+            if (ids == null || !ids.Any()) return false;
+
+            var query = _context.PdfFiles.AsQueryable();
+
+            if (!isAdmin)
+            {
+                query = query.Where(f => f.UserId == userId);
+            }
+
+            var recordsToDelete = await query.Where(f => ids.Contains(f.Id)).ToListAsync();
+
+            if (!recordsToDelete.Any()) return false;
+
+            foreach (var record in recordsToDelete)
+            {
+                if (!string.IsNullOrEmpty(record.StoredFilePath))
+                {
+                    var filePath = Path.Combine(_env.WebRootPath, record.StoredFilePath.TrimStart('/').Replace('/', '\\'));
+                    if (File.Exists(filePath))
+                    {
+                        try
+                        {
+                            File.Delete(filePath);
+                        }
+                        catch
+                        {
+                            // ignore
+                        }
+                    }
+                }
+                
+                _context.PdfFiles.Remove(record);
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

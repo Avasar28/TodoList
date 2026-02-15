@@ -10,10 +10,12 @@ namespace TodoListApp.Controllers
     public class PdfToolsController : Controller
     {
         private readonly IPdfService _pdfService;
+        private readonly IUserService _userService;
 
-        public PdfToolsController(IPdfService pdfService)
+        public PdfToolsController(IPdfService pdfService, IUserService userService)
         {
             _pdfService = pdfService;
+            _userService = userService;
         }
 
         public async Task<IActionResult> Index()
@@ -22,9 +24,119 @@ namespace TodoListApp.Controllers
             var isAdmin = User.HasClaim(c => c.Type == "IsAdmin" && c.Value == "True") || User.IsInRole("Admin");
 
             var history = await _pdfService.GetHistoryAsync(userId, isAdmin);
+            
+            // Storage Usage
+            long usage = await _pdfService.GetUserStorageUsageAsync(userId);
+            ViewBag.StorageUsage = usage;
+            ViewBag.StorageLimit = 500 * 1024 * 1024; // 500 MB
             ViewBag.IsAdmin = isAdmin;
+
+            // Get User Preferences
+            var user = _userService.GetAllUsers().FirstOrDefault(u => u.Email == userId);
+            if (user != null)
+            {
+                 ViewBag.Favorites = user.Preferences.FavoritePdfTools;
+                 ViewBag.AutoDeleteEnabled = user.Preferences.AutoDeletePdfEnabled;
+            }
+            else
+            {
+                 ViewBag.Favorites = new List<string>();
+                 ViewBag.AutoDeleteEnabled = false;
+            }
             
             return View(history);
+        }
+
+        [HttpPost]
+        public IActionResult ToggleFavorite([FromBody] string toolType)
+        {
+            var userId = User.Identity?.Name ?? string.Empty;
+            var user = _userService.GetAllUsers().FirstOrDefault(u => u.Email == userId);
+            
+            if (user == null) return Json(new { success = false });
+
+            if (user.Preferences.FavoritePdfTools.Contains(toolType))
+            {
+                user.Preferences.FavoritePdfTools.Remove(toolType);
+            }
+            else
+            {
+                user.Preferences.FavoritePdfTools.Add(toolType);
+            }
+
+            _userService.UpdatePreferences(user.Id, user.Preferences);
+            return Json(new { success = true, favorites = user.Preferences.FavoritePdfTools });
+        }
+
+        [HttpPost]
+        public IActionResult ToggleAutoDelete([FromBody] bool enabled)
+        {
+            var userId = User.Identity?.Name ?? string.Empty;
+            var user = _userService.GetAllUsers().FirstOrDefault(u => u.Email == userId);
+            
+            if (user == null) return Json(new { success = false });
+
+            user.Preferences.AutoDeletePdfEnabled = enabled;
+            _userService.UpdatePreferences(user.Id, user.Preferences);
+            
+            return Json(new { success = true, enabled = user.Preferences.AutoDeletePdfEnabled });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteHistory([FromBody] List<Guid> ids)
+        {
+            var userId = User.Identity?.Name ?? string.Empty;
+            var isAdmin = User.HasClaim(c => c.Type == "IsAdmin" && c.Value == "True") || User.IsInRole("Admin");
+
+            var result = await _pdfService.DeleteHistoryAsync(ids, userId, isAdmin);
+            
+            return Json(new { success = result, message = result ? "Files deleted successfully" : "Failed to delete files" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AnalyzePdf(IFormFile file)
+        {
+            if (file == null) return Json(new { success = false, message = "No file selected" });
+
+            try
+            {
+                var metadata = await _pdfService.GetPdfMetadataAsync(file);
+                return Json(new { success = true, metadata });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult DownloadFile(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !path.StartsWith("/converted/"))
+                return BadRequest("Invalid file path");
+
+            // Normalize path for security (prevent directory traversal)
+            var fileName = Path.GetFileName(path); 
+            var physicalPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "converted", fileName);
+
+            if (!System.IO.File.Exists(physicalPath))
+                return NotFound();
+
+            var stream = new FileStream(physicalPath, FileMode.Open, FileAccess.Read);
+            return File(stream, "application/pdf", fileName); 
+        }
+
+        private async Task<(bool allowed, string message)> CheckStorageLimit(long incomingSize)
+        {
+             var userId = User.Identity?.Name ?? string.Empty;
+             long usage = await _pdfService.GetUserStorageUsageAsync(userId);
+             long limit = 500 * 1024 * 1024;
+
+             if (usage + incomingSize > limit)
+             {
+                 return (false, "Storage limit (500MB) exceeded. Please remove some files.");
+             }
+             return (true, string.Empty);
         }
 
         [HttpPost]
@@ -32,6 +144,10 @@ namespace TodoListApp.Controllers
         {
             if (files == null || files.Count == 0)
                 return Json(new { success = false, message = "No files selected" });
+
+            long totalSize = files.Sum(f => f.Length);
+            var (allowed, msg) = await CheckStorageLimit(totalSize);
+            if (!allowed) return Json(new { success = false, message = msg });
 
             try
             {
@@ -56,6 +172,9 @@ namespace TodoListApp.Controllers
             if (file == null)
                 return Json(new { success = false, message = "No file selected" });
 
+            var (allowed, msg) = await CheckStorageLimit(file.Length);
+            if (!allowed) return Json(new { success = false, message = msg });
+
             try
             {
                 var outputPath = await _pdfService.SplitPdfAsync(file, pageRange, splitAll);
@@ -79,6 +198,10 @@ namespace TodoListApp.Controllers
             if (images == null || images.Count == 0)
                 return Json(new { success = false, message = "No images selected" });
 
+            long totalSize = images.Sum(f => f.Length);
+            var (allowed, msg) = await CheckStorageLimit(totalSize);
+            if (!allowed) return Json(new { success = false, message = msg });
+
             try
             {
                 var outputPath = await _pdfService.ImagesToPdfAsync(images);
@@ -101,6 +224,10 @@ namespace TodoListApp.Controllers
         {
             if (file == null)
                 return Json(new { success = false, message = "No file selected" });
+
+            // Compress might reduce size, but initial upload counts
+            var (allowed, msg) = await CheckStorageLimit(file.Length);
+            if (!allowed) return Json(new { success = false, message = msg });
 
             try
             {

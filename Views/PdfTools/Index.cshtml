@@ -4,31 +4,146 @@
 }
 
 <div class="container mt-5">
+    <style>
+        .pdf-tool-container {
+            border-radius: 12px;
+            /* background: var(--glass-bg); -- handled in site.css or inline */
+        }
+        .pdf-tab-btn {
+            transition: all 0.3s ease;
+        }
+        .pdf-tab-btn:hover {
+            transform: translateY(-2px);
+        }
+        .drop-zone {
+            transition: all 0.3s ease;
+            border: 2px dashed var(--glass-border);
+        }
+        .drop-zone.drag-over {
+            border-color: var(--accent-color);
+            background: rgba(var(--accent-rgb), 0.1);
+            transform: scale(1.02);
+        }
+        
+        /* Checkmark Animation */
+        .checkmark-circle {
+            width: 30px;
+            height: 30px;
+            position: relative;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .checkmark.draw:after {
+            animation-duration: 800ms;
+            animation-timing-function: ease;
+            animation-name: checkmark;
+            transform: scaleX(-1) rotate(135deg);
+        }
+        .checkmark:after {
+            opacity: 1;
+            height: 15px;
+            width: 7.5px;
+            transform-origin: left top;
+            border-right: 2px solid #5cb85c;
+            border-top: 2px solid #5cb85c;
+            content: '';
+            left: 5px;
+            top: 15px;
+            position: absolute;
+        }
+        @@keyframes checkmark {
+            0% {
+                height: 0;
+                width: 0;
+                opacity: 1;
+            }
+            20% {
+                height: 0;
+                width: 7.5px;
+                opacity: 1;
+            }
+            40% {
+                height: 15px;
+                width: 7.5px;
+                opacity: 1;
+            }
+            100% {
+                height: 15px;
+                width: 7.5px;
+                opacity: 1;
+            }
+        }
+    </style>
+
     <div class="pdf-tool-container">
         
-        <div class="text-center mb-4">
-            <h2 class="display-6 fw-bold" style="color: var(--text-primary);">
-                <i class="fas fa-file-pdf me-2" style="color: var(--accent-color);"></i>
-                PDF Tools
-            </h2>
-            <p style="color: var(--text-secondary);">Manage your documents securely and efficiently.</p>
+        <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h1 class="display-4 mb-0" style="font-weight: 700; letter-spacing: -1px; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                <i class="fas fa-file-pdf me-3" style="color: var(--accent-color); filter: drop-shadow(0 0 10px var(--accent-color));"></i>PDF Tools
+            </h1>
+            <p class="text-muted lead ms-1 mt-2">Merge, Split, Convert & Compress</p>
         </div>
+        <div class="col-md-6">
+            <!-- Storage & Settings -->
+            <div class="card bg-dark border-secondary shadow-sm" style="background: var(--glass-bg) !important; border: 1px solid var(--glass-border);">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted small">Storage Usage</span>
+                        <span class="text-white small">@((ViewBag.StorageUsage / 1024.0 / 1024.0).ToString("F2")) / @((ViewBag.StorageLimit / 1024.0 / 1024.0).ToString("F0")) MB</span>
+                    </div>
+                    <div class="progress mb-2" style="height: 6px; background-color: rgba(255,255,255,0.1);">
+                        @{
+                            var percent = (long)ViewBag.StorageUsage * 100.0 / (long)ViewBag.StorageLimit;
+                            var color = percent > 90 ? "bg-danger" : (percent > 70 ? "bg-warning" : "bg-success");
+                        }
+                        <div class="progress-bar @color" role="progressbar" style="width: @percent%; box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.5);" aria-valuenow="@percent" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top border-secondary" style="border-color: rgba(255,255,255,0.1) !important;">
+                        <span class="text-white-50 small"><i class="fas fa-trash-alt me-1"></i>Auto-delete > 30 days</span>
+                        <div class="form-check form-switch m-0">
+                            <input class="form-check-input" type="checkbox" id="autoDeleteToggle" @(ViewBag.AutoDeleteEnabled == true ? "checked" : "") onchange="toggleAutoDelete(this)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
         <!-- Tool Tabs -->
-        <div class="pdf-tabs">
-            <button class="pdf-tab-btn active" onclick="switchTab('merge')">
-                <i class="fas fa-layer-group me-2"></i>Merge
-            </button>
-            <button class="pdf-tab-btn" onclick="switchTab('split')">
-                <i class="fas fa-cut me-2"></i>Split
-            </button>
-            <button class="pdf-tab-btn" onclick="switchTab('images')">
-                <i class="fas fa-images me-2"></i>Images to PDF
-            </button>
-            <button class="pdf-tab-btn" onclick="switchTab('compress')">
-                <i class="fas fa-compress-arrows-alt me-2"></i>Compress
-            </button>
+        <div class="pdf-tabs" id="tool-tabs">
+            @{
+                var favorites = ViewBag.Favorites as List<string> ?? new List<string>();
+                var tools = new[] 
+                { 
+                    new { id = "merge", icon = "fa-layer-group", label = "Merge" },
+                    new { id = "split", icon = "fa-cut", label = "Split" },
+                    new { id = "images", icon = "fa-images", label = "Images to PDF" },
+                    new { id = "compress", icon = "fa-compress-arrows-alt", label = "Compress" }
+                };
+                
+                // Sort favorites first
+                var sortedTools = tools.OrderByDescending(t => favorites.Contains(t.id)).ToList();
+            }
+
+            @foreach (var tool in sortedTools)
+            {
+                var isFav = favorites.Contains(tool.id);
+                <div class="position-relative d-inline-block">
+                    <button class="pdf-tab-btn @(tool.id == "merge" ? "active" : "")" onclick="switchTab('@tool.id')" data-tool="@tool.id">
+                        <i class="fas @tool.icon me-2"></i>@tool.label
+                    </button>
+                    <i class="fas fa-star position-absolute top-0 end-0 mt-1 me-1 star-icon @(isFav ? "text-warning" : "text-muted opacity-25")" 
+                       style="cursor: pointer; font-size: 0.7rem; z-index: 10;" 
+                       onclick="toggleFavorite('@tool.id', this); event.stopPropagation();"></i>
+                </div>
+            }
         </div>
+<!-- ... input area ... -->
+
+<!-- ... table body ... -->
+
 
         <!-- Input Area -->
         <div id="drop-zone" class="drop-zone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('fileInput').click()">
@@ -71,12 +186,98 @@
             </button>
         </div>
 
+        <!-- Info Panel -->
+        <div id="info-panel" class="mb-4 p-3 rounded d-none" style="background: var(--glass-bg); border: 1px solid var(--glass-border);">
+            <h5 class="mb-3" style="color: var(--accent-color);"><i class="fas fa-info-circle me-2"></i>File Analysis</h5>
+            <div class="row g-3" id="info-content">
+                <!-- Populated via JS -->
+            </div>
+        </div>
+
+        <!-- Progress Container -->
+        <div id="progress-container" class="mt-4 d-none">
+            <div class="d-flex justify-content-between mb-1">
+                <span id="progress-label" class="text-white small">Uploading...</span>
+                <span id="progress-percent" class="text-white small">0%</span>
+            </div>
+            <div class="progress" style="height: 6px; background-color: rgba(255,255,255,0.1);">
+                <div id="progress-bar" class="progress-bar bg-accent" role="progressbar" style="width: 0%; box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.5);"></div>
+            </div>
+        </div>
+
         <!-- Result -->
         <div id="result-section" class="result-section">
-            <span id="result-message" class="result-message">Success! File ready.</span>
-            <a id="download-link" href="#" class="btn btn-sm btn-light" download>
-                <i class="fas fa-download me-2"></i>Download
-            </a>
+            <div class="d-flex align-items-center mb-2">
+                <div class="checkmark-circle me-2">
+                    <div class="checkmark draw"></div>
+                </div>
+                <span id="result-message" class="result-message">Success! File ready.</span>
+            </div>
+            <div class="mt-3">
+                <button id="preview-btn" class="btn btn-sm btn-outline-info me-2">
+                    <i class="fas fa-eye me-2"></i>Preview
+                </button>
+                <a id="download-link" href="#" class="btn btn-sm btn-light" download>
+                    <i class="fas fa-download me-2"></i>Download
+                </a>
+            </div>
+        </div>
+
+        <!-- Toasts -->
+        <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+            <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" style="background: var(--bg-secondary); border: 1px solid var(--glass-border); color: var(--text-primary);">
+                <div class="toast-header border-0" style="background: rgba(255,255,255,0.05); color: var(--text-primary);">
+                    <i class="fas fa-info-circle me-2" id="toast-icon"></i>
+                    <strong class="me-auto" id="toast-title">Notification</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body" id="toast-message">
+                    Hello, world! This is a toast message.
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Modal -->
+        <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+            <!-- ... existing preview modal ... -->
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="background: var(--bg-secondary); border: 1px solid var(--glass-border); color: var(--text-primary);">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title">Confirm Deletion</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete the selected files? This action cannot be undone.
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" onclick="executeBulkDelete()">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="background: var(--bg-secondary); border: 1px solid var(--glass-border); color: var(--text-primary);">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title">Confirm Deletion</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete the selected files? This action cannot be undone.
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" onclick="executeBulkDelete()">Delete</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- History Section -->
@@ -86,6 +287,9 @@
                     <i class="fas fa-history me-2" style="color: var(--accent-color);"></i>
                     My PDF History @(ViewBag.IsAdmin == true ? "(All Users)" : "")
                 </h4>
+                <button id="bulkDeleteBtn" class="btn btn-sm btn-outline-danger d-none" onclick="confirmBulkDelete()">
+                    <i class="fas fa-trash-alt me-2"></i>Delete Selected
+                </button>
             </div>
 
             @if (Model != null && Model.Any())
@@ -94,6 +298,9 @@
                     <table class="table table-hover" style="background: transparent; vertical-align: middle; --bs-table-hover-bg: rgba(255,255,255,0.05); --bs-table-color: var(--text-primary);">
                         <thead>
                             <tr style="color: var(--text-secondary); border-bottom: 1px solid var(--glass-border);">
+                                <th style="width: 40px;">
+                                    <input type="checkbox" class="form-check-input" id="selectAllHistory" onclick="toggleSelectAll(this)">
+                                </th>
                                 <th>Date</th>
                                 @if (ViewBag.IsAdmin == true)
                                 {
@@ -109,6 +316,9 @@
                             @foreach (var item in Model)
                             {
                                 <tr style="border-bottom: 1px solid var(--glass-border);">
+                                    <td>
+                                        <input type="checkbox" class="form-check-input history-checkbox" value="@item.Id" onclick="updateBulkDeleteState()">
+                                    </td>
                                     <td>@item.CreatedAt.ToLocalTime().ToString("g")</td>
                                     @if (ViewBag.IsAdmin == true)
                                     {
@@ -120,6 +330,9 @@
                                     </td>
                                     <td>@((item.FileSize / 1024.0 / 1024.0).ToString("F2")) MB</td>
                                     <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-info me-1" onclick="reprocessFile('@item.StoredFilePath', '@item.ToolType')" title="Use Again">
+                                            <i class="fas fa-redo"></i>
+                                        </button>
                                         <a href="@item.StoredFilePath" class="btn btn-sm btn-outline-light" download>
                                             <i class="fas fa-download"></i>
                                         </a>
@@ -139,181 +352,421 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-<script>
-    let currentTab = 'merge';
-    let selectedFiles = [];
-
-    // --- Tab Switching ---
-    function switchTab(tab) {
-        currentTab = tab;
-        document.querySelectorAll('.pdf-tab-btn').forEach(btn => btn.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-
-        // Show/Hide Options
-        document.getElementById('split-options').style.display = tab === 'split' ? 'block' : 'none';
-        document.getElementById('compress-options').style.display = tab === 'compress' ? 'block' : 'none';
-
-        // Reset
-        clearFiles();
-        document.getElementById('result-section').style.display = 'none';
-
-        // Update Input Attribute
-        const fileInput = document.getElementById('fileInput');
-        if (tab === 'images') {
-            fileInput.accept = '.jpg,.jpeg,.png';
-            fileInput.multiple = true;
-        } else if (tab === 'merge') {
-            fileInput.accept = '.pdf';
-            fileInput.multiple = true;
-        } else {
-            fileInput.accept = '.pdf';
-            fileInput.multiple = false; // Split/Compress usually single file
-        }
-    }
-
-    // --- Drag & Drop ---
-    function handleDragOver(e) {
-        e.preventDefault();
-        document.getElementById('drop-zone').classList.add('drag-over');
-    }
-
-    function handleDragLeave(e) {
-        document.getElementById('drop-zone').classList.remove('drag-over');
-    }
-
-    function handleDrop(e) {
-        e.preventDefault();
-        document.getElementById('drop-zone').classList.remove('drag-over');
-        handleFiles(e.dataTransfer.files);
-    }
-
-    function handleFileSelect(e) {
-        handleFiles(e.target.files);
-    }
-
-    function handleFiles(files) {
-        if (currentTab === 'split' || currentTab === 'compress') {
-            selectedFiles = [files[0]]; // Single file only
-        } else {
-            selectedFiles = [...selectedFiles, ...Array.from(files)];
-        }
-        renderFileList();
-    }
-
-    // --- Rendering ---
-    function renderFileList() {
-        const list = document.getElementById('file-list');
-        list.innerHTML = '';
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <script>
+        // --- DOM Elements ---
+        const fileList = document.getElementById('file-list');
+        const infoPanel = document.getElementById('info-panel');
+        const infoContent = document.getElementById('info-content');
+        const actionBtn = document.getElementById('processBtn');
+        const loadingSpinner = document.getElementById('spinner');
+        const resultSection = document.getElementById('result-section');
+        const resultMessage = document.getElementById('result-message');
+        const previewBtn = document.getElementById('preview-btn');
+        // Initialize Bootstrap components
+        const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+        const previewFrame = document.getElementById('preview-frame');
         
-        selectedFiles.forEach((file, index) => {
-            if(!file) return;
-            const li = document.createElement('li');
-            li.className = 'file-item';
-            
-            // Icon based on type
-            const iconClass = file.type.includes('image') ? 'fa-file-image' : 'fa-file-pdf';
-            
-            li.innerHTML = `
-                <div class="file-info">
-                    <i class="fas ${iconClass} file-icon" style="color: var(--accent-color);"></i>
-                    <span style="color: var(--text-primary);">${file.name}</span>
-                    <span style="color: var(--text-secondary); font-size: 0.8rem;">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                </div>
-                <button class="remove-btn" onclick="removeFile(${index})">
-                    <i class="fas fa-trash"></i>
-                </button>
-            `;
-            list.appendChild(li);
-        });
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
 
-        // Init Sortable if Merge/Images
-        if (currentTab === 'merge' || currentTab === 'images') {
-            new Sortable(list, {
-                animation: 150,
-                onEnd: function (evt) {
-                    const item = selectedFiles.splice(evt.oldIndex, 1)[0];
-                    selectedFiles.splice(evt.newIndex, 0, item);
-                }
-            });
-        }
-    }
+        // --- State ---
+        let currentTab = 'merge';
+        let selectedFiles = [];
+        let currentDownloadUrl = "";
 
-    function removeFile(index) {
-        selectedFiles.splice(index, 1);
-        renderFileList();
-    }
+        // --- Tab Switching ---
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.pdf-tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
 
-    function clearFiles() {
-        selectedFiles = [];
-        renderFileList();
-        document.getElementById('result-section').style.display = 'none';
-    }
+            // Show/Hide Options
+            document.getElementById('split-options').style.display = tab === 'split' ? 'block' : 'none';
+            document.getElementById('compress-options').style.display = tab === 'compress' ? 'block' : 'none';
 
-    // --- Processing ---
-    async function processFiles() {
-        if (selectedFiles.length === 0) {
-            alert("Please select files first.");
-            return;
-        }
+            // Reset
+            clearFiles();
 
-        const btn = document.getElementById('processBtn');
-        const spinner = document.getElementById('spinner');
-        
-        btn.disabled = true;
-        spinner.style.display = 'block';
-
-        const formData = new FormData();
-        selectedFiles.forEach(file => {
-            // For Merge/Images, name needs to be 'files' or 'images' depending on endpoint
-            // But controller usually binds List<IFormFile> files or similar.
-            // Let's check controller. MergePdf(List<IFormFile> files), SplitPdf(IFormFile file), ImagesToPdf(List<IFormFile> images), CompressPdf(IFormFile file)
-            
-            if (currentTab === 'images') formData.append('images', file);
-            else if (currentTab === 'split' || currentTab === 'compress') formData.append('file', file);
-            else formData.append('files', file); 
-        });
-
-        // Add options
-        if (currentTab === 'split') {
-            formData.append('pageRange', document.getElementById('pageRange').value);
-            formData.append('splitAll', document.getElementById('splitAll').checked);
-        }
-        if (currentTab === 'compress') {
-            formData.append('compressionLevel', document.getElementById('compressionLevel').value);
-        }
-
-        // Determine URL
-        let url = '';
-        if (currentTab === 'merge') url = '/PdfTools/MergePdf';
-        else if (currentTab === 'split') url = '/PdfTools/SplitPdf';
-        else if (currentTab === 'images') url = '/PdfTools/ImageToPdf';
-        else if (currentTab === 'compress') url = '/PdfTools/CompressPdf';
-
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                body: formData
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                const resultSection = document.getElementById('result-section');
-                const downloadLink = document.getElementById('download-link');
-                
-                resultSection.style.display = 'flex';
-                downloadLink.href = result.fileUrl;
-                // If it's a browser openable file, maybe add target_blank, but download attr handles it usually.
+            // Update Input Attribute
+            const fileInput = document.getElementById('fileInput');
+            if (tab === 'images') {
+                fileInput.accept = '.jpg,.jpeg,.png';
+                fileInput.multiple = true;
+            } else if (tab === 'merge') {
+                fileInput.accept = '.pdf';
+                fileInput.multiple = true;
             } else {
-                alert("Error: " + result.message);
+                fileInput.accept = '.pdf';
+                fileInput.multiple = false;
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert("An unexpected error occurred.");
-        } finally {
-            btn.disabled = false;
-            spinner.style.display = 'none';
         }
-    }
-</script>
+
+        // --- Drag & Drop ---
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('drop-zone').classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            document.getElementById('drop-zone').classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('drop-zone').classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        }
+
+        function handleFileSelect(e) {
+            handleFiles(e.target.files);
+            e.target.value = ''; // Reset input
+        }
+
+        function handleFiles(files) {
+            if (!files || files.length === 0) return;
+
+            // If simple upload (Merge/Compress), analyze first file
+            if (files.length > 0 && files[0].type === "application/pdf") {
+                analyzeFile(files[0]);
+            }
+
+            const newFiles = Array.from(files).filter(file => {
+                 if (currentTab === 'images' && !file.type.match('image.*')) {
+                     alert("Only Image files are allowed for this tool!");
+                     return false;
+                 }
+                 if (currentTab !== 'images' && file.type !== 'application/pdf') {
+                     alert("Only PDF files are allowed!");
+                     return false;
+                 }
+                 return true;
+            });
+
+            if (currentTab === 'split' || currentTab === 'compress') {
+                selectedFiles = [newFiles[0]]; // Single file only
+            } else {
+                selectedFiles = [...selectedFiles, ...newFiles];
+            }
+            renderFileList();
+        }
+
+        async function analyzeFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                infoPanel.classList.add('d-none');
+                const response = await fetch('/PdfTools/AnalyzePdf', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const m = data.metadata;
+                    infoContent.innerHTML = `
+                        <div class="col-md-3"><small class="text-muted">Pages:</small> <span class="text-white">${m.pageCount}</span></div>
+                        <div class="col-md-3"><small class="text-muted">Size:</small> <span class="text-white">${(m.fileSize/1024/1024).toFixed(2)} MB</span></div>
+                        <div class="col-md-3"><small class="text-muted">Ver:</small> <span class="text-white">${m.version}</span></div>
+                        <div class="col-md-3"><small class="text-muted">Encrypted:</small> <span class="text-${m.isEncrypted ? 'danger' : 'success'}">${m.isEncrypted ? 'Yes' : 'No'}</span></div>
+                        <div class="col-12"><small class="text-muted">Dimensions:</small> <span class="text-white">${m.dimensions}</span></div>
+                    `;
+                    infoPanel.classList.remove('d-none');
+                }
+            } catch (e) {
+                console.error("Analysis failed", e);
+            }
+        }
+
+        // --- Rendering ---
+        function renderFileList() {
+            fileList.innerHTML = '';
+            
+            selectedFiles.forEach((file, index) => {
+                if(!file) return;
+                const li = document.createElement('li');
+                li.className = 'file-item';
+                
+                const iconClass = file.type.includes('image') ? 'fa-file-image' : 'fa-file-pdf';
+                
+                li.innerHTML = `
+                    <div class="file-info">
+                        <i class="fas ${iconClass} file-icon" style="color: var(--accent-color);"></i>
+                        <span style="color: var(--text-primary);">${file.name}</span>
+                        <span style="color: var(--text-secondary); font-size: 0.8rem;">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    </div>
+                    <button class="remove-btn" onclick="removeFile('${file.name}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                fileList.appendChild(li);
+            });
+
+            // Init Sortable if Merge/Images
+            if (currentTab === 'merge' || currentTab === 'images') {
+                new Sortable(fileList, {
+                    animation: 150,
+                    onEnd: function (evt) {
+                        const item = selectedFiles.splice(evt.oldIndex, 1)[0];
+                        selectedFiles.splice(evt.newIndex, 0, item);
+                    }
+                });
+            }
+        }
+
+        function removeFile(fileName) {
+            selectedFiles = selectedFiles.filter(file => file.name !== fileName);
+            renderFileList();
+            if (selectedFiles.length === 0) {
+                infoPanel.classList.add('d-none');
+            }
+        }
+
+        function clearFiles() {
+            selectedFiles = [];
+            fileList.innerHTML = '';
+            resultSection.style.display = 'none'; // CSS might conflict with classList toggling, sticking to style
+            resultSection.classList.remove('active');
+            infoPanel.classList.add('d-none');
+            previewBtn.classList.add('d-none');
+        }
+
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressLabel = document.getElementById('progress-label');
+        const progressPercent = document.getElementById('progress-percent');
+        const toastEl = document.getElementById('liveToast');
+        const toast = new bootstrap.Toast(toastEl);
+
+        function showToast(message, type = 'info') {
+            document.getElementById('toast-message').innerText = message;
+            const icon = document.getElementById('toast-icon');
+            const title = document.getElementById('toast-title');
+            
+            icon.className = type === 'error' ? 'fas fa-exclamation-circle me-2 text-danger' : 'fas fa-check-circle me-2 text-success';
+            title.innerText = type === 'error' ? 'Error' : 'Success';
+            
+            toast.show();
+        }
+
+        // --- Action Handling ---
+        actionBtn.onclick = () => {
+            if (selectedFiles.length === 0) {
+                showToast('Please select files first.', 'error');
+                return;
+            }
+
+            loadingSpinner.classList.remove('d-none');
+            actionBtn.disabled = true;
+            resultSection.classList.remove('active');
+            resultSection.style.display = 'none';
+            progressContainer.classList.remove('d-none');
+            progressBar.style.width = '0%';
+            progressLabel.innerText = "Uploading...";
+            progressPercent.innerText = "0%";
+
+            const formData = new FormData();
+            switch (currentTab) {
+                case 'merge':
+                    selectedFiles.forEach(f => formData.append('files', f));
+                    break;
+                case 'images':
+                    selectedFiles.forEach(f => formData.append('images', f));
+                    break;
+                case 'split':
+                    formData.append('file', selectedFiles[0]);
+                    formData.append('pageRange', document.getElementById('pageRange').value);
+                    formData.append('splitAll', document.getElementById('splitAll').checked);
+                    break;
+                case 'compress':
+                    formData.append('file', selectedFiles[0]);
+                    formData.append('compressionLevel', document.getElementById('compressionLevel').value);
+                    break;
+            }
+
+            const endpoints = {
+                'merge': '/PdfTools/MergePdf',
+                'split': '/PdfTools/SplitPdf',
+                'images': '/PdfTools/ImageToPdf',
+                'compress': '/PdfTools/CompressPdf'
+            };
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', endpoints[currentTab], true);
+
+            // Upload Progress
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                    progressPercent.innerText = Math.round(percentComplete) + '%';
+                    if(percentComplete === 100) {
+                        progressLabel.innerText = "Processing...";
+                    }
+                }
+            };
+
+            xhr.onload = function() {
+                loadingSpinner.classList.add('d-none');
+                actionBtn.disabled = false;
+                progressContainer.classList.add('d-none');
+
+                if (xhr.status === 200) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.success) {
+                            resultSection.style.display = 'flex'; // Make visible
+                            setTimeout(() => resultSection.classList.add('active'), 10);
+                            
+                            document.getElementById('result-message').innerText = data.message;
+                            
+                            // Set download link
+                            const downloadUrl = `/PdfTools/DownloadFile?path=${encodeURIComponent(data.fileUrl)}`;
+                            document.getElementById('download-link').href = downloadUrl;
+                            currentDownloadUrl = downloadUrl;
+
+                            // Show preview button only for PDF output
+                            if(data.fileUrl.endsWith('.pdf')) {
+                                previewBtn.classList.remove('d-none');
+                            } else {
+                                previewBtn.classList.add('d-none');
+                            }
+                            showToast("Operation completed successfully!", 'success');
+                        } else {
+                            showToast(data.message || 'Operation failed', 'error');
+                        }
+                    } catch (e) {
+                        showToast("Invalid response from server", 'error');
+                    }
+                } else {
+                    showToast("Server error occurred", 'error');
+                }
+            };
+
+            xhr.onerror = function() {
+                loadingSpinner.classList.add('d-none');
+                actionBtn.disabled = false;
+                progressContainer.classList.add('d-none');
+                showToast("Network error occurred", 'error');
+            };
+
+            xhr.send(formData);
+        };
+
+        previewBtn.onclick = () => {
+            if(currentDownloadUrl) {
+                previewFrame.src = currentDownloadUrl;
+                previewModal.show();
+            }
+        };
+
+        async function toggleFavorite(toolType, iconElement) {
+            try {
+                const res = await fetch('/PdfTools/ToggleFavorite', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(toolType)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (iconElement.classList.contains('text-warning')) {
+                        iconElement.classList.remove('text-warning');
+                        iconElement.classList.add('text-muted', 'opacity-25');
+                    } else {
+                        iconElement.classList.add('text-warning');
+                        iconElement.classList.remove('text-muted', 'opacity-25');
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function toggleAutoDelete(checkbox) {
+            try {
+                const res = await fetch('/PdfTools/ToggleAutoDelete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(checkbox.checked)
+                });
+            } catch (e) {
+                console.error(e);
+                checkbox.checked = !checkbox.checked;
+            }
+        }
+
+        async function reprocessFile(filePath, toolType) {
+            try {
+                let targetTab = 'merge';
+                if (toolType === 'Split') targetTab = 'split';
+                if (toolType === 'Compress') targetTab = 'compress';
+                if (toolType === 'ImagesToPdf') targetTab = 'images';
+                
+                const tabBtn = document.querySelector(`button[data-tool="${targetTab}"]`);
+                if(tabBtn) tabBtn.click();
+                else switchTab(targetTab); // Fallback
+
+                const url = `/PdfTools/DownloadFile?path=${encodeURIComponent(filePath)}`;
+                const res = await fetch(url);
+                if(!res.ok) throw new Error("File not found");
+                
+                const blob = await res.blob();
+                const fileName = filePath.split('/').pop() || "reprocessed.pdf";
+                const file = new File([blob], fileName, { type: blob.type });
+
+                handleFiles([file]);
+                
+                document.querySelector('.pdf-tool-container').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (e) {
+                alert("Could not load file for reprocessing: " + e.message);
+            }
+        }
+
+        // --- Bulk Delete Functions ---
+        function toggleSelectAll(source) {
+            document.querySelectorAll('.history-checkbox').forEach(cb => {
+                cb.checked = source.checked;
+            });
+            updateBulkDeleteState();
+        }
+
+        function updateBulkDeleteState() {
+            const checkedCount = document.querySelectorAll('.history-checkbox:checked').length;
+            if (checkedCount > 0) {
+                bulkDeleteBtn.classList.remove('d-none');
+                bulkDeleteBtn.innerHTML = `<i class="fas fa-trash-alt me-2"></i>Delete Selected (${checkedCount})`;
+            } else {
+                bulkDeleteBtn.classList.add('d-none');
+            }
+        }
+
+        function confirmBulkDelete() {
+            deleteModal.show();
+        }
+
+        async function executeBulkDelete() {
+            const selectedIds = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(cb => cb.value);
+            
+            try {
+                const res = await fetch('/PdfTools/DeleteHistory', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(selectedIds)
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    location.reload(); 
+                } else {
+                    showToast(data.message || "Deletion failed", 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast("An error occurred", 'error');
+            }
+        }
+    </script>
+}

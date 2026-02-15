@@ -39,6 +39,7 @@ builder.Services.AddDbContext<TodoListApp.Data.ApplicationDbContext>(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<TodoListApp.Services.IPdfService, TodoListApp.Services.PdfService>();
+builder.Services.AddHostedService<TodoListApp.Services.PdfCleanupService>();
 
 builder.Services.AddMemoryCache();
 
