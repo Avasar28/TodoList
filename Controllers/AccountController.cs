@@ -40,8 +40,14 @@ namespace TodoListApp.Controllers
                 {
                     new Claim(ClaimTypes.Name, user.Email),
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.GivenName, user.Name ?? user.Email) // Use Name or fallback to Email
+                    new Claim(ClaimTypes.GivenName, user.Name ?? user.Email), // Use Name or fallback to Email
+                    new Claim("IsAdmin", user.IsAdmin.ToString())
                 };
+
+                if (user.IsAdmin)
+                {
+                   claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+                }
 
                 var identity = new ClaimsIdentity(claims, "CookieAuth");
                 var principal = new ClaimsPrincipal(identity);

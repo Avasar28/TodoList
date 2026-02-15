@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -33,6 +34,11 @@ builder.Services.AddHttpClient<TodoListApp.Services.ITranslationService, TodoLis
         client.Timeout = TimeSpan.FromSeconds(10);
     });
 
+builder.Services.AddDbContext<TodoListApp.Data.ApplicationDbContext>(options =>
+    options.UseSqlite("Data Source=todotask.db"));
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<TodoListApp.Services.IPdfService, TodoListApp.Services.PdfService>();
 
 builder.Services.AddMemoryCache();
 

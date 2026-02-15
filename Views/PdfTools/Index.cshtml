@@ -1,0 +1,319 @@
+@model List<TodoListApp.Models.PdfFileHistory>
+@{
+    ViewData["Title"] = "PDF Tools";
+}
+
+<div class="container mt-5">
+    <div class="pdf-tool-container">
+        
+        <div class="text-center mb-4">
+            <h2 class="display-6 fw-bold" style="color: var(--text-primary);">
+                <i class="fas fa-file-pdf me-2" style="color: var(--accent-color);"></i>
+                PDF Tools
+            </h2>
+            <p style="color: var(--text-secondary);">Manage your documents securely and efficiently.</p>
+        </div>
+
+        <!-- Tool Tabs -->
+        <div class="pdf-tabs">
+            <button class="pdf-tab-btn active" onclick="switchTab('merge')">
+                <i class="fas fa-layer-group me-2"></i>Merge
+            </button>
+            <button class="pdf-tab-btn" onclick="switchTab('split')">
+                <i class="fas fa-cut me-2"></i>Split
+            </button>
+            <button class="pdf-tab-btn" onclick="switchTab('images')">
+                <i class="fas fa-images me-2"></i>Images to PDF
+            </button>
+            <button class="pdf-tab-btn" onclick="switchTab('compress')">
+                <i class="fas fa-compress-arrows-alt me-2"></i>Compress
+            </button>
+        </div>
+
+        <!-- Input Area -->
+        <div id="drop-zone" class="drop-zone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('fileInput').click()">
+            <i class="fas fa-cloud-upload-alt mb-3" style="font-size: 3rem; color: var(--accent-color);"></i>
+            <h4 style="color: var(--text-primary);">Drag & Drop files here</h4>
+            <p style="color: var(--text-secondary);">or click to browse</p>
+            <input type="file" id="fileInput" multiple style="display: none;" onchange="handleFileSelect(event)">
+        </div>
+
+        <!-- Options: Split Range -->
+        <div id="split-options" class="mb-4" style="display: none;">
+            <label class="form-label" style="color: var(--text-primary);">Page Range (e.g., 1-5, 8)</label>
+            <div class="d-flex gap-2">
+                <input type="text" id="pageRange" class="form-control" placeholder="Leave empty to split all pages" style="background: rgba(255,255,255,0.05); color: var(--text-primary); border: var(--glass-border);">
+                <div class="form-check d-flex align-items-center">
+                    <input class="form-check-input" type="checkbox" id="splitAll">
+                    <label class="form-check-label ms-2" for="splitAll" style="color: var(--text-secondary);">Split All</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Options: Compression Level -->
+        <div id="compress-options" class="mb-4" style="display: none;">
+            <label class="form-label" style="color: var(--text-primary);">Compression Level</label>
+            <select id="compressionLevel" class="form-select" style="background: rgba(255,255,255,0.05); color: var(--text-primary); border: var(--glass-border);">
+                <option value="standard">Standard</option>
+                <option value="high">High (Maximum reduction)</option>
+            </select>
+        </div>
+
+        <!-- File List -->
+        <ul id="file-list" class="file-list"></ul>
+
+        <!-- Action Buttons -->
+        <div class="pdf-controls">
+            <button class="btn btn-outline-secondary" onclick="clearFiles()">Clear All</button>
+            <button id="processBtn" class="btn btn-primary d-flex align-items-center gap-2" onclick="processFiles()">
+                <span>Process Files</span>
+                <div class="loading-spinner" id="spinner"></div>
+            </button>
+        </div>
+
+        <!-- Result -->
+        <div id="result-section" class="result-section">
+            <span id="result-message" class="result-message">Success! File ready.</span>
+            <a id="download-link" href="#" class="btn btn-sm btn-light" download>
+                <i class="fas fa-download me-2"></i>Download
+            </a>
+        </div>
+
+        <!-- History Section -->
+        <div class="mt-5 pt-4 border-top border-secondary" style="border-color: var(--glass-border) !important;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0" style="color: var(--text-primary);">
+                    <i class="fas fa-history me-2" style="color: var(--accent-color);"></i>
+                    My PDF History @(ViewBag.IsAdmin == true ? "(All Users)" : "")
+                </h4>
+            </div>
+
+            @if (Model != null && Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover" style="background: transparent; vertical-align: middle; --bs-table-hover-bg: rgba(255,255,255,0.05); --bs-table-color: var(--text-primary);">
+                        <thead>
+                            <tr style="color: var(--text-secondary); border-bottom: 1px solid var(--glass-border);">
+                                <th>Date</th>
+                                @if (ViewBag.IsAdmin == true)
+                                {
+                                    <th>User</th>
+                                }
+                                <th>Tool</th>
+                                <th>Files</th>
+                                <th>Size</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr style="border-bottom: 1px solid var(--glass-border);">
+                                    <td>@item.CreatedAt.ToLocalTime().ToString("g")</td>
+                                    @if (ViewBag.IsAdmin == true)
+                                    {
+                                        <td>@item.UserId</td>
+                                    }
+                                    <td><span class="badge" style="background: var(--glass-bg); color: var(--accent-color); border: 1px solid var(--glass-border);">@item.ToolType</span></td>
+                                    <td class="text-truncate" style="max-width: 200px;" title="@item.OriginalFileNames">
+                                        @item.OriginalFileNames
+                                    </td>
+                                    <td>@((item.FileSize / 1024.0 / 1024.0).ToString("F2")) MB</td>
+                                    <td class="text-end">
+                                        <a href="@item.StoredFilePath" class="btn btn-sm btn-outline-light" download>
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-center text-muted py-3">No history found.</p>
+            }
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+<script>
+    let currentTab = 'merge';
+    let selectedFiles = [];
+
+    // --- Tab Switching ---
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.pdf-tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        // Show/Hide Options
+        document.getElementById('split-options').style.display = tab === 'split' ? 'block' : 'none';
+        document.getElementById('compress-options').style.display = tab === 'compress' ? 'block' : 'none';
+
+        // Reset
+        clearFiles();
+        document.getElementById('result-section').style.display = 'none';
+
+        // Update Input Attribute
+        const fileInput = document.getElementById('fileInput');
+        if (tab === 'images') {
+            fileInput.accept = '.jpg,.jpeg,.png';
+            fileInput.multiple = true;
+        } else if (tab === 'merge') {
+            fileInput.accept = '.pdf';
+            fileInput.multiple = true;
+        } else {
+            fileInput.accept = '.pdf';
+            fileInput.multiple = false; // Split/Compress usually single file
+        }
+    }
+
+    // --- Drag & Drop ---
+    function handleDragOver(e) {
+        e.preventDefault();
+        document.getElementById('drop-zone').classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+        document.getElementById('drop-zone').classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        document.getElementById('drop-zone').classList.remove('drag-over');
+        handleFiles(e.dataTransfer.files);
+    }
+
+    function handleFileSelect(e) {
+        handleFiles(e.target.files);
+    }
+
+    function handleFiles(files) {
+        if (currentTab === 'split' || currentTab === 'compress') {
+            selectedFiles = [files[0]]; // Single file only
+        } else {
+            selectedFiles = [...selectedFiles, ...Array.from(files)];
+        }
+        renderFileList();
+    }
+
+    // --- Rendering ---
+    function renderFileList() {
+        const list = document.getElementById('file-list');
+        list.innerHTML = '';
+        
+        selectedFiles.forEach((file, index) => {
+            if(!file) return;
+            const li = document.createElement('li');
+            li.className = 'file-item';
+            
+            // Icon based on type
+            const iconClass = file.type.includes('image') ? 'fa-file-image' : 'fa-file-pdf';
+            
+            li.innerHTML = `
+                <div class="file-info">
+                    <i class="fas ${iconClass} file-icon" style="color: var(--accent-color);"></i>
+                    <span style="color: var(--text-primary);">${file.name}</span>
+                    <span style="color: var(--text-secondary); font-size: 0.8rem;">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                </div>
+                <button class="remove-btn" onclick="removeFile(${index})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            list.appendChild(li);
+        });
+
+        // Init Sortable if Merge/Images
+        if (currentTab === 'merge' || currentTab === 'images') {
+            new Sortable(list, {
+                animation: 150,
+                onEnd: function (evt) {
+                    const item = selectedFiles.splice(evt.oldIndex, 1)[0];
+                    selectedFiles.splice(evt.newIndex, 0, item);
+                }
+            });
+        }
+    }
+
+    function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        renderFileList();
+    }
+
+    function clearFiles() {
+        selectedFiles = [];
+        renderFileList();
+        document.getElementById('result-section').style.display = 'none';
+    }
+
+    // --- Processing ---
+    async function processFiles() {
+        if (selectedFiles.length === 0) {
+            alert("Please select files first.");
+            return;
+        }
+
+        const btn = document.getElementById('processBtn');
+        const spinner = document.getElementById('spinner');
+        
+        btn.disabled = true;
+        spinner.style.display = 'block';
+
+        const formData = new FormData();
+        selectedFiles.forEach(file => {
+            // For Merge/Images, name needs to be 'files' or 'images' depending on endpoint
+            // But controller usually binds List<IFormFile> files or similar.
+            // Let's check controller. MergePdf(List<IFormFile> files), SplitPdf(IFormFile file), ImagesToPdf(List<IFormFile> images), CompressPdf(IFormFile file)
+            
+            if (currentTab === 'images') formData.append('images', file);
+            else if (currentTab === 'split' || currentTab === 'compress') formData.append('file', file);
+            else formData.append('files', file); 
+        });
+
+        // Add options
+        if (currentTab === 'split') {
+            formData.append('pageRange', document.getElementById('pageRange').value);
+            formData.append('splitAll', document.getElementById('splitAll').checked);
+        }
+        if (currentTab === 'compress') {
+            formData.append('compressionLevel', document.getElementById('compressionLevel').value);
+        }
+
+        // Determine URL
+        let url = '';
+        if (currentTab === 'merge') url = '/PdfTools/MergePdf';
+        else if (currentTab === 'split') url = '/PdfTools/SplitPdf';
+        else if (currentTab === 'images') url = '/PdfTools/ImageToPdf';
+        else if (currentTab === 'compress') url = '/PdfTools/CompressPdf';
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const resultSection = document.getElementById('result-section');
+                const downloadLink = document.getElementById('download-link');
+                
+                resultSection.style.display = 'flex';
+                downloadLink.href = result.fileUrl;
+                // If it's a browser openable file, maybe add target_blank, but download attr handles it usually.
+            } else {
+                alert("Error: " + result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert("An unexpected error occurred.");
+        } finally {
+            btn.disabled = false;
+            spinner.style.display = 'none';
+        }
+    }
+</script>

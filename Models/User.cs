@@ -20,6 +20,7 @@ namespace TodoListApp.Models
         public bool IsEmailVerified { get; set; } = false;
 
         public string? Name { get; set; }
+        public bool IsAdmin { get; set; } = false;
         public UserPreferences Preferences { get; set; } = new UserPreferences();
     }
 
