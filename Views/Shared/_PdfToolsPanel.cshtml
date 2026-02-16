@@ -16,9 +16,9 @@
     <div class="widget-content-container">
         
         <!-- Storage Stats Panel -->
-        <div class="pdf-stats-widget-panel" style="max-width: 900px; margin: 0 auto 2rem;">
+        <div class="pdf-stats-widget-panel">
             <div class="row g-3">
-                <div class="col-md-8">
+                <div class="col-md-7">
                     <div class="stat-card-glass">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="stat-label-widget"><i class="fas fa-hdd me-2"></i>Storage Usage</span>
@@ -29,7 +29,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-5">
                     <div class="stat-card-glass">
                         <div class="d-flex align-items-center justify-content-between">
                             <span class="stat-label-widget" style="font-size: 0.85rem;"><i class="fas fa-clock me-2"></i>Auto-delete</span>
@@ -43,7 +43,7 @@
         </div>
 
         <!-- Tool Grid Navigation with Favorites -->
-        <div class="pdf-tool-grid-enhanced" id="pdf-tool-grid-enhanced" style="max-width: 900px; margin: 0 auto 2rem;">
+        <div class="pdf-tool-grid-enhanced" id="pdf-tool-grid-enhanced">
             <div class="tool-card-enhanced active" onclick="switchPdfTab('merge')" data-tool="merge">
                 <div class="favorite-star-widget" onclick="togglePdfFavorite('merge', this); event.stopPropagation();">
                     <i class="fas fa-star"></i>
@@ -79,14 +79,14 @@
         </div>
 
         <!-- Workspace -->
-        <div id="pdf-workspace-widget" style="max-width: 900px; margin: 0 auto; background: rgba(255,255,255,0.03); padding: 2rem; border-radius: 20px; border: 1px solid var(--glass-border);">
+        <div id="pdf-workspace-widget" class="pdf-workspace-widget">
             <div class="d-flex align-items-center mb-4">
                 <div class="badge bg-accent text-dark me-2">Active</div>
                 <h4 class="mb-0 text-white" id="pdf-workspace-title">Merge PDF</h4>
             </div>
 
             <!-- Input Area -->
-            <div id="pdf-drop-zone" class="premium-drop-zone" ondrop="handlePdfDrop(event)" ondragover="handlePdfDragOver(event)" ondragleave="handlePdfDragLeave(event)" onclick="document.getElementById('pdfFileInput').click()">
+            <div id="pdf-drop-zone" class="pdf-drop-zone-enhanced" ondrop="handlePdfDrop(event)" ondragover="handlePdfDragOver(event)" ondragleave="handlePdfDragLeave(event)" onclick="document.getElementById('pdfFileInput').click()">
                 <i class="fas fa-cloud-upload-alt mb-3"></i>
                 <h4 class="drop-title">Drag & Drop files here</h4>
                 <p class="drop-subtitle">or click to browse from your computer</p>
@@ -158,7 +158,7 @@
         </div>
 
         <!-- History Section -->
-        <div class="mt-5 pt-4" style="max-width: 900px; margin: 0 auto; border-top: 1px solid var(--glass-border);">
+        <div class="pdf-history-widget">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 class="mb-0 d-flex align-items-center" style="color: var(--text-primary); font-family: 'Outfit', sans-serif; font-weight: 700;">
                     <i class="fas fa-history me-2 text-accent"></i>

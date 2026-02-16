@@ -1945,7 +1945,7 @@ h1 {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--glass-border);
-  padding: 1.5rem 2rem;
+  padding: 0.9rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1964,7 +1964,7 @@ h1 {
 
 .widget-hero-title {
   margin: 0;
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   font-weight: 700;
   background: var(--gradient-text);
   -webkit-background-clip: text;
@@ -1974,7 +1974,7 @@ h1 {
 }
 
 .widget-hero-subtitle {
-  font-size: 1rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
   display: flex;
   align-items: center;
@@ -2007,14 +2007,14 @@ h1 {
 
 /* Content Container for Full Screen */
 .widget-content-container {
-  max-width: 1400px;
+  max-width: 1100px;
   margin: 0 auto;
   width: 100%;
-  padding: 2rem;
+  padding: 40px 2rem;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 40px;
 }
 
 /* Helper to center/limit width if needed */
@@ -8088,7 +8088,7 @@ input:checked+.slider:before {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 1.5rem 2rem;
+  padding: 0.9rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -8108,7 +8108,7 @@ input:checked+.slider:before {
 }
 
 .widget-hero-title {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
   background: var(--gradient-text);
@@ -8118,7 +8118,7 @@ input:checked+.slider:before {
 }
 
 .widget-hero-subtitle {
-  font-size: 1rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
   display: flex;
   align-items: center;

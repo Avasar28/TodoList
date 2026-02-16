@@ -2,9 +2,21 @@
 
 /* Stats Panel */
 .pdf-stats-widget-panel {
-    max-width: 900px;
-    margin: 0 auto 2rem;
+    margin-bottom: 0;
 }
+
+.pdf-stats-widget-panel .row {
+    display: flex;
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.pdf-stats-widget-panel .col-md-8,
+.pdf-stats-widget-panel .col-md-4 {
+    flex: 1;
+    display: flex;
+}
+
 
 .stat-card-glass {
     background: rgba(255, 255, 255, 0.03);
@@ -12,6 +24,10 @@
     border-radius: 16px;
     padding: 1.25rem;
     backdrop-filter: blur(10px);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .stat-label-widget {
@@ -26,19 +42,19 @@
     font-size: 1rem;
 }
 
+
 /* Enhanced Tool Cards with Descriptions */
 .pdf-tool-grid-enhanced {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.25rem;
-    max-width: 900px;
-    margin: 0 auto 2rem;
+    margin-bottom: 0;
 }
 
 .tool-card-enhanced {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--glass-border);
-    border-radius: 18px;
+    border-radius: 16px;
     padding: 1.75rem;
     display: flex;
     flex-direction: column;
@@ -48,13 +64,15 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     text-align: center;
+    height: 100%;
 }
+
 
 .tool-card-enhanced:hover {
     background: rgba(255, 255, 255, 0.06);
     border-color: var(--accent-color);
-    transform: translateY(-6px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+    transform: translateY(-8px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
 }
 
 .tool-card-enhanced.active {
@@ -373,6 +391,11 @@
 .history-empty-state {
     text-align: center;
     padding: 4rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
 }
 
 .empty-icon {
@@ -409,4 +432,69 @@
     .pdf-tool-grid-enhanced {
         grid-template-columns: 1fr;
     }
+}
+
+/* Enhanced Workspace Container */
+.pdf-workspace-widget {
+    margin-top: 30px;
+    margin-bottom: 40px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+/* History Widget */
+.pdf-history-widget {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    margin-top: 0;
+}
+
+/* Enhanced Drop Zone */
+.pdf-drop-zone-enhanced {
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 2px dashed var(--glass-border);
+    border-radius: 16px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.02);
+    cursor: pointer;
+    text-align: center;
+}
+
+.pdf-drop-zone-enhanced:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--accent-color);
+    transform: translateY(-2px);
+}
+
+.pdf-drop-zone-enhanced.drag-over {
+    background: rgba(20, 184, 166, 0.1);
+    border-color: var(--accent-color);
+    transform: scale(1.02);
+}
+
+.pdf-drop-zone-enhanced i {
+    font-size: 3rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    transition: color 0.3s;
+}
+
+.pdf-drop-zone-enhanced:hover i {
+    color: var(--accent-color);
 }
