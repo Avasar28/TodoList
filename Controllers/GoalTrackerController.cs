@@ -79,5 +79,38 @@ namespace TodoListApp.Controllers
             var result = await _goalService.DeleteGoalAsync(id, GetUserId());
             return Json(new { success = result.Success, message = result.Message });
         }
+
+        [HttpGet]
+        [Route("GetSchedules")]
+        public async Task<JsonResult> GetSchedules()
+        {
+            var schedules = await _goalService.GetUserSchedulesAsync(GetUserId());
+            return Json(new { success = true, data = schedules });
+        }
+
+        [HttpPost]
+        [Route("CreateSchedule")]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> CreateSchedule([FromBody] GoalSchedule schedule)
+        {
+            try
+            {
+                var created = await _goalService.CreateScheduleAsync(schedule, GetUserId());
+                return Json(new { success = true, data = created, message = "Session scheduled." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Route("DeleteSchedule")]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> DeleteSchedule(int id)
+        {
+            var result = await _goalService.DeleteScheduleAsync(id, GetUserId());
+            return Json(new { success = result.Success, message = result.Message });
+        }
     }
 }
