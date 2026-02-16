@@ -106,6 +106,20 @@
         </div>
     </div>
 
+    <!-- Achievements Hub -->
+    <div id="achievementsHub" class="section-card" style="margin-bottom: 2rem; padding: 1.5rem; display: none; background: linear-gradient(135deg, rgba(20, 184, 166, 0.05), rgba(59, 130, 246, 0.05)); border: 1px solid rgba(255,255,255,0.05);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="font-size: 1.5rem;">🏆</span>
+                <h3 style="margin: 0; font-weight: 850; letter-spacing: -0.02em;">Achievements Hub</h3>
+            </div>
+            <span id="achievementCount" style="font-size: 0.85rem; font-weight: 700; color: #14b8a6; background: rgba(20,184,166,0.1); padding: 4px 12px; border-radius: 20px;">0 Unlocked</span>
+        </div>
+        <div id="achievementsList" style="display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem; scrollbar-width: none;">
+            <!-- Achievements will be injected here -->
+        </div>
+    </div>
+
     <!-- Calendar Tab -->
     <div id="calendarTab" class="tab-content" style="display: none;">
         <div class="calendar-container insight-card" style="padding: 2.5rem; border-radius: 30px;">
@@ -394,6 +408,41 @@
 
     .suggestion-text .highlight { color: #14b8a6; font-weight: 850; }
     .overdue-badge { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 850; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(239, 68, 68, 0.2); }
+    .overdue-badge { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 850; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+    /* Achievement Styles */
+    .achievement-card { 
+        min-width: 80px; height: 80px; 
+        background: rgba(255,255,255,0.03); 
+        border-radius: 16px; 
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        border: 1px solid rgba(255,255,255,0.05);
+        cursor: help;
+        position: relative;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        animation: badgePop 0.5s ease-out;
+    }
+    .achievement-card:hover { 
+        background: rgba(255,255,255,0.08); 
+        transform: translateY(-5px) scale(1.05);
+        border-color: #14b8a6;
+    }
+    .achievement-card .icon { font-size: 2rem; margin-bottom: 0px; }
+    .achievement-card .tooltip {
+        position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+        background: #1e293b; color: #fff; padding: 0.75rem 1rem; border-radius: 12px;
+        font-size: 0.8rem; font-weight: 600; width: 200px; text-align: center;
+        opacity: 0; visibility: hidden; transition: all 0.2s ease;
+        pointer-events: none; z-index: 100;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        border: 1px solid rgba(255,255,255,0.1);
+        margin-bottom: 10px;
+    }
+    .achievement-card:hover .tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(-5px); }
+    @@keyframes badgePop {
+        0% { transform: scale(0.5); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
 </style>
 
 @section Scripts {
@@ -515,8 +564,39 @@
                 if (result.success) {
                     allGoals = result.data;
                     await loadSchedules();
+                    await loadAchievements();
                     initCharts();
                     applyFilters();
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadAchievements() {
+            try {
+                const res = await fetch(`${API_BASE}/GetAchievements`);
+                const result = await res.json();
+                if (result.success && result.data.length > 0) {
+                    const hub = document.getElementById('achievementsHub');
+                    const list = document.getElementById('achievementsList');
+                    const count = document.getElementById('achievementCount');
+                    
+                    hub.style.display = 'block';
+                    list.innerHTML = '';
+                    count.textContent = `${result.data.length} Unlocked`;
+
+                    result.data.forEach(a => {
+                        const card = document.createElement('div');
+                        card.className = 'achievement-card';
+                        card.innerHTML = `
+                            <span class="icon">${a.icon}</span>
+                            <div class="tooltip">
+                                <div style="color: #14b8a6; font-weight: 850; margin-bottom: 4px;">${a.achievementName}</div>
+                                <div style="color: #cbd5e1; font-size: 0.75rem;">${a.description}</div>
+                                <div style="margin-top: 8px; font-size: 0.65rem; color: var(--text-secondary); opacity: 0.6;">Unlocked ${new Date(a.achievedAt).toLocaleDateString()}</div>
+                            </div>
+                        `;
+                        list.appendChild(card);
+                    });
                 }
             } catch (err) { console.error(err); }
         }

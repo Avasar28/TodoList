@@ -13,6 +13,14 @@ namespace TodoListApp.Services
             _context = context;
         }
 
+        public async Task<IEnumerable<UserAchievement>> GetUserAchievementsAsync(string userId)
+        {
+            return await _context.UserAchievements
+                .Where(ua => ua.UserId == userId)
+                .OrderByDescending(ua => ua.AchievedAt)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Goal>> GetUserGoalsAsync(string userId)
         {
             return await _context.Goals
@@ -38,6 +46,9 @@ namespace TodoListApp.Services
 
             _context.Goals.Add(goal);
             await _context.SaveChangesAsync();
+            
+            await CheckAndAwardAchievementsAsync(userId);
+            
             return goal;
         }
 
@@ -72,6 +83,7 @@ namespace TodoListApp.Services
             if (currentValue > goal.TargetValue) currentValue = goal.TargetValue;
             if (currentValue < 0) currentValue = 0;
 
+            bool wasCompleted = goal.ProgressPercent >= 100;
             goal.CurrentValue = currentValue;
             goal.UpdatedAt = DateTime.UtcNow;
 
@@ -80,6 +92,12 @@ namespace TodoListApp.Services
 
             _context.Update(goal);
             await _context.SaveChangesAsync();
+
+            if (!wasCompleted && goal.ProgressPercent >= 100)
+            {
+                await CheckAndAwardAchievementsAsync(userId);
+            }
+
             return (true, "Progress updated successfully.");
         }
 
@@ -188,6 +206,100 @@ namespace TodoListApp.Services
             else
             {
                 goal.Status = "On Track";
+            }
+        }
+
+        private async Task CheckAndAwardAchievementsAsync(string userId)
+        {
+            var goals = await _context.Goals.Where(g => g.UserId == userId).ToListAsync();
+            var existingAchievements = await _context.UserAchievements
+                .Where(ua => ua.UserId == userId)
+                .Select(ua => ua.AchievementName)
+                .ToListAsync();
+
+            var achievementsToAward = new List<UserAchievement>();
+
+            // 1. Trailblazer: First Goal Created
+            if (goals.Count >= 1 && !existingAchievements.Contains("Trailblazer"))
+            {
+                achievementsToAward.Add(new UserAchievement {
+                    UserId = userId,
+                    AchievementName = "Trailblazer",
+                    Description = "Created your first milestone!",
+                    Icon = "🚀",
+                    AchievedAt = DateTime.UtcNow
+                });
+            }
+
+            var completedGoals = goals.Where(g => g.ProgressPercent >= 100).ToList();
+
+            // 2. Finisher: First Goal Completed
+            if (completedGoals.Count >= 1 && !existingAchievements.Contains("Finisher"))
+            {
+                achievementsToAward.Add(new UserAchievement {
+                    UserId = userId,
+                    AchievementName = "Finisher",
+                    Description = "Completed your first milestone!",
+                    Icon = "✅",
+                    AchievedAt = DateTime.UtcNow
+                });
+            }
+
+            // 3. High Five: 5 Goals Completed
+            if (completedGoals.Count >= 5 && !existingAchievements.Contains("High Five"))
+            {
+                achievementsToAward.Add(new UserAchievement {
+                    UserId = userId,
+                    AchievementName = "High Five",
+                    Description = "Successfully completed 5 milestones!",
+                    Icon = "🖐️",
+                    AchievedAt = DateTime.UtcNow
+                });
+            }
+
+            // 4. Elite: 10 Goals Completed
+            if (completedGoals.Count >= 10 && !existingAchievements.Contains("Elite"))
+            {
+                achievementsToAward.Add(new UserAchievement {
+                    UserId = userId,
+                    AchievementName = "Elite",
+                    Description = "Completed 10 milestones. You're a pro!",
+                    Icon = "👑",
+                    AchievedAt = DateTime.UtcNow
+                });
+            }
+
+            // 5. Perfect Month
+            var firstDayOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+            var goalsThisMonth = goals.Where(g => g.EndDate >= firstDayOfMonth && g.EndDate < firstDayOfMonth.AddMonths(1)).ToList();
+            if (goalsThisMonth.Count > 0 && goalsThisMonth.All(g => g.ProgressPercent >= 100) && !existingAchievements.Contains("Perfect Month"))
+            {
+                achievementsToAward.Add(new UserAchievement {
+                    UserId = userId,
+                    AchievementName = "Perfect Month",
+                    Description = "Completed all milestones set for this month!",
+                    Icon = "🌟",
+                    AchievedAt = DateTime.UtcNow
+                });
+            }
+
+            // 6. Hat Trick: Streak (3 goals completed in a row)
+            var recentGoals = goals.OrderByDescending(g => g.UpdatedAt).Take(3).ToList();
+            if (recentGoals.Count == 3 && recentGoals.All(g => g.ProgressPercent >= 100) && !existingAchievements.Contains("Hat Trick"))
+            {
+                achievementsToAward.Add(new UserAchievement {
+                    UserId = userId,
+                    AchievementName = "Hat Trick",
+                    Description = "Completed 3 milestones in a row!",
+                    Icon = "🎩",
+                    AchievedAt = DateTime.UtcNow
+                });
+            }
+
+            if (achievementsToAward.Any())
+            {
+                _context.UserAchievements.AddRange(achievementsToAward);
+                await _context.SaveChangesAsync();
             }
         }
     }

@@ -17,6 +17,7 @@ namespace TodoListApp.Data
         public DbSet<ActivityLog> ActivityLogs { get; set; }
         public DbSet<Goal> Goals { get; set; }
         public DbSet<GoalSchedule> GoalSchedules { get; set; }
+        public DbSet<UserAchievement> UserAchievements { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

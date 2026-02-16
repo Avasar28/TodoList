@@ -96,6 +96,14 @@ namespace TodoListApp.Controllers
             return Json(new { success = true, data = analytics });
         }
 
+        [HttpGet]
+        [Route("GetAchievements")]
+        public async Task<JsonResult> GetAchievements()
+        {
+            var achievements = await _goalService.GetUserAchievementsAsync(GetUserId());
+            return Json(new { success = true, data = achievements });
+        }
+
         [HttpPost]
         [Route("CreateSchedule")]
         [ValidateAntiForgeryToken]
