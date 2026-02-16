@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 * {
   box-sizing: border-box;
@@ -3769,6 +3769,11 @@ input:checked+.slider:before {
   grid-row: 3 !important;
 }
 
+.grid-area-goaltracker {
+  grid-column: 2 !important;
+  grid-row: 4 !important;
+}
+
 .grid-area-pdftools {
   grid-column: 1 !important;
   grid-row: 4 !important;
@@ -3785,7 +3790,8 @@ input:checked+.slider:before {
 .grid-area-holiday,
 .grid-area-translator,
 .grid-area-emergency,
-.grid-area-pdftools {
+.grid-area-pdftools,
+.grid-area-goaltracker {
   min-height: 0;
   /* REMOVED 280px constraint to allow fitting to screen */
   min-width: 0;
@@ -3829,7 +3835,8 @@ input:checked+.slider:before {
   .grid-area-holiday,
   .grid-area-translator,
   .grid-area-emergency,
-  .grid-area-pdftools {
+  .grid-area-pdftools,
+  .grid-area-goaltracker {
     grid-column: auto !important;
     grid-row: auto !important;
   }
@@ -10396,192 +10403,208 @@ h4,
   background: linear-gradient(to right, var(--accent-color), transparent);
   opacity: 0.3;
 }
+
 /* --- Manage Access UI --- */
 .btn-manage-access {
-    background: rgba(99, 102, 241, 0.1);
-    color: #818cf8;
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  background: rgba(99, 102, 241, 0.1);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-manage-access:hover {
-    background: #6366f1;
-    color: white;
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+  background: #6366f1;
+  color: white;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
 }
 
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(8px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
 }
 
 .modal-content-wide {
-    width: 90%;
-    max-width: 800px;
-    border-radius: 20px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+  width: 90%;
+  max-width: 800px;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
-    background: rgba(255, 255, 255, 0.03);
-    padding: 1.5rem 2rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .btn-close-modal {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 2rem;
-    line-height: 1;
-    cursor: pointer;
-    opacity: 0.5;
-    transition: opacity 0.2s;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s;
 }
 
 .btn-close-modal:hover {
-    opacity: 1;
+  opacity: 1;
 }
 
 .feature-section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
 .feature-section-header h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .btn-select-all-mini {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: var(--text-secondary);
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
 }
 
 .feature-grid-mini {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 15px;
 }
 
 .feature-card-mini {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    user-select: none;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  user-select: none;
 }
 
 .feature-card-mini:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
 }
 
 .feature-card-mini.selected {
-    background: rgba(99, 102, 241, 0.1);
-    border-color: #6366f1;
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);
+  background: rgba(99, 102, 241, 0.1);
+  border-color: #6366f1;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);
 }
 
 .card-check-mini {
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
 }
 
 .feature-card-mini.selected .card-check-mini {
-    background: #6366f1;
-    border-color: #6366f1;
+  background: #6366f1;
+  border-color: #6366f1;
 }
 
 .card-check-mini input {
-    display: none;
+  display: none;
 }
 
 .card-icon-mini {
-    font-size: 1.25rem;
+  font-size: 1.25rem;
 }
 
 .card-title-mini {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
 .modal-footer {
-    background: rgba(0, 0, 0, 0.2);
-    padding: 1.5rem 2rem;
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .btn-lite {
-    background: none;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-secondary);
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 .spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba(255,255,255,0.1);
-    border-top-color: #6366f1;
-    border-radius: 50%;
-    animation: spin-unique 1s linear infinite;
-    margin: 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin-unique 1s linear infinite;
+  margin: 0 auto;
 }
 
 @keyframes spin-unique {
-    to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 
 
 /* Wide auth card for Create User page */
-.auth-card-wide { background: var(--glass-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); padding: 3rem 2.5rem; border-radius: 24px; border: var(--border-card); width: 100%; max-width: 1400px !important; text-align: center; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 1.5rem; transition: var(--transition-smooth); }
-
-
+.auth-card-wide {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 3rem 2.5rem;
+  border-radius: 24px;
+  border: var(--border-card);
+  width: 100%;
+  max-width: 1400px !important;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  transition: var(--transition-smooth);
+}

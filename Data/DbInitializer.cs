@@ -46,8 +46,7 @@ namespace TodoListApp.Data
         private static async Task SeedFeaturesAsync(IServiceProvider serviceProvider)
         {
             var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
-            if (await context.SystemFeatures.AnyAsync()) return;
-
+            
             var features = new List<SystemFeature>
             {
                 // Pages
@@ -67,10 +66,18 @@ namespace TodoListApp.Data
                 new SystemFeature { Name = "Country Widget", TechnicalName = "Widget_Country", Type = FeatureType.Widget, Icon = "🌍", Description = "Explore global country details and statistics.", IsDefault = true },
                 new SystemFeature { Name = "Translator Widget", TechnicalName = "Widget_Translator", Type = FeatureType.Widget, Icon = "🈶", Description = "Quick text translation tool.", IsDefault = true },
                 new SystemFeature { Name = "Emergency Widget", TechnicalName = "Widget_Emergency", Type = FeatureType.Widget, Icon = "🆘", Description = "Emergency SOS and global contact numbers.", IsDefault = true },
-                new SystemFeature { Name = "PDF Widget", TechnicalName = "Widget_PdfTools", Type = FeatureType.Widget, Icon = "📄", Description = "Quick access to PDF tools from dashboard.", IsDefault = true }
+                new SystemFeature { Name = "PDF Widget", TechnicalName = "Widget_PdfTools", Type = FeatureType.Widget, Icon = "📄", Description = "Quick access to PDF tools from dashboard.", IsDefault = true },
+                new SystemFeature { Name = "Goal Tracker", TechnicalName = "Widget_GoalTracker", Type = FeatureType.Widget, Icon = "🎯", Description = "Track and manage your personal goals.", IsDefault = true }
             };
 
-            await context.SystemFeatures.AddRangeAsync(features);
+            foreach (var feature in features)
+            {
+                if (!await context.SystemFeatures.AnyAsync(f => f.TechnicalName == feature.TechnicalName))
+                {
+                    await context.SystemFeatures.AddAsync(feature);
+                }
+            }
+            
             await context.SaveChangesAsync();
         }
 

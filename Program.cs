@@ -45,6 +45,7 @@ builder.Services.AddHttpClient<TodoListApp.Services.ITranslationService, TodoLis
     });
 builder.Services.AddScoped<TodoListApp.Services.IUserManagementService, TodoListApp.Services.UserManagementService>();
 builder.Services.AddScoped<TodoListApp.Services.IFeatureService, TodoListApp.Services.FeatureService>();
+builder.Services.AddScoped<TodoListApp.Services.IGoalTrackerService, TodoListApp.Services.GoalTrackerService>();
 
 builder.Services.AddDbContext<TodoListApp.Data.ApplicationDbContext>(options =>
     options.UseSqlite("Data Source=todotask.db"));

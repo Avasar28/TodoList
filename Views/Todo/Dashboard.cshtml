@@ -271,6 +271,26 @@
             </div>
         }
 
+        <!-- Area: Goal Tracker -->
+        @if (Model.GrantedFeatures.Contains("Widget_GoalTracker"))
+        {
+            <div class="grid-area-goaltracker">
+                <div class="insight-card widget-goal-tracker goaltracker widget-secondary" onclick="window.location.href='/GoalTracker'">
+                    <div class="widget-header-row">
+                        <span class="widget-title-sm">GOAL TRACKER</span>
+                        <span class="pulse-dot" style="background:#6366f1; box-shadow:0 0 10px #6366f1;"></span>
+                    </div>
+                    <div class="goaltracker-visual" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <div class="goal-icon" style="font-size: 2.5rem;">🎯</div>
+                        <span class="goal-label" style="font-weight: 700; color: #fff;">My Goals</span>
+                    </div>
+                    <div class="goal-action-hint" style="text-align: center; font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: auto;">
+                        View & Manage Achievements
+                    </div>
+                </div>
+            </div>
+        }
+
     </div>
 
     <!-- Legacy Grid Hidden

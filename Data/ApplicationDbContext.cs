@@ -15,6 +15,7 @@ namespace TodoListApp.Data
         public DbSet<SystemFeature> SystemFeatures { get; set; }
         public DbSet<UserFeatureAccess> UserFeatures { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
+        public DbSet<Goal> Goals { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
