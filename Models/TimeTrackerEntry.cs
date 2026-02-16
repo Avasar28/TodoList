@@ -5,7 +5,7 @@ namespace TodoListApp.Models
     public class TimeTrackerEntry
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public int UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         
         // Stored as string "HH:mm" for simplicity in this context, or TimeSpan. 

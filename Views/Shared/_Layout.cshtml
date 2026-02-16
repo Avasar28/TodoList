@@ -1,4 +1,19 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using TodoListApp.Models
+@using TodoListApp.Services
+@inject UserManager<ApplicationUser> UserManager
+@inject IFeatureService FeatureService
+
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var grantedFeatures = currentUser != null 
+        ? (await FeatureService.GetUserGrantedFeaturesAsync(currentUser.Id)).Select(f => f.TechnicalName).ToList()
+        : new List<string>();
+    
+    bool HasPage(string technicalName) => grantedFeatures.Contains(technicalName);
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -13,10 +28,23 @@
     {
         <div class="nav-bar">
             <div class="nav-links">
-                <a asp-controller="Todo" asp-action="Dashboard" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" data-translate="true">Dashboard</a>
-                <a asp-controller="Todo" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "Todo" ? "active" : "")" data-translate="true">My Tasks</a>
-                <a asp-controller="TimeTracker" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "TimeTracker" ? "active" : "")" data-translate="true">Time Tracker</a>
-                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                @if (HasPage("Page_Dashboard"))
+                {
+                    <a asp-controller="Todo" asp-action="Dashboard" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" data-translate="true">Dashboard</a>
+                }
+                @if (HasPage("Page_Tasks"))
+                {
+                    <a asp-controller="Todo" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "Todo" ? "active" : "")" data-translate="true">My Tasks</a>
+                }
+                @if (HasPage("Page_TimeTracker"))
+                {
+                    <a asp-controller="TimeTracker" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "TimeTracker" ? "active" : "")" data-translate="true">Time Tracker</a>
+                }
+                @if (HasPage("Page_PdfTools"))
+                {
+                    <a asp-controller="PdfTools" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "PdfTools" ? "active" : "")" data-translate="true">PDF Tools</a>
+                }
+                @if (HasPage("Page_UserManagement") && (User.IsInRole("SuperAdmin") || User.IsInRole("Admin")))
                 {
                     <a asp-controller="Todo" asp-action="UserList" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "UserList" ? "active" : "")" data-translate="true">User List</a>
                 }

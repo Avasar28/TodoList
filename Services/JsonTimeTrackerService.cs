@@ -45,13 +45,13 @@ namespace TodoListApp.Services
             File.WriteAllText(_filePath, json);
         }
 
-        public IEnumerable<TimeTrackerEntry> GetEntries(int userId, DateTime date)
+        public IEnumerable<TimeTrackerEntry> GetEntries(string userId, DateTime date)
         {
             var allEntries = LoadEntries();
             return allEntries.Where(e => e.UserId == userId && e.Date.Date == date.Date);
         }
 
-        public IEnumerable<TimeTrackerEntry> GetEntriesRange(int userId, DateTime startDate, DateTime endDate)
+        public IEnumerable<TimeTrackerEntry> GetEntriesRange(string userId, DateTime startDate, DateTime endDate)
         {
             var allEntries = LoadEntries();
             return allEntries.Where(e => e.UserId == userId && e.Date.Date >= startDate.Date && e.Date.Date <= endDate.Date);
@@ -79,7 +79,7 @@ namespace TodoListApp.Services
             }
         }
 
-        public void DeleteEntry(Guid id, int userId)
+        public void DeleteEntry(Guid id, string userId)
         {
             var entries = LoadEntries();
             var entry = entries.FirstOrDefault(e => e.Id == id && e.UserId == userId);

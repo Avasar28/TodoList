@@ -133,11 +133,33 @@ namespace TodoListApp.Controllers
                     // Assign the selected role
                     await _userManager.AddToRoleAsync(user, role);
 
+                    // Save Feature Access if any
+                    var featuresStr = HttpContext.Session.GetString("SignupFeatures");
+                    if (!string.IsNullOrEmpty(featuresStr))
+                    {
+                        var featureIds = featuresStr.Split(',').Select(int.Parse).ToList();
+                        var context = HttpContext.RequestServices.GetRequiredService<Data.ApplicationDbContext>();
+                        var currentAdmin = User.Identity?.Name ?? "System";
+
+                        foreach (var fId in featureIds)
+                        {
+                            context.UserFeatures.Add(new UserFeatureAccess
+                            {
+                                UserId = user.Id,
+                                FeatureId = fId,
+                                GrantedBy = currentAdmin,
+                                GrantedAt = DateTime.UtcNow
+                            });
+                        }
+                        await context.SaveChangesAsync();
+                    }
+
                     // Clear session and redirect to login
                     HttpContext.Session.Remove("SignupEmail");
                     HttpContext.Session.Remove("SignupPassword");
                     HttpContext.Session.Remove("SignupFullName");
                     HttpContext.Session.Remove("SignupRole");
+                    HttpContext.Session.Remove("SignupFeatures");
                     HttpContext.Session.Remove("SignupOtp");
                     HttpContext.Session.Remove("SignupOtpExpiry");
 
@@ -252,6 +274,11 @@ namespace TodoListApp.Controllers
             }
 
             return View(model);
+        }
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
     }
 }

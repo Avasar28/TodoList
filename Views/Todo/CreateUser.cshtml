@@ -5,7 +5,7 @@
 }
 
 <div class="auth-container fade-in">
-    <div class="auth-card">
+    <div class="auth-card-wide">
         <div class="auth-header">
             <h1 class="auth-hero-title">Create User</h1>
             <p class="auth-hero-subtitle">Add a new member to your team.</p>
@@ -55,7 +55,7 @@
                         new { Name = "NormalUser", Desc = "Standard level access", Tips = "Default access to dashboard, todo items, and PDF tools for their own data." }
                     })
                     {
-                        <label class="role-card">
+                        <label class="role-card" onclick="updateRoleDefaults('@role.Name')">
                             <input type="radio" asp-for="Role" value="@role.Name" checked="@(role.Name == "NormalUser" ? "checked" : null)" onchange="validateForm()" />
                             <div class="role-card-content">
                                 <span class="role-info-trigger" data-tooltip="@role.Tips">ⓘ</span>
@@ -68,7 +68,59 @@
                 <span asp-validation-for="Role" class="text-danger small"></span>
             </div>
 
-            <div style="margin-top: 1rem;">
+
+            <!-- Feature & Widget Access Section -->
+            <div class="form-section feature-access-section">
+                <div class="form-section-title">Feature & Widget Access</div>
+                <p class="text-secondary small mb-3">Define granular permissions. These control which pages and widgets the user can access.</p>
+                
+                <div class="feature-actions">
+                    <button type="button" class="btn-feature-action" onclick="selectAll('Everything')">Select Everything</button>
+                    <button type="button" class="btn-feature-action" onclick="selectAll('Page')">Select All Pages</button>
+                    <button type="button" class="btn-feature-action" onclick="selectAll('Widget')">Select All Widgets</button>
+                    <button type="button" class="btn-feature-action" onclick="clearAllFeatures()">Clear All</button>
+                </div>
+
+                <div class="feature-grid">
+                    @{
+                        var features = ViewBag.SystemFeatures as IEnumerable<TodoListApp.Models.SystemFeature>;
+                        var groups = features?.GroupBy(f => f.Type) ?? Enumerable.Empty<IGrouping<TodoListApp.Models.FeatureType, TodoListApp.Models.SystemFeature>>();
+                    }
+
+                    @foreach (var group in groups)
+                    {
+                        <div class="feature-type-divider">@group.Key.ToString()s</div>
+                        @foreach (var feature in group)
+                        {
+                            <div class="feature-card @(feature.IsDefault ? "selected" : "")" 
+                                 data-feature-id="@feature.Id" 
+                                 data-type="@feature.Type"
+                                 data-default="@feature.IsDefault.ToString().ToLower()"
+                                 onclick="toggleFeature(this)">
+                                <div class="feature-header">
+                                    <div class="feature-icon-box">@feature.Icon</div>
+                                    <div class="feature-info">
+                                        <div class="feature-title">@feature.Name</div>
+                                        <div class="feature-desc">@feature.Description</div>
+                                    </div>
+                                </div>
+                                <div class="card-switch">
+                                    <span class="switch-label">Access Granted</span>
+                                    <div class="form-check form-switch p-0 m-0">
+                                        <input class="form-check-input feature-checkbox" 
+                                               type="checkbox" 
+                                               @(feature.IsDefault ? "checked" : "")
+                                               onclick="event.stopPropagation(); syncCardState(this)">
+                                    </div>
+                                </div>
+                                <input type="hidden" name="SelectedFeatureIds" value="@feature.Id" @(feature.IsDefault ? "" : "disabled") class="feature-hidden-input">
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem;">
                 <button type="submit" class="btn-auth-primary" id="btnSubmit" disabled style="opacity: 0.6; cursor: not-allowed;">Confirm & Create User</button>
                 <a asp-action="UserList" style="display: block; margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem; text-decoration: none; font-weight: 500;">
                     ← Back to User List
@@ -78,6 +130,68 @@
     </div>
 
 <script>
+    function toggleFeature(card) {
+        const checkbox = card.querySelector('.feature-checkbox');
+        checkbox.checked = !checkbox.checked;
+        syncCardState(checkbox);
+    }
+
+    function syncCardState(checkbox) {
+        const card = checkbox.closest('.feature-card');
+        const hiddenInput = card.querySelector('.feature-hidden-input');
+        
+        if (checkbox.checked) {
+            card.classList.add('selected');
+            hiddenInput.disabled = false;
+        } else {
+            card.classList.remove('selected');
+            hiddenInput.disabled = true;
+        }
+    }
+
+    function selectAll(type) {
+        const cards = document.querySelectorAll('.feature-card');
+        cards.forEach(card => {
+            if (type === 'Everything' || card.getAttribute('data-type') === type) {
+                const checkbox = card.querySelector('.feature-checkbox');
+                checkbox.checked = true;
+                syncCardState(checkbox);
+            }
+        });
+    }
+
+    function clearAllFeatures() {
+        const cards = document.querySelectorAll('.feature-card');
+        cards.forEach(card => {
+            const checkbox = card.querySelector('.feature-checkbox');
+            checkbox.checked = false;
+            syncCardState(checkbox);
+        });
+    }
+
+    function updateRoleDefaults(role) {
+        if (role === 'SuperAdmin' || role === 'Admin') {
+            selectAll('Everything');
+        } else if (role === 'NormalUser' || role === 'PrivateUser') {
+            const cards = document.querySelectorAll('.feature-card');
+            cards.forEach(card => {
+                const isDefault = card.getAttribute('data-default') === 'true';
+                const checkbox = card.querySelector('.feature-checkbox');
+                checkbox.checked = isDefault;
+                syncCardState(checkbox);
+            });
+        } else if (role === 'Manager') {
+            selectAll('Everything');
+            // Uncheck User Management (Example refinement)
+            const umCard = Array.from(document.querySelectorAll('.feature-card')).find(c => c.querySelector('.feature-title').innerText.trim() === 'User Management');
+            if (umCard) {
+                 const checkbox = umCard.querySelector('.feature-checkbox');
+                 checkbox.checked = false;
+                 syncCardState(checkbox);
+            }
+        }
+    }
+
     document.getElementById("createUserForm").addEventListener("submit", async function(e) {
         e.preventDefault();
         
@@ -88,8 +202,6 @@
         btn.style.opacity = "0.7";
 
         const formData = new FormData(this);
-        const errorDiv = document.getElementById("formErrorMessage");
-        errorDiv.style.display = "none";
 
         try {
             const response = await fetch('@Url.Action("CreateUser", "Todo")', {
@@ -100,7 +212,7 @@
             const result = await response.json();
 
             if (result.success) {
-                showToast("User account initiated. Redirecting...", "success");
+                showToast(result.message, "success");
                 setTimeout(() => {
                     window.location.href = result.redirectUrl;
                 }, 1500);

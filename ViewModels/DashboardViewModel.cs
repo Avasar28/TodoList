@@ -62,5 +62,6 @@ namespace TodoListApp.ViewModels
 
         public List<string> AvailableCurrencies { get; set; } = new List<string>(StaticAvailableCurrencies);
         public List<TimeZoneOption> AvailableTimeZones { get; set; } = new List<TimeZoneOption>();
+        public List<string> GrantedFeatures { get; set; } = new List<string>();
     }
 }

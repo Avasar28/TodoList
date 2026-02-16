@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using TodoListApp.Helpers;
 using TodoListApp.Models;
 using TodoListApp.Services;
 
@@ -16,23 +17,20 @@ namespace TodoListApp.Controllers
             _timeTrackerService = timeTrackerService;
         }
 
-        private int GetUserId()
+        private string GetUserId()
         {
            var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-           if (idClaim != null && int.TryParse(idClaim.Value, out var id))
+           if (idClaim != null)
            {
-               return id;
+               return idClaim.Value;
            }
            throw new Exception("User ID not found");
         }
 
+        [AuthorizeFeature("Page_TimeTracker")]
         public IActionResult Index()
         {
-            return View(); // The view will fetch data via AJAX or we can pass initial data here if preferred. 
-                           // Plan said AJAX for Add, but Index usually loads valid data. 
-                           // Let's pass the initial list for today to be server-side rendered for speed, 
-                           // OR just let the JS handle it.
-                           // Given the simple requirement, let's stick to the plan: Index View + JS logic.
+            return View(); 
         }
 
         [HttpGet]

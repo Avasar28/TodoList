@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using TodoListApp.Helpers;
 using TodoListApp.Models;
 using TodoListApp.Services;
 
@@ -14,19 +15,26 @@ namespace TodoListApp.Controllers
         private readonly IExternalApiService _externalApiService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IUserManagementService _userManagementService;
+        private readonly IFeatureService _featureService;
 
         public TodoController(
             ITodoService todoService, 
             IExternalApiService externalApiService, 
             UserManager<ApplicationUser> userManager, 
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            IUserManagementService userManagementService,
+            IFeatureService featureService)
         {
             _todoService = todoService;
             _externalApiService = externalApiService;
             _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
+            _userManagementService = userManagementService;
+            _featureService = featureService;
         }
 
+        [AuthorizeFeature("Page_Dashboard")]
         public async Task<IActionResult> Dashboard(string? city, string? fromCurrency, string? toCurrency, string? sourceTime, string? targetTime)
         {
             var userId = GetUserId();
@@ -73,7 +81,10 @@ namespace TodoListApp.Controllers
                 SourceTimeZone = sourceTime,
                 TargetTimeZone = targetTime,
                 AvailableCurrencies = new List<string> { "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "HKD", "NZD", "SGD", "INR" }, 
-                AvailableTimeZones = LoadTimeZones()
+                AvailableTimeZones = LoadTimeZones(),
+                GrantedFeatures = user != null 
+                    ? (await _featureService.GetUserGrantedFeaturesAsync(user.Id)).Select(f => f.TechnicalName).ToList()
+                    : new List<string>()
             };
 
             // Don't fetch data server-side - let client handle it for faster initial render
@@ -210,6 +221,30 @@ namespace TodoListApp.Controllers
             return Json(data);
         }
 
+        [HttpGet]
+        [Authorize(Roles = "SuperAdmin,Admin")]
+        public async Task<IActionResult> GetUserFeatures(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return NotFound();
+
+            var allFeatures = await _featureService.GetAllFeaturesAsync();
+            var grantedFeatures = await _featureService.GetUserGrantedFeaturesAsync(userId);
+            
+            return Json(new {
+                allFeatures = allFeatures.Select(f => new { f.Id, f.Name, f.Type, f.Icon, f.TechnicalName }),
+                grantedFeatureIds = grantedFeatures.Select(f => f.Id)
+            });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "SuperAdmin,Admin")]
+        public async Task<IActionResult> UpdateUserFeatures(string userId, [FromBody] List<int> featureIds)
+        {
+            var result = await _featureService.UpdateUserFeaturesAsync(userId, featureIds, User.Identity?.Name);
+            return Json(new { success = result.Success, message = result.Message });
+        }
+
         private string GetUserId()
         {
             var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -220,6 +255,7 @@ namespace TodoListApp.Controllers
             throw new Exception("User ID not found");
         }
 
+        [AuthorizeFeature("Page_Tasks")]
         public IActionResult Index(string searchString, string status)
         {
             ViewData["CurrentFilter"] = searchString;
@@ -247,6 +283,7 @@ namespace TodoListApp.Controllers
             return View(items);
         }
 
+        [AuthorizeFeature("Page_UserManagement")]
         [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> UserList()
         {
@@ -271,14 +308,15 @@ namespace TodoListApp.Controllers
 
         [HttpGet]
         [Authorize(Roles = "SuperAdmin,Admin")]
-        public IActionResult CreateUser()
+        public async Task<IActionResult> CreateUser([FromServices] Services.IFeatureService featureService)
         {
+            ViewBag.SystemFeatures = await featureService.GetAllFeaturesAsync();
             return View(new ViewModels.AdminCreateUserViewModel());
         }
 
         [HttpPost]
         [Authorize(Roles = "SuperAdmin,Admin")]
-        public async Task<IActionResult> CreateUser(ViewModels.AdminCreateUserViewModel model, [FromServices] IEmailService emailService)
+        public async Task<IActionResult> CreateUser(ViewModels.AdminCreateUserViewModel model, [FromServices] Services.IUserManagementService userManagementService)
         {
             if (!ModelState.IsValid)
             {
@@ -291,29 +329,14 @@ namespace TodoListApp.Controllers
                 return Json(new { success = false, message = "Insufficient permissions to create a SuperAdmin." });
             }
 
-            // Check if user already exists
-            var existingUser = await _userManager.FindByEmailAsync(model.Email);
-            if (existingUser != null) 
+            var result = await userManagementService.CreateUserAsync(model, User.Identity?.Name);
+            
+            if (result.Success)
             {
-                return Json(new { success = false, message = "Email already exists." });
+                return Json(new { success = true, message = result.Message, redirectUrl = result.RedirectUrl });
             }
 
-            // Generate 6-digit OTP
-            var otp = Helpers.OtpHelper.Generate6DigitOtp();
-            var expiry = DateTime.UtcNow.AddMinutes(10);
-            
-            // Store EVERYTHING in session (Email, Password, Role, OTP, Expiry)
-            HttpContext.Session.SetString("SignupEmail", model.Email);
-            HttpContext.Session.SetString("SignupPassword", model.Password);
-            HttpContext.Session.SetString("SignupFullName", model.Name);
-            HttpContext.Session.SetString("SignupRole", model.Role);
-            HttpContext.Session.SetString("SignupOtp", otp);
-            HttpContext.Session.SetString("SignupOtpExpiry", expiry.ToString("O"));
-
-            // Send OTP email
-            await emailService.SendEmailAsync(model.Email, "Verify Your Email", Helpers.OtpHelper.GetOtpEmailBody(otp));
-
-            return Json(new { success = true, message = "OTP sent successfully!", redirectUrl = Url.Action("VerifyOtp", "Account") });
+            return Json(new { success = false, message = result.Message });
         }
 
         [HttpGet]

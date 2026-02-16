@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using TodoListApp.Models;
 using System.Text.Json;
 using System.IO;
+using Microsoft.EntityFrameworkCore;
 
 namespace TodoListApp.Data
 {
@@ -23,6 +24,9 @@ namespace TodoListApp.Data
                 }
             }
 
+            // Seed Features
+            await SeedFeaturesAsync(serviceProvider);
+
             // Legacy Import
             await ImportLegacyUsers(userManager);
 
@@ -39,8 +43,48 @@ namespace TodoListApp.Data
             }
         }
 
+        private static async Task SeedFeaturesAsync(IServiceProvider serviceProvider)
+        {
+            var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
+            if (await context.SystemFeatures.AnyAsync()) return;
+
+            var features = new List<SystemFeature>
+            {
+                // Pages
+                new SystemFeature { Name = "Dashboard", TechnicalName = "Page_Dashboard", Type = FeatureType.Page, Icon = "📊", Description = "Access to the main analytics dashboard.", IsDefault = true },
+                new SystemFeature { Name = "My Tasks", TechnicalName = "Page_Tasks", Type = FeatureType.Page, Icon = "✅", Description = "Access to personal todo list management.", IsDefault = true },
+                new SystemFeature { Name = "Time Tracker", TechnicalName = "Page_TimeTracker", Type = FeatureType.Page, Icon = "⏱️", Description = "Access to the productivity time tracking tool.", IsDefault = true },
+                new SystemFeature { Name = "PDF Tools", TechnicalName = "Page_PdfTools", Type = FeatureType.Page, Icon = "📄", Description = "Access to PDF merge and management tools.", IsDefault = true },
+                new SystemFeature { Name = "User Management", TechnicalName = "Page_UserManagement", Type = FeatureType.Page, Icon = "👥", Description = "Access to manage system users and roles.", IsDefault = false },
+
+                // Widgets
+                new SystemFeature { Name = "Weather Widget", TechnicalName = "Widget_Weather", Type = FeatureType.Widget, Icon = "🌤️", Description = "Real-time weather information on dashboard.", IsDefault = true },
+                new SystemFeature { Name = "News Widget", TechnicalName = "Widget_News", Type = FeatureType.Widget, Icon = "📰", Description = "Daily news feed on dashboard.", IsDefault = true },
+                new SystemFeature { Name = "Currency Widget", TechnicalName = "Widget_Currency", Type = FeatureType.Widget, Icon = "💱", Description = "Live currency conversion rates.", IsDefault = true },
+                new SystemFeature { Name = "Holiday Widget", TechnicalName = "Widget_Holiday", Type = FeatureType.Widget, Icon = "📅", Description = "Public holiday calendar for selected countries.", IsDefault = true },
+                new SystemFeature { Name = "Time Widget", TechnicalName = "Widget_Time", Type = FeatureType.Widget, Icon = "🕒", Description = "Digital clock and time conversion widgets.", IsDefault = true },
+                new SystemFeature { Name = "Habit Widget", TechnicalName = "Widget_Habit", Type = FeatureType.Widget, Icon = "🌱", Description = "Daily habit tracking and streaks.", IsDefault = true },
+                new SystemFeature { Name = "Country Widget", TechnicalName = "Widget_Country", Type = FeatureType.Widget, Icon = "🌍", Description = "Explore global country details and statistics.", IsDefault = true },
+                new SystemFeature { Name = "Translator Widget", TechnicalName = "Widget_Translator", Type = FeatureType.Widget, Icon = "🈶", Description = "Quick text translation tool.", IsDefault = true },
+                new SystemFeature { Name = "Emergency Widget", TechnicalName = "Widget_Emergency", Type = FeatureType.Widget, Icon = "🆘", Description = "Emergency SOS and global contact numbers.", IsDefault = true },
+                new SystemFeature { Name = "PDF Widget", TechnicalName = "Widget_PdfTools", Type = FeatureType.Widget, Icon = "📄", Description = "Quick access to PDF tools from dashboard.", IsDefault = true }
+            };
+
+            await context.SystemFeatures.AddRangeAsync(features);
+            await context.SaveChangesAsync();
+        }
+
         private static async Task ImportLegacyUsers(UserManager<ApplicationUser> userManager)
         {
+            // Check if any users exist (excluding the bootstrap user)
+            var existingUsers = userManager.Users.ToList();
+            if (existingUsers.Any(u => !u.Email.Equals("savaliyaavasar@gmail.com", StringComparison.OrdinalIgnoreCase)))
+            {
+                // Users already exist, skip import to prevent re-importing deleted users
+                System.Diagnostics.Debug.WriteLine("[IMPORT] Skipping legacy import - users already exist in database.");
+                return;
+            }
+
             var legacyFiles = new[] { "user.json", "users.json" };
             foreach (var file in legacyFiles)
             {

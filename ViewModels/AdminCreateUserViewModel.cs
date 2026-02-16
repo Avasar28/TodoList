@@ -25,5 +25,7 @@ namespace TodoListApp.ViewModels
 
         [Required(ErrorMessage = "Please select a role")]
         public string Role { get; set; } = "NormalUser";
+
+        public List<int> SelectedFeatureIds { get; set; } = new();
     }
 }

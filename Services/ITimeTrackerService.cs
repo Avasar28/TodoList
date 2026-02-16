@@ -6,10 +6,10 @@ namespace TodoListApp.Services
 {
     public interface ITimeTrackerService
     {
-        IEnumerable<TimeTrackerEntry> GetEntries(int userId, DateTime date);
-        IEnumerable<TimeTrackerEntry> GetEntriesRange(int userId, DateTime startDate, DateTime endDate);
+        IEnumerable<TimeTrackerEntry> GetEntries(string userId, DateTime date);
+        IEnumerable<TimeTrackerEntry> GetEntriesRange(string userId, DateTime startDate, DateTime endDate);
         void AddEntry(TimeTrackerEntry entry);
         void UpdateEntry(TimeTrackerEntry entry);
-        void DeleteEntry(Guid id, int userId);
+        void DeleteEntry(Guid id, string userId);
     }
 }

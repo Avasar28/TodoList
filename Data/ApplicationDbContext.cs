@@ -12,6 +12,9 @@ namespace TodoListApp.Data
         }
 
         public DbSet<PdfFileHistory> PdfFiles { get; set; }
+        public DbSet<SystemFeature> SystemFeatures { get; set; }
+        public DbSet<UserFeatureAccess> UserFeatures { get; set; }
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

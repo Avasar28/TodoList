@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using TodoListApp.Helpers;
 using TodoListApp.Models;
 using TodoListApp.Services;
 
@@ -20,6 +21,7 @@ namespace TodoListApp.Controllers
             _userManager = userManager;
         }
 
+        [AuthorizeFeature("Page_PdfTools")]
         public async Task<IActionResult> Index()
         {
             var userId = User.Identity?.Name ?? string.Empty;

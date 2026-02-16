@@ -37,222 +37,238 @@
         <!-- ROW 1: STATUS (Weather, Currency, Time) -->
         
         <!-- Area: Weather -->
-        <div class="grid-area-weather">
-             <div class="insight-card widget-weather-live weather loading" onclick="openDetails('weather')">
-                <div class="weather-live-indicator">
-                    <span class="pulse-dot"></span> <span class="live-text">LIVE</span>
-                </div>
-                <!-- Main Content Centered -->
-                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-top: 1rem;">
-                    <div class="insight-icon-huge" id="summaryWeatherIcon" style="margin-bottom: 0.5rem;">@(string.IsNullOrEmpty(Model.Weather.Icon) ? "🌤️" : Model.Weather.Icon)</div>
-                    <span class="insight-value-huge" id="summaryWeatherTemp">@(Model.Weather.Temperature > 0 ? Model.Weather.Temperature + "°" : "--°")</span>
-                    <span class="insight-label-lg" id="summaryWeatherDesc" style="font-size: 1rem; opacity: 0.9;">@Model.Weather.Description</span>
-                </div>
-                <!-- Footer -->
-                 <div class="weather-meta-row" style="margin-top: auto;">
-                    <span class="meta-item" id="summaryWeatherHum">💧 @Model.Weather.Humidity%</span>
-                    <span class="meta-item" id="summaryWeatherWind">💨 @Model.Weather.WindSpeed km/h</span>
+        @if (Model.GrantedFeatures.Contains("Widget_Weather"))
+        {
+            <div class="grid-area-weather">
+                <div class="insight-card widget-weather-live weather loading" onclick="openDetails('weather')">
+                    <div class="weather-live-indicator">
+                        <span class="pulse-dot"></span> <span class="live-text">LIVE</span>
+                    </div>
+                    <!-- Main Content Centered -->
+                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-top: 1rem;">
+                        <div class="insight-icon-huge" id="summaryWeatherIcon" style="margin-bottom: 0.5rem;">@(string.IsNullOrEmpty(Model.Weather.Icon) ? "🌤️" : Model.Weather.Icon)</div>
+                        <span class="insight-value-huge" id="summaryWeatherTemp">@(Model.Weather.Temperature > 0 ? Model.Weather.Temperature + "°" : "--°")</span>
+                        <span class="insight-label-lg" id="summaryWeatherDesc" style="font-size: 1rem; opacity: 0.9;">@Model.Weather.Description</span>
+                    </div>
+                    <!-- Footer -->
+                    <div class="weather-meta-row" style="margin-top: auto;">
+                        <span class="meta-item" id="summaryWeatherHum">💧 @Model.Weather.Humidity%</span>
+                        <span class="meta-item" id="summaryWeatherWind">💨 @Model.Weather.WindSpeed km/h</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        }
 
         <!-- Area: Currency -->
-        <div class="grid-area-currency">
-            <div class="insight-card widget-currency-live currency compact" onclick="openDetails('currency')">
-                <div class="widget-header-row" style="justify-content: center;">
-                    <span class="widget-title-sm" style="font-size: 0.9rem; opacity: 1;">Currency Converter</span>
-                </div>
-                <div class="currency-live-data">
-                    <div class="pair-display">
-                        <span class="curr-code">@Model.FromCurrency</span>
-                        <span class="arrow" style="opacity: 0.7;">→</span>
-                        <span class="curr-code">@Model.ToCurrency</span>
+        @if (Model.GrantedFeatures.Contains("Widget_Currency"))
+        {
+            <div class="grid-area-currency">
+                <div class="insight-card widget-currency-live currency compact" onclick="openDetails('currency')">
+                    <div class="widget-header-row" style="justify-content: center;">
+                        <span class="widget-title-sm" style="font-size: 0.9rem; opacity: 1;">Currency Converter</span>
                     </div>
-                    <div class="rate-large" id="summaryCurrencyRate">
-                        @(Model.Currency.Rate > 0 ? Model.Currency.Rate.ToString("F3") : "--.---")
-                    </div>
-                    <div class="currency-meta-row">
-                        <span class="trend-indicator @(Model.Currency.IsUp == true ? "up" : "down")" id="summaryCurrencyTrend">
-                             @(Model.Currency.IsUp == true ? "▲" : "▼") <span class="trend-val">0.05%</span>
-                        </span>
-                        <span class="meta-item-sm" id="summaryCurrencyMeta">1 @Model.FromCurrency = @Model.Currency.Rate @Model.ToCurrency</span>
+                    <div class="currency-live-data">
+                        <div class="pair-display">
+                            <span class="curr-code">@Model.FromCurrency</span>
+                            <span class="arrow" style="opacity: 0.7;">→</span>
+                            <span class="curr-code">@Model.ToCurrency</span>
+                        </div>
+                        <div class="rate-large" id="summaryCurrencyRate">
+                            @(Model.Currency.Rate > 0 ? Model.Currency.Rate.ToString("F3") : "--.---")
+                        </div>
+                        <div class="currency-meta-row">
+                            <span class="trend-indicator @(Model.Currency.IsUp == true ? "up" : "down")" id="summaryCurrencyTrend">
+                                @(Model.Currency.IsUp == true ? "▲" : "▼") <span class="trend-val">0.05%</span>
+                            </span>
+                            <span class="meta-item-sm" id="summaryCurrencyMeta">1 @Model.FromCurrency = @Model.Currency.Rate @Model.ToCurrency</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        }
 
         <!-- Area: Time -->
-        <div class="grid-area-time">
-            <div class="insight-card widget-time-live time compact" onclick="openDetails('time')">
-                 <div class="widget-header-row" style="justify-content: center;">
-                    <span class="widget-title-sm" style="font-size: 0.9rem; opacity: 1;">Time Converter</span>
-                </div>
-                <div class="time-digital-display">
-                    <span class="digital-time" id="summaryTargetTime">--:--</span>
-                    <span class="time-diff-pill">Standard Time</span>
+        @if (Model.GrantedFeatures.Contains("Widget_Time"))
+        {
+            <div class="grid-area-time">
+                <div class="insight-card widget-time-live time compact" onclick="openDetails('time')">
+                    <div class="widget-header-row" style="justify-content: center;">
+                        <span class="widget-title-sm" style="font-size: 0.9rem; opacity: 1;">Time Converter</span>
+                    </div>
+                    <div class="time-digital-display">
+                        <span class="digital-time" id="summaryTargetTime">--:--</span>
+                        <span class="time-diff-pill">Standard Time</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        }
 
         <!-- ROW 2: FOCUS (Habits, News) -->
 
         <!-- Area: Habit Tracker -->
-        <div class="grid-area-habit">
-             <div class="insight-card widget-habit-tracker habit widget-secondary" id="habitWidget" onclick="openDetails('habit')">
-                <div class="habit-summary-content">
-                    <div class="habit-summary-header">
-                        <span class="widget-title-sm">DAILY HABITS</span>
-                        <div class="summary-badges">
-                            <span class="badge-pill" id="habitSummaryCount">0 Active</span>
-                        </div>
-                    </div>
-                    
-                    <div class="habit-summary-hero">
-                        <div class="hero-left">
-                            <span class="hero-stat-label">Best Streak</span>
-                            <span class="hero-stat-val" id="habitSummaryBest">0</span>
-                        </div>
-                         <div class="hero-right">
-                             <span class="hero-stat-label">Today's Progress</span>
-                            <div class="mini-progress-bar">
-                                <div class="mini-progress-fill" id="habitSummaryProgress" style="width: 0%"></div>
+        @if (Model.GrantedFeatures.Contains("Widget_Habit"))
+        {
+            <div class="grid-area-habit">
+                <div class="insight-card widget-habit-tracker habit widget-secondary" id="habitWidget" onclick="openDetails('habit')">
+                    <div class="habit-summary-content">
+                        <div class="habit-summary-header">
+                            <span class="widget-title-sm">DAILY HABITS</span>
+                            <div class="summary-badges">
+                                <span class="badge-pill" id="habitSummaryCount">0 Active</span>
                             </div>
-                         </div>
-                    </div>
+                        </div>
+                        
+                        <div class="habit-summary-hero">
+                            <div class="hero-left">
+                                <span class="hero-stat-label">Best Streak</span>
+                                <span class="hero-stat-val" id="habitSummaryBest">0</span>
+                            </div>
+                            <div class="hero-right">
+                                <span class="hero-stat-label">Today's Progress</span>
+                                <div class="mini-progress-bar">
+                                    <div class="mini-progress-fill" id="habitSummaryProgress" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="habit-summary-footer">
-                        <span class="click-hint">Click to manage habits & streaks →</span>
+                        <div class="habit-summary-footer">
+                            <span class="click-hint">Click to manage habits & streaks →</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        }
 
         <!-- Area: News Feed -->
-        <div class="grid-area-news">
-             <div class="insight-card widget-news-feed news loading widget-secondary" id="newsWidgetCard" onclick="openDetails('news')">
-                <div class="widget-header-feed">
-                    <div class="header-left">
-                        <span class="feed-title">Live News Feed</span>
-                        <span class="feed-live-dot"></span>
-                    </div>
-                    <div class="header-right">
-                        <span class="badge-count" id="summaryNewsCount">-- Stories</span>
-                    </div>
-                </div>
-                <div class="news-meta-bar">
-                    <span class="meta-text" id="summaryNewsMeta">Loading regional headlines...</span>
-                </div>
-                <div class="news-timeline-container">
-                    <!-- Placeholder Items for Loading -->
-                     <div class="timeline-item">
-                        <span class="time-stamp">Now</span>
-                        <div class="timeline-content">
-                            <span class="category-pill-news">Headlines</span>
-                            <span class="headline-text">Loading top stories for @Model.SelectedCity...</span>
+        @if (Model.GrantedFeatures.Contains("Widget_News"))
+        {
+            <div class="grid-area-news">
+                <div class="insight-card widget-news-feed news loading widget-secondary" id="newsWidgetCard" onclick="openDetails('news')">
+                    <div class="widget-header-feed">
+                        <div class="header-left">
+                            <span class="feed-title">Live News Feed</span>
+                            <span class="feed-live-dot"></span>
+                        </div>
+                        <div class="header-right">
+                            <span class="badge-count" id="summaryNewsCount">-- Stories</span>
                         </div>
                     </div>
-                    <div class="timeline-item">
-                        <span class="time-stamp">10m</span>
-                        <div class="timeline-content">
-                            <span class="category-pill-news">World</span>
-                            <span class="headline-text">Global market updates and breaking news...</span>
-                        </div>
+                    <div class="news-meta-bar">
+                        <span class="meta-text" id="summaryNewsMeta">Loading regional headlines...</span>
                     </div>
-                     <div class="timeline-item">
-                        <span class="time-stamp">1h</span>
-                        <div class="timeline-content">
-                            <span class="category-pill-news">Tech</span>
-                            <span class="headline-text">Latest technology trends and updates...</span>
+                    <div class="news-timeline-container">
+                        <!-- Placeholder Items for Loading -->
+                        <div class="timeline-item">
+                            <span class="time-stamp">Now</span>
+                            <div class="timeline-content">
+                                <span class="category-pill-news">Headlines</span>
+                                <span class="headline-text">Loading top stories for @Model.SelectedCity...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        }
 
         <!-- ROW 3: TOOLS (Country, Holiday, Translator, Emergency) -->
         
         <!-- Area: Country -->
-        <div class="grid-area-country">
-            <div class="insight-card widget-country-live country widget-secondary" onclick="openDetails('country')">
-                <div class="country-visual-bg">
-                    <div class="search-hint-overlay">
-                        <span class="search-icon-lg">🔍</span>
-                        <span class="search-text">Explore Global Data</span>
+        @if (Model.GrantedFeatures.Contains("Widget_Country"))
+        {
+            <div class="grid-area-country">
+                <div class="insight-card widget-country-live country widget-secondary" onclick="openDetails('country')">
+                    <div class="country-visual-bg">
+                        <div class="search-hint-overlay">
+                            <span class="search-icon-lg">🔍</span>
+                            <span class="search-text">Explore Global Data</span>
+                        </div>
+                    </div>
+                    <div class="country-label-overlay">
+                        <span class="country-name-lg" id="summaryCountryName">Country Explorer</span>
+                        <span class="country-meta-sm" id="summaryCountryMeta" style="display:block; font-size:0.75rem; color:rgba(255,255,255,0.7);">Search to explore</span>
                     </div>
                 </div>
-                <div class="country-label-overlay">
-                    <span class="country-name-lg" id="summaryCountryName">Country Explorer</span>
-                    <span class="country-meta-sm" id="summaryCountryMeta" style="display:block; font-size:0.75rem; color:rgba(255,255,255,0.7);">Search to explore</span>
-                </div>
             </div>
-        </div>
+        }
 
         <!-- Area: Holiday -->
-        <div class="grid-area-holiday">
-            <div class="insight-card widget-holiday-live holiday loading widget-secondary" id="holidayWidgetCard" onclick="openDetails('holiday')">
-                <div class="widget-header-row">
-                    <span class="widget-title-sm">PUBLIC HOLIDAYS</span>
-                    <span class="holiday-next-pill" id="nextHolidayBadge">Loading...</span>
-                </div>
-                <div class="holiday-summary-content">
-                    <div class="holiday-count-large" id="summaryHolidayCount">--</div>
-                    <span class="holiday-label-sm" id="summaryHolidayLabel">Fetching @DateTime.Now.Year Holidays</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Area: Translator -->
-        <div class="grid-area-translator">
-            <div class="insight-card widget-translator-summary translator widget-secondary" onclick="openDetails('translator')">
-                <div class="widget-header-row">
-                    <span class="widget-title-sm">TRANSLATOR</span>
-                    <span class="pulse-dot" style="background:#10b981; box-shadow:0 0 10px #10b981;"></span>
-                </div>
-                <div class="translator-summary-hero">
-                    <div class="trans-icon-hero">🈂️</div>
-                    <div class="trans-hero-text">
-                        <span class="hero-main">Quick Translate</span>
-                        <span class="hero-sub">100+ Languages</span>
+        @if (Model.GrantedFeatures.Contains("Widget_Holiday"))
+        {
+            <div class="grid-area-holiday">
+                <div class="insight-card widget-holiday-live holiday loading widget-secondary" id="holidayWidgetCard" onclick="openDetails('holiday')">
+                    <div class="widget-header-row">
+                        <span class="widget-title-sm">PUBLIC HOLIDAYS</span>
+                        <span class="holiday-next-pill" id="nextHolidayBadge">Loading...</span>
+                    </div>
+                    <div class="holiday-summary-content">
+                        <div class="holiday-count-large" id="summaryHolidayCount">--</div>
+                        <span class="holiday-label-sm" id="summaryHolidayLabel">Fetching @DateTime.Now.Year Holidays</span>
                     </div>
                 </div>
-                <div class="trans-action-hint">
-                    Click to start translating →
+            </div>
+        }
+
+        <!-- Area: Translator -->
+        @if (Model.GrantedFeatures.Contains("Widget_Translator"))
+        {
+            <div class="grid-area-translator">
+                <div class="insight-card widget-translator-summary translator widget-secondary" onclick="openDetails('translator')">
+                    <div class="widget-header-row">
+                        <span class="widget-title-sm">TRANSLATOR</span>
+                        <span class="pulse-dot" style="background:#10b981; box-shadow:0 0 10px #10b981;"></span>
+                    </div>
+                    <div class="translator-summary-hero">
+                        <div class="trans-icon-hero">🈂️</div>
+                        <div class="trans-hero-text">
+                            <span class="hero-main">Quick Translate</span>
+                            <span class="hero-sub">100+ Languages</span>
+                        </div>
+                    </div>
+                    <div class="trans-action-hint">
+                        Click to start translating →
+                    </div>
                 </div>
             </div>
-        </div>
+        }
 
         <!-- Area: Emergency -->
-        <div class="grid-area-emergency">
-            <div class="insight-card widget-emergency emergency widget-attention" onclick="openDetails('emergency')">
-                <div class="widget-header-row">
-                    <span class="widget-title-sm" style="color: #f87171;">EMERGENCY SOS</span>
-                    <span class="pulse-dot"></span>
-                </div>
-                <div class="emergency-visual">
-                    <div class="sos-icon">🆘</div>
-                    <span class="sos-label">Help Center</span>
-                </div>
-                <div class="emergency-action-hint">
-                    Tap for Numbers
+        @if (Model.GrantedFeatures.Contains("Widget_Emergency"))
+        {
+            <div class="grid-area-emergency">
+                <div class="insight-card widget-emergency emergency widget-attention" onclick="openDetails('emergency')">
+                    <div class="widget-header-row">
+                        <span class="widget-title-sm" style="color: #f87171;">EMERGENCY SOS</span>
+                        <span class="pulse-dot"></span>
+                    </div>
+                    <div class="emergency-visual">
+                        <div class="sos-icon">🆘</div>
+                        <span class="sos-label">Help Center</span>
+                    </div>
+                    <div class="emergency-action-hint">
+                        Tap for Numbers
+                    </div>
                 </div>
             </div>
-        </div>
+        }
 
         <!-- Area: PDF Tools -->
-        <div class="grid-area-pdftools">
-            <div class="insight-card widget-pdf-tools pdftools widget-secondary" onclick="window.location.href='@Url.Action("Index", "PdfTools")'">
-                <div class="widget-header-row">
-                    <span class="widget-title-sm">PDF TOOLS</span>
-                </div>
-                <div class="pdf-tools-visual" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
-                    <div class="pdf-icon" style="font-size: 2.5rem;">📄</div>
-                    <span class="pdf-label" style="font-weight: 700; color: #fff;">PDF Suite</span>
-                </div>
-                <div class="pdf-action-hint" style="text-align: center; font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: auto;">
-                    Merge, Split & Convert
+        @if (Model.GrantedFeatures.Contains("Widget_PdfTools"))
+        {
+            <div class="grid-area-pdftools">
+                <div class="insight-card widget-pdf-tools pdftools widget-secondary" onclick="window.location.href='@Url.Action("Index", "PdfTools")'">
+                    <div class="widget-header-row">
+                        <span class="widget-title-sm">PDF TOOLS</span>
+                    </div>
+                    <div class="pdf-tools-visual" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <div class="pdf-icon" style="font-size: 2.5rem;">📄</div>
+                        <span class="pdf-label" style="font-weight: 700; color: #fff;">PDF Suite</span>
+                    </div>
+                    <div class="pdf-action-hint" style="text-align: center; font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: auto;">
+                        Merge, Split & Convert
+                    </div>
                 </div>
             </div>
-        </div>
+        }
 
     </div>
 
