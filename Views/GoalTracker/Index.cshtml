@@ -269,8 +269,12 @@
                 <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary);">Progress (<span class="goal-unit"></span>)</span>
                 <span class="progress-ratio" style="font-weight: 800; color: #14b8a6; font-size: 1rem;"></span>
             </div>
-            <div class="mini-progress-bar" style="height: 12px; background: rgba(255,255,255,0.05); border-radius: 30px; overflow: hidden;">
+            <div class="mini-progress-bar" style="height: 12px; background: rgba(255,255,255,0.05); border-radius: 30px; overflow: hidden; margin-bottom: 1rem;">
                 <div class="progress-fill" style="height: 100%; width: 0%; transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
+            </div>
+            <div class="suggestion-area" style="display: flex; align-items: center; gap: 0.5rem; background: rgba(20, 184, 166, 0.05); padding: 0.75rem 1rem; border-radius: 12px; border: 1px solid rgba(20, 184, 166, 0.1);">
+                <span style="font-size: 1rem;">💡</span>
+                <span class="suggestion-text" style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);"></span>
             </div>
         </div>
 
@@ -377,6 +381,9 @@
     .today .day-number { color: #14b8a6; }
     .work-indicator { width: 8px; height: 8px; background: #14b8a6; border-radius: 50%; margin: 5px auto 0; box-shadow: 0 0 10px #14b8a6; }
     .day-name { font-size: 0.8rem; font-weight: 850; color: var(--text-secondary); opacity: 0.6; }
+
+    .suggestion-text .highlight { color: #14b8a6; font-weight: 850; }
+    .overdue-badge { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 850; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(239, 68, 68, 0.2); }
 </style>
 
 @section Scripts {
@@ -578,6 +585,24 @@
 
                 const rem = Math.ceil((new Date(g.endDate) - new Date()) / (1000 * 60 * 60 * 24));
                 card.querySelector('.days-remaining').textContent = rem > 0 ? `${rem} days remaining` : (rem === 0 ? "Today is the deadline!" : "Deadline passed");
+
+                // Suggestion Logic
+                const suggestText = card.querySelector('.suggestion-text');
+                const suggestArea = card.querySelector('.suggestion-area');
+                
+                if (g.progressPercent >= 100) {
+                    suggestArea.style.display = 'none';
+                } else if (rem < 0) {
+                    suggestArea.style.background = 'rgba(239, 68, 68, 0.05)';
+                    suggestArea.style.borderColor = 'rgba(239, 68, 68, 0.1)';
+                    suggestText.innerHTML = `<span class="overdue-badge">⚠️ Overdue</span> <span style="color: #ef4444;">Deadline has passed!</span>`;
+                } else {
+                    const remainingValue = g.targetValue - g.currentValue;
+                    const daysToWork = Math.max(rem, 1); // Avoid division by zero
+                    const dailyEffort = remainingValue / daysToWork;
+                    const effortStr = dailyEffort % 1 === 0 ? dailyEffort.toString() : dailyEffort.toFixed(1);
+                    suggestText.innerHTML = `Suggested daily effort: <span class="highlight">${effortStr} ${g.unit || 'units'}</span>/day`;
+                }
 
                 card.querySelector('.edit').onclick = () => openCreateModal(g);
                 card.querySelector('.sched').onclick = () => openScheduleModal(g.id);
