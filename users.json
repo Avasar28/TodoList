@@ -1,36 +1,8 @@
 [
   {
-    "Id": "976e1ec8-182a-4d03-bf06-c7af8e06fc2b",
-    "Email": "avsar@gmail.com",
-    "Password": "$2a$11$zy.p8v5UCAx2asnA9nmxOe0JJ1ergHmPNoAW/WK48akVFv98wigSO",
-    "ResetToken": null,
-    "ResetTokenExpiry": null
-  },
-  {
     "Id": "c4dd3984-f4af-4153-893a-e0e5a629b1c3",
     "Email": "savaliya@gmail.com",
     "Password": "$2a$11$YfOCCaC4ZICDXg8w/mEKc.IX18zDocXZc1DPloqGn5Z7gpwRgpifC",
-    "ResetToken": null,
-    "ResetTokenExpiry": null
-  },
-  {
-    "Id": "a1653fec-30fc-4389-9d5a-19a2240fedff",
-    "Email": "abc@gmail.com",
-    "Password": "$2a$11$Ps40YUCycJl36FbI4yO5OeViKTj0QhI8QmIWPla.74vr.VzkpKuT6",
-    "ResetToken": null,
-    "ResetTokenExpiry": null
-  },
-  {
-    "Id": "c0d75289-a226-4937-a814-1d8d0f85b4f9",
-    "Email": "bbb@gmail.com",
-    "Password": "$2a$11$RxtbgXMLm4OCea0v.7o/4uPglD2SEIxHJ.Oplg6Jq.dUFLmxAAuXK",
-    "ResetToken": null,
-    "ResetTokenExpiry": null
-  },
-  {
-    "Id": "aa78e79f-7e72-47b0-bb84-13676e758e32",
-    "Email": "aaa@gmail.com",
-    "Password": "$2a$11$YPMuTgFufEFvILZQkJNdYOxJ5LmfsVR2qpJ7g5Ur9psyOlhwjqUby",
     "ResetToken": null,
     "ResetTokenExpiry": null
   }
