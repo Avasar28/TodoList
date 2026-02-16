@@ -16,5 +16,12 @@ namespace TodoListApp.Services
         Task<(bool Success, string Message)> DeleteScheduleAsync(int scheduleId, string userId);
         Task<GoalAnalyticsDto> GetGoalAnalyticsAsync(string userId);
         Task<IEnumerable<UserAchievement>> GetUserAchievementsAsync(string userId);
+        
+        // Sub-task Methods
+        Task<IEnumerable<GoalSubTask>> GetSubTasksAsync(int goalId, string userId);
+        Task<GoalSubTask> AddSubTaskAsync(int goalId, string title, string userId);
+        Task<bool> ToggleSubTaskAsync(int subTaskId, string userId);
+        Task<bool> DeleteSubTaskAsync(int subTaskId, string userId);
+        Task<IEnumerable<string>> GetSuggestedSubTasksAsync(int goalId, string userId);
     }
 }

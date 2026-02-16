@@ -44,6 +44,12 @@ namespace TodoListApp.Models
         [StringLength(20)]
         public string Priority { get; set; } = "Medium"; // Low, Medium, High
 
+        public DateTime LastProgressUpdate { get; set; } = DateTime.UtcNow;
+
+        // Smart Reminder Settings
+        public bool ReminderEnabled { get; set; } = true;
+        public int ReminderFrequencyDays { get; set; } = 3;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

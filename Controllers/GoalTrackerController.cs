@@ -81,8 +81,8 @@ namespace TodoListApp.Controllers
         }
 
         [HttpGet]
-        [Route("GetSchedules")]
-        public async Task<JsonResult> GetSchedules()
+        [Route("GetCalendarData")]
+        public async Task<JsonResult> GetCalendarData()
         {
             var schedules = await _goalService.GetUserSchedulesAsync(GetUserId());
             return Json(new { success = true, data = schedules });
@@ -97,17 +97,17 @@ namespace TodoListApp.Controllers
         }
 
         [HttpGet]
-        [Route("GetAchievements")]
-        public async Task<JsonResult> GetAchievements()
+        [Route("GetUserAchievements")]
+        public async Task<JsonResult> GetUserAchievements()
         {
             var achievements = await _goalService.GetUserAchievementsAsync(GetUserId());
             return Json(new { success = true, data = achievements });
         }
 
         [HttpPost]
-        [Route("CreateSchedule")]
+        [Route("AddScheduleEntry")]
         [ValidateAntiForgeryToken]
-        public async Task<JsonResult> CreateSchedule([FromBody] GoalSchedule schedule)
+        public async Task<JsonResult> AddScheduleEntry([FromBody] GoalSchedule schedule)
         {
             try
             {
@@ -121,12 +121,63 @@ namespace TodoListApp.Controllers
         }
 
         [HttpPost]
-        [Route("DeleteSchedule")]
+        [Route("DeleteScheduleEntry")]
         [ValidateAntiForgeryToken]
-        public async Task<JsonResult> DeleteSchedule(int id)
+        public async Task<JsonResult> DeleteScheduleEntry(int id)
         {
             var result = await _goalService.DeleteScheduleAsync(id, GetUserId());
             return Json(new { success = result.Success, message = result.Message });
+        }
+
+        // Sub-task Management
+        [HttpGet]
+        [Route("GetSubTasks")]
+        public async Task<JsonResult> GetSubTasks(int goalId)
+        {
+            var subTasks = await _goalService.GetSubTasksAsync(goalId, GetUserId());
+            return Json(new { success = true, data = subTasks });
+        }
+
+        [HttpPost]
+        [Route("AddSubTask")]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> AddSubTask(int goalId, string title)
+        {
+            try
+            {
+                var subTask = await _goalService.AddSubTaskAsync(goalId, title, GetUserId());
+                return Json(new { success = true, data = subTask, message = "Sub-task added." });
+            }
+            catch
+            {
+                return Json(new { success = false, message = "Failed to add sub-task." });
+            }
+        }
+
+        [HttpPost]
+        [Route("ToggleSubTask")]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> ToggleSubTask(int id)
+        {
+            var result = await _goalService.ToggleSubTaskAsync(id, GetUserId());
+            return Json(new { success = result, message = result ? "Sub-task updated." : "Sub-task not found." });
+        }
+
+        [HttpPost]
+        [Route("DeleteSubTask")]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> DeleteSubTask(int id)
+        {
+            var result = await _goalService.DeleteSubTaskAsync(id, GetUserId());
+            return Json(new { success = result, message = result ? "Sub-task deleted." : "Sub-task not found." });
+        }
+
+        [HttpGet]
+        [Route("GetSuggestedSubTasks")]
+        public async Task<JsonResult> GetSuggestedSubTasks(int goalId)
+        {
+            var suggestions = await _goalService.GetSuggestedSubTasksAsync(goalId, GetUserId());
+            return Json(new { success = true, data = suggestions });
         }
     }
 }

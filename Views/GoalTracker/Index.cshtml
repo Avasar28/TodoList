@@ -104,6 +104,30 @@
             </div>
             <div style="height: 300px; width: 100%;"><canvas id="timelineChart"></canvas></div>
         </div>
+
+        <!-- Smart Insights Panel -->
+        <div class="insight-card" style="padding: 2rem; border-radius: 24px; margin-top: 2rem; background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(251, 191, 36, 0.05)); border: 1px solid rgba(251, 191, 36, 0.2);">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                <span style="font-size: 2rem;">🧠</span>
+                <div>
+                    <h3 style="margin: 0; font-weight: 850; color: #fff;">Productivity Intelligence</h3>
+                    <p style="color: var(--text-secondary); margin: 0.25rem 0 0; font-size: 0.9rem;">AI-powered insights to keep you on track.</p>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div class="stat-mini-card" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);">
+                    <span class="stat-icon">⚠️</span>
+                    <div><span class="stat-label">At Risk</span><span class="stat-value" id="statGoalsAtRisk">0</span></div>
+                </div>
+                <div class="stat-mini-card" style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.2);">
+                    <span class="stat-icon">💤</span>
+                    <div><span class="stat-label">Stagnant</span><span class="stat-value" id="statStagnantGoals">0</span></div>
+                </div>
+            </div>
+            <div id="smartInsightsList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <!-- Insights will be injected here -->
+            </div>
+        </div>
     </div>
 
     <!-- Achievements Hub -->
@@ -428,6 +452,15 @@
         border-color: #14b8a6;
     }
     .achievement-card .icon { font-size: 2rem; margin-bottom: 0px; }
+
+    /* Smooth Tab Transitions */
+    .tab-content {
+        animation: fadeIn 0.4s ease-out;
+    }
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
     .achievement-card .tooltip {
         position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
         background: #1e293b; color: #fff; padding: 0.75rem 1rem; border-radius: 12px;
@@ -573,7 +606,7 @@
 
         async function loadAchievements() {
             try {
-                const res = await fetch(`${API_BASE}/GetAchievements`);
+                const res = await fetch(`${API_BASE}/GetUserAchievements`);
                 const result = await res.json();
                 if (result.success && result.data.length > 0) {
                     const hub = document.getElementById('achievementsHub');
@@ -603,7 +636,7 @@
 
         async function loadSchedules() {
             try {
-                const res = await fetch(`${API_BASE}/GetSchedules`);
+                const res = await fetch(`${API_BASE}/GetCalendarData`);
                 const result = await res.json();
                 if (result.success) {
                     allSchedules = result.data;
@@ -661,14 +694,31 @@
                 card.querySelector('.goal-unit').textContent = g.unit || 'units';
                 card.querySelector('.goal-end-date').textContent = new Date(g.endDate).toLocaleDateString();
                 
-                const cat = card.querySelector('.category-badge'); cat.textContent = g.category;
-                const prio = card.querySelector('.priority-badge'); prio.textContent = g.priority; prio.classList.add(g.priority.toLowerCase());
+                const cat = card.querySelector('.category-badge'); if (cat) cat.textContent = g.category || 'General';
+                const prio = card.querySelector('.priority-badge'); 
+                if (prio) {
+                    prio.textContent = g.priority || 'Medium';
+                    const prioClass = (g.priority || 'Medium').toLowerCase();
+                    prio.classList.add(prioClass);
+                }
                 
-                const badge = card.querySelector('.status-badge'); badge.textContent = g.status;
-                const slug = g.status.toLowerCase().replace(' ', '-'); badge.classList.add(slug);
+                const badge = card.querySelector('.status-badge'); 
+                if (badge) {
+                    badge.textContent = g.status || 'Active';
+                    const slug = (g.status || 'Active').toLowerCase().replace(' ', '-'); 
+                    badge.classList.add(slug);
+                }
 
-                const fill = card.querySelector('.progress-fill'); fill.style.width = `${Math.min(g.progressPercent, 100)}%`; fill.classList.add(slug);
-                card.querySelector('.progress-ratio').textContent = `${g.currentValue}/${g.targetValue} (${g.progressPercent.toFixed(1)}%)`;
+                const fill = card.querySelector('.progress-fill'); 
+                if (fill) {
+                    const percent = g.progressPercent || 0;
+                    fill.style.width = `${Math.min(percent, 100)}%`; 
+                    const slug = (g.status || 'Active').toLowerCase().replace(' ', '-');
+                    fill.classList.add(slug);
+                }
+                
+                const ratio = card.querySelector('.progress-ratio');
+                if (ratio) ratio.textContent = `${g.currentValue || 0}/${g.targetValue || 0} (${(g.progressPercent || 0).toFixed(1)}%)`;
 
                 const rem = Math.ceil((new Date(g.endDate) - new Date()) / (1000 * 60 * 60 * 24));
                 card.querySelector('.days-remaining').textContent = rem > 0 ? `${rem} days remaining` : (rem === 0 ? "Today is the deadline!" : "Deadline passed");
@@ -691,10 +741,15 @@
                     suggestText.innerHTML = `Suggested daily effort: <span class="highlight">${effortStr} ${g.unit || 'units'}</span>/day`;
                 }
 
-                card.querySelector('.edit').onclick = () => openCreateModal(g);
-                card.querySelector('.sched').onclick = () => openScheduleModal(g.id);
-                card.querySelector('.track').onclick = () => openUpdateModal(g.id, g.currentValue);
-                card.querySelector('.delete').onclick = () => handleDelete(g.id);
+                const btnEdit = card.querySelector('.edit');
+                const btnSched = card.querySelector('.sched');
+                const btnTrack = card.querySelector('.track');
+                const btnDelete = card.querySelector('.delete');
+
+                if (btnEdit) btnEdit.onclick = () => openCreateModal(g);
+                if (btnSched) btnSched.onclick = () => openScheduleModal(g.id);
+                if (btnTrack) btnTrack.onclick = () => openUpdateModal(g.id, g.currentValue);
+                if (btnDelete) btnDelete.onclick = () => handleDelete(g.id);
 
                 container.appendChild(clone);
             });
@@ -931,7 +986,7 @@
             };
 
             try {
-                const res = await fetch(`${API_BASE}/CreateSchedule`, { 
+                const res = await fetch(`${API_BASE}/AddScheduleEntry`, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getAntiforgeryToken() }, 
                     body: JSON.stringify(data) 
@@ -951,7 +1006,7 @@
             if (!confirm("Cancel this work session?")) return;
             const fd = new FormData(); fd.append('id', id);
             try {
-                const res = await fetch(`${API_BASE}/DeleteSchedule`, { 
+                const res = await fetch(`${API_BASE}/DeleteScheduleEntry`, { 
                     method: 'POST', 
                     headers: { 'RequestVerificationToken': getAntiforgeryToken() }, 
                     body: fd 

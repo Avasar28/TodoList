@@ -86,6 +86,7 @@ namespace TodoListApp.Services
             bool wasCompleted = goal.ProgressPercent >= 100;
             goal.CurrentValue = currentValue;
             goal.UpdatedAt = DateTime.UtcNow;
+            goal.LastProgressUpdate = DateTime.UtcNow;
 
             CalculateProgress(goal);
             UpdateStatus(goal);
@@ -164,7 +165,7 @@ namespace TodoListApp.Services
                 .Where(g => g.UserId == userId)
                 .ToListAsync();
 
-            var today = DateTime.UtcNow.Date;
+            var today = DateTime.UtcNow;
             var analytics = new GoalAnalyticsDto
             {
                 TotalGoals = goals.Count,
@@ -174,10 +175,46 @@ namespace TodoListApp.Services
                 CompletionRate = goals.Any() ? (double)goals.Count(g => g.ProgressPercent >= 100) / goals.Count * 100 : 0
             };
 
+            // Productivity Intelligence: Risk Detection & Stagnation
+            foreach (var goal in goals.Where(g => g.ProgressPercent < 100))
+            {
+                var remainingDays = (goal.EndDate - today).TotalDays;
+                if (remainingDays > 0)
+                {
+                    var remainingValue = goal.TargetValue - goal.CurrentValue;
+                    var requiredPace = (double)remainingValue / remainingDays;
+                    var elapsedDays = (today - goal.StartDate).TotalDays;
+                    var actualPace = elapsedDays > 0.5 ? (double)goal.CurrentValue / elapsedDays : 0;
+
+                    if (actualPace > 0 && requiredPace > actualPace * 1.8)
+                    {
+                        analytics.GoalsAtRisk++;
+                    }
+                    else if (actualPace == 0 && goal.StartDate.AddDays(3) < today)
+                    {
+                        analytics.GoalsAtRisk++;
+                    }
+                }
+                else if (goal.EndDate < today)
+                {
+                    analytics.GoalsAtRisk++;
+                }
+
+                if (goal.LastProgressUpdate < today.AddDays(-goal.ReminderFrequencyDays))
+                {
+                    analytics.StagnantGoals++;
+                }
+            }
+
             // Category Breakdown
             analytics.CategoryBreakdown = goals
                 .GroupBy(g => g.Category)
                 .ToDictionary(g => g.Key ?? "Uncategorized", g => g.Count());
+
+            // Smart Insights
+            if (analytics.GoalsAtRisk > 0) analytics.SmartInsights.Add($"{analytics.GoalsAtRisk} goals need immediate attention.");
+            if (analytics.StagnantGoals > 0) analytics.SmartInsights.Add($"{analytics.StagnantGoals} goals haven't seen progress recently.");
+            if (analytics.OverdueGoals > 0) analytics.SmartInsights.Add($"{analytics.OverdueGoals} overdue milestones.");
 
             // Monthly Completion Data (Last 6 months)
             for (int i = 5; i >= 0; i--)
@@ -301,6 +338,70 @@ namespace TodoListApp.Services
                 _context.UserAchievements.AddRange(achievementsToAward);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<IEnumerable<GoalSubTask>> GetSubTasksAsync(int goalId, string userId)
+        {
+            var goal = await _context.Goals.AnyAsync(g => g.Id == goalId && g.UserId == userId);
+            if (!goal) return Enumerable.Empty<GoalSubTask>();
+
+            return await _context.GoalSubTasks
+                .Where(s => s.GoalId == goalId)
+                .OrderBy(s => s.IsCompleted)
+                .ThenByDescending(s => s.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<GoalSubTask> AddSubTaskAsync(int goalId, string title, string userId)
+        {
+            var goal = await _context.Goals.AnyAsync(g => g.Id == goalId && g.UserId == userId);
+            if (!goal) throw new UnauthorizedAccessException();
+
+            var subTask = new GoalSubTask { GoalId = goalId, Title = title };
+            _context.GoalSubTasks.Add(subTask);
+            await _context.SaveChangesAsync();
+            return subTask;
+        }
+
+        public async Task<bool> ToggleSubTaskAsync(int subTaskId, string userId)
+        {
+            var subTask = await _context.GoalSubTasks
+                .Include(s => s.Goal)
+                .FirstOrDefaultAsync(s => s.Id == subTaskId && s.Goal!.UserId == userId);
+
+            if (subTask == null) return false;
+
+            subTask.IsCompleted = !subTask.IsCompleted;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteSubTaskAsync(int subTaskId, string userId)
+        {
+            var subTask = await _context.GoalSubTasks
+                .Include(s => s.Goal)
+                .FirstOrDefaultAsync(s => s.Id == subTaskId && s.Goal!.UserId == userId);
+
+            if (subTask == null) return false;
+
+            _context.GoalSubTasks.Remove(subTask);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<IEnumerable<string>> GetSuggestedSubTasksAsync(int goalId, string userId)
+        {
+            var goal = await _context.Goals.FirstOrDefaultAsync(g => g.Id == goalId && g.UserId == userId);
+            if (goal == null) return Enumerable.Empty<string>();
+
+            return goal.Category switch
+            {
+                "Health" => new[] { "Plan weekly workout", "Track baseline metrics", "Prepare meal plan", "Join community group" },
+                "Work" => new[] { "Define success metrics", "Draft project outline", "Schedule stakeholder review", "Identify bottlenecks" },
+                "Learning" => new[] { "Review fundamental concepts", "Source study materials", "Complete practice exercises", "Set weekly study slots" },
+                "Finance" => new[] { "Audit current expenses", "Set up automated savings", "Research investment options", "Create monthly budget" },
+                _ => new[] { "Break into 5 smaller steps", "Identify required resources", "Set daily deep work block", "Celebrate small wins" }
+            };
         }
     }
 }
