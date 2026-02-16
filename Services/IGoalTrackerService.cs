@@ -14,5 +14,6 @@ namespace TodoListApp.Services
         Task<IEnumerable<GoalSchedule>> GetUserSchedulesAsync(string userId);
         Task<GoalSchedule> CreateScheduleAsync(GoalSchedule schedule, string userId);
         Task<(bool Success, string Message)> DeleteScheduleAsync(int scheduleId, string userId);
+        Task<GoalAnalyticsDto> GetGoalAnalyticsAsync(string userId);
     }
 }

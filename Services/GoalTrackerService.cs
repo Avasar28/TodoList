@@ -140,6 +140,41 @@ namespace TodoListApp.Services
             }
         }
 
+        public async Task<GoalAnalyticsDto> GetGoalAnalyticsAsync(string userId)
+        {
+            var goals = await _context.Goals
+                .Where(g => g.UserId == userId)
+                .ToListAsync();
+
+            var today = DateTime.UtcNow.Date;
+            var analytics = new GoalAnalyticsDto
+            {
+                TotalGoals = goals.Count,
+                CompletedGoals = goals.Count(g => g.ProgressPercent >= 100),
+                ActiveGoals = goals.Count(g => g.ProgressPercent < 100 && g.EndDate >= today),
+                OverdueGoals = goals.Count(g => g.ProgressPercent < 100 && g.EndDate < today),
+                CompletionRate = goals.Any() ? (double)goals.Count(g => g.ProgressPercent >= 100) / goals.Count * 100 : 0
+            };
+
+            // Category Breakdown
+            analytics.CategoryBreakdown = goals
+                .GroupBy(g => g.Category)
+                .ToDictionary(g => g.Key ?? "Uncategorized", g => g.Count());
+
+            // Monthly Completion Data (Last 6 months)
+            for (int i = 5; i >= 0; i--)
+            {
+                var monthDate = DateTime.UtcNow.AddMonths(-i);
+                var monthKey = monthDate.ToString("MMM yyyy");
+                var completions = goals.Count(g => g.ProgressPercent >= 100 && 
+                                                 g.UpdatedAt.Month == monthDate.Month && 
+                                                 g.UpdatedAt.Year == monthDate.Year);
+                analytics.MonthlyCompletionData.Add(monthKey, completions);
+            }
+
+            return analytics;
+        }
+
         private void UpdateStatus(Goal goal)
         {
             if (goal.ProgressPercent >= 100)

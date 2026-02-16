@@ -70,29 +70,39 @@
 
     <!-- Analytics Tab -->
     <div id="analyticsTab" class="tab-content" style="display: none;">
-        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; margin-bottom: 3rem;">
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; margin-bottom: 2rem;">
             <div class="stats-overview-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
                 <div class="stat-mini-card">
                     <span class="stat-icon">🎯</span>
                     <div><span class="stat-label">Total Goals</span><span class="stat-value" id="statTotalGoals">0</span></div>
                 </div>
                 <div class="stat-mini-card">
-                    <span class="stat-icon">📈</span>
-                    <div><span class="stat-label">Avg. Completion</span><span class="stat-value" id="statAvgProgress">0%</span></div>
+                    <span class="stat-icon pulse-teal">🏁</span>
+                    <div><span class="stat-label">Completion Rate</span><span class="stat-value" id="statCompletionRate">0%</span></div>
                 </div>
                 <div class="stat-mini-card">
-                    <span class="stat-icon pulse-teal">🔥</span>
-                    <div><span class="stat-label">On Track</span><span class="stat-value" id="statOnTrack">0</span></div>
+                    <span class="stat-icon">📈</span>
+                    <div><span class="stat-label">Active Focus</span><span class="stat-value" id="statActiveGoals">0</span></div>
                 </div>
                 <div class="stat-mini-card">
                     <span class="stat-icon">⚠️</span>
-                    <div><span class="stat-label">Off Track</span><span class="stat-value" id="statOffTrack">0</span></div>
+                    <div><span class="stat-label">Overdue</span><span class="stat-value" id="statOverdueGoals">0</span></div>
                 </div>
             </div>
             <div class="insight-card" style="padding: 1.5rem; background: rgba(255,255,255,0.02); display: flex; align-items: center; gap: 1.5rem; border-radius: 24px;">
                 <div style="flex: 1; height: 180px;"><canvas id="statusChart"></canvas></div>
                 <div style="flex: 1; height: 180px;"><canvas id="categoryChart"></canvas></div>
             </div>
+        </div>
+        
+        <div class="insight-card" style="padding: 2.5rem; border-radius: 24px; margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div>
+                    <h3 style="margin: 0; font-weight: 850; color: #fff;">Success Timeline</h3>
+                    <p style="color: var(--text-secondary); margin: 0.25rem 0 0; font-size: 0.9rem;">Goal completions over the last 6 months.</p>
+                </div>
+            </div>
+            <div style="height: 300px; width: 100%;"><canvas id="timelineChart"></canvas></div>
         </div>
     </div>
 
@@ -393,7 +403,7 @@
 
         let allGoals = [];
         let allSchedules = [];
-        let statusChart, categoryChart;
+        let statusChart, categoryChart, timelineChart;
         let currentCalendarDate = new Date();
 
         // Tabs
@@ -408,7 +418,7 @@
             if (activeBtn) activeBtn.classList.add('active');
 
             if (tabId === 'calendar') renderCalendar();
-            if (tabId === 'analytics') updateCharts();
+            if (tabId === 'analytics') loadAnalytics();
         }
 
         // Toast
@@ -541,14 +551,11 @@
                 return new Date(b.createdAt) - new Date(a.createdAt);
             });
 
-            document.getElementById('statTotalGoals').textContent = allGoals.length;
-            document.getElementById('statAvgProgress').textContent = allGoals.length ? (allGoals.reduce((a,c)=>a+c.progressPercent,0)/allGoals.length).toFixed(0)+'%' : '0%';
-            document.getElementById('statOnTrack').textContent = allGoals.filter(g=>g.status==='On Track').length;
-            document.getElementById('statOffTrack').textContent = allGoals.filter(g=>g.status==='Off Track').length;
-
             document.getElementById('filteredCount').textContent = filtered.length;
             renderGoals(filtered);
-            updateCharts();
+            if (document.getElementById('analyticsTab').style.display !== 'none') {
+                loadAnalytics();
+            }
         }
 
         function renderGoals(goals) {
@@ -666,33 +673,96 @@
         }
 
         // Charts
+        async function loadAnalytics() {
+            try {
+                const res = await fetch(`${API_BASE}/GetGoalAnalytics`);
+                const result = await res.json();
+                if (result.success) {
+                    const data = result.data;
+                    document.getElementById('statTotalGoals').textContent = data.totalGoals;
+                    document.getElementById('statCompletionRate').textContent = data.completionRate.toFixed(0) + '%';
+                    document.getElementById('statActiveGoals').textContent = data.activeGoals;
+                    document.getElementById('statOverdueGoals').textContent = data.overdueGoals;
+                    
+                    updateCharts(data);
+                }
+            } catch (err) { console.error(err); }
+        }
+
         function initCharts() {
             if (statusChart) statusChart.destroy();
             if (categoryChart) categoryChart.destroy();
+            if (timelineChart) timelineChart.destroy();
             
+            const baseOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            };
+
             const ctx1 = document.getElementById('statusChart').getContext('2d');
-            statusChart = new Chart(ctx1, { type: 'doughnut', data: { labels: [], datasets:[{ data: [], backgroundColor: ['#3b82f6', '#ef4444', '#10b981'], borderWidth: 0 }] }, options: { plugins: { legend: { position: 'bottom', labels: { color: '#888', font: { size: 10 } } } }, cutout: '70%'} });
-
-            const ctx2 = document.getElementById('categoryChart').getContext('2d');
-            categoryChart = new Chart(ctx2, { type: 'bar', data: { labels: [], datasets:[{ data: [], backgroundColor: '#14b8a6', borderRadius: 8 }] }, options: { scales: { y: { display: false }, x: { ticks: { color: '#888', font: { size: 10 } } } }, plugins: { legend: { display: false } } } });
-        }
-
-        function updateCharts() {
-            const statusCounts = { 'On Track': 0, 'Off Track': 0, 'Completed': 0 };
-            const catCounts = {};
-            
-            allGoals.forEach(g => {
-                statusCounts[g.status]++;
-                catCounts[g.category] = (catCounts[g.category] || 0) + 1;
+            statusChart = new Chart(ctx1, { 
+                type: 'doughnut', 
+                data: { labels: ['Active', 'Completed', 'Overdue'], datasets:[{ data: [], backgroundColor: ['#3b82f6', '#10b981', '#ef4444'], borderWidth: 0 }] }, 
+                options: { ...baseOptions, cutout: '75%', plugins: { legend: { display: false } } } 
             });
 
-            statusChart.data.labels = Object.keys(statusCounts);
-            statusChart.data.datasets[0].data = Object.values(statusCounts);
-            statusChart.update();
+            const ctx2 = document.getElementById('categoryChart').getContext('2d');
+            categoryChart = new Chart(ctx2, { 
+                type: 'bar', 
+                data: { labels: [], datasets:[{ data: [], backgroundColor: '#14b8a6', borderRadius: 8 }] }, 
+                options: { ...baseOptions, scales: { y: { display: false }, x: { ticks: { color: '#888', font: { size: 10 } } } } } 
+            });
 
-            categoryChart.data.labels = Object.keys(catCounts);
-            categoryChart.data.datasets[0].data = Object.values(catCounts);
-            categoryChart.update();
+            const ctx3 = document.getElementById('timelineChart').getContext('2d');
+            timelineChart = new Chart(ctx3, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Completions', data: [], borderColor: '#14b8a6', backgroundColor: 'rgba(20, 184, 166, 0.1)', fill: true, tension: 0.4, borderWidth: 3, pointRadius: 4, pointBackgroundColor: '#14b8a6' }] },
+                options: { 
+                    ...baseOptions, 
+                    scales: { 
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', stepSize: 1 } },
+                        x: { grid: { display: false }, ticks: { color: '#888' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function updateCharts(data = null) {
+            if (!statusChart) return;
+
+            if (data) {
+                // Use aggregated backend analytics
+                statusChart.data.datasets[0].data = [data.activeGoals, data.completedGoals, data.overdueGoals];
+                statusChart.update();
+
+                categoryChart.data.labels = Object.keys(data.categoryBreakdown);
+                categoryChart.data.datasets[0].data = Object.values(data.categoryBreakdown);
+                categoryChart.update();
+
+                if (timelineChart) {
+                    timelineChart.data.labels = Object.keys(data.monthlyCompletionData);
+                    timelineChart.data.datasets[0].data = Object.values(data.monthlyCompletionData);
+                    timelineChart.update();
+                }
+            } else {
+                // Fallback to client-side filtered results for small charts
+                const statusCounts = { 'On Track': 0, 'Off Track': 0, 'Completed': 0 };
+                const catCounts = {};
+                
+                allGoals.forEach(g => {
+                    statusCounts[g.status]++;
+                    catCounts[g.category] = (catCounts[g.category] || 0) + 1;
+                });
+
+                statusChart.data.datasets[0].data = [statusCounts['On Track'] + statusCounts['Off Track'], statusCounts['Completed'], 0];
+                statusChart.update();
+
+                categoryChart.data.labels = Object.keys(catCounts);
+                categoryChart.data.datasets[0].data = Object.values(catCounts);
+                categoryChart.update();
+            }
         }
 
         // CRUD

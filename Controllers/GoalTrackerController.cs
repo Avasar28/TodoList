@@ -88,6 +88,14 @@ namespace TodoListApp.Controllers
             return Json(new { success = true, data = schedules });
         }
 
+        [HttpGet]
+        [Route("GetGoalAnalytics")]
+        public async Task<JsonResult> GetGoalAnalytics()
+        {
+            var analytics = await _goalService.GetGoalAnalyticsAsync(GetUserId());
+            return Json(new { success = true, data = analytics });
+        }
+
         [HttpPost]
         [Route("CreateSchedule")]
         [ValidateAntiForgeryToken]
