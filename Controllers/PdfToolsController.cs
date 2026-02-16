@@ -21,38 +21,37 @@ namespace TodoListApp.Controllers
             _userManager = userManager;
         }
 
-        [AuthorizeFeature("Page_PdfTools")]
-        public async Task<IActionResult> Index()
+        // Removed Index action - PDF Tools is now a dashboard widget only
+
+        [HttpGet]
+        public async Task<IActionResult> GetUserData()
+        {
+            var userId = User.Identity?.Name ?? string.Empty;
+            var user = await _userManager.FindByNameAsync(userId);
+            
+            long usage = await _pdfService.GetUserStorageUsageAsync(userId);
+            long limit = 500 * 1024 * 1024; // 500 MB
+            
+            return Json(new
+            {
+                storageUsage = usage,
+                storageLimit = limit,
+                favorites = user?.Preferences.FavoritePdfTools ?? new List<string>(),
+                autoDeleteEnabled = user?.Preferences.AutoDeletePdfEnabled ?? false
+            });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetHistory()
         {
             var userId = User.Identity?.Name ?? string.Empty;
             var isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Admin");
-
             var history = await _pdfService.GetHistoryAsync(userId, isAdmin);
-            
-            // Storage Usage
-            long usage = await _pdfService.GetUserStorageUsageAsync(userId);
-            ViewBag.StorageUsage = usage;
-            ViewBag.StorageLimit = 500 * 1024 * 1024; // 500 MB
-            ViewBag.IsAdmin = isAdmin;
-
-            // Get User Preferences
-            var user = await _userManager.FindByNameAsync(userId);
-            if (user != null)
-            {
-                 ViewBag.Favorites = user.Preferences.FavoritePdfTools;
-                 ViewBag.AutoDeleteEnabled = user.Preferences.AutoDeletePdfEnabled;
-            }
-            else
-            {
-                 ViewBag.Favorites = new List<string>();
-                 ViewBag.AutoDeleteEnabled = false;
-            }
-            
-            return View(history);
+            return Json(history);
         }
 
         [HttpPost]
-        public async Task<IActionResult> ToggleFavorite(string toolType)
+        public async Task<IActionResult> ToggleFavorite([FromBody] ToggleFavoriteRequest request)
         {
             var userId = User.Identity?.Name ?? string.Empty;
             var user = await _userManager.FindByNameAsync(userId);
@@ -60,13 +59,13 @@ namespace TodoListApp.Controllers
             if (user == null) return Json(new { success = false });
 
             var prefs = user.Preferences;
-            if (prefs.FavoritePdfTools.Contains(toolType))
+            if (prefs.FavoritePdfTools.Contains(request.ToolId))
             {
-                prefs.FavoritePdfTools.Remove(toolType);
+                prefs.FavoritePdfTools.Remove(request.ToolId);
             }
             else
             {
-                prefs.FavoritePdfTools.Add(toolType);
+                prefs.FavoritePdfTools.Add(request.ToolId);
             }
 
             user.Preferences = prefs;
@@ -75,7 +74,7 @@ namespace TodoListApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ToggleAutoDelete(bool enabled)
+        public async Task<IActionResult> ToggleAutoDelete([FromBody] ToggleAutoDeleteRequest request)
         {
             var userId = User.Identity?.Name ?? string.Empty;
             var user = await _userManager.FindByNameAsync(userId);
@@ -83,15 +82,30 @@ namespace TodoListApp.Controllers
             if (user == null) return Json(new { success = false });
 
             var prefs = user.Preferences;
-            prefs.AutoDeletePdfEnabled = enabled;
+            prefs.AutoDeletePdfEnabled = request.Enabled;
             user.Preferences = prefs;
             await _userManager.UpdateAsync(user);
             
             return Json(new { success = true, enabled = user.Preferences.AutoDeletePdfEnabled });
         }
 
+        [HttpDelete]
+        [Route("PdfTools/DeleteHistory/{id}")]
+        public async Task<IActionResult> DeleteHistory(string id)
+        {
+            var userId = User.Identity?.Name ?? string.Empty;
+            var isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Admin");
+
+            if (!Guid.TryParse(id, out var guid))
+                return Json(new { success = false, message = "Invalid ID" });
+
+            var result = await _pdfService.DeleteHistoryAsync(new List<Guid> { guid }, userId, isAdmin);
+            
+            return Json(new { success = result, message = result ? "File deleted successfully" : "Failed to delete file" });
+        }
+
         [HttpPost]
-        public async Task<IActionResult> DeleteHistory([FromBody] List<Guid> ids)
+        public async Task<IActionResult> DeleteHistoryBulk([FromBody] List<Guid> ids)
         {
             var userId = User.Identity?.Name ?? string.Empty;
             var isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Admin");
@@ -255,5 +269,16 @@ namespace TodoListApp.Controllers
                 return Json(new { success = false, message = $"Error compressing PDF: {ex.Message}" });
             }
         }
+    }
+
+    // Request models
+    public class ToggleFavoriteRequest
+    {
+        public string ToolId { get; set; } = string.Empty;
+    }
+
+    public class ToggleAutoDeleteRequest
+    {
+        public bool Enabled { get; set; }
     }
 }

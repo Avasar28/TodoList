@@ -8,6 +8,7 @@
 <!-- Leaflet for Country Maps (Local) -->
 <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
 <link rel="stylesheet" href="~/css/missing_widgets.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/pdf-tools-widget.css" asp-append-version="true" />
 <script src="~/lib/leaflet/leaflet.js"></script>
 
 
@@ -255,7 +256,7 @@
         @if (Model.GrantedFeatures.Contains("Widget_PdfTools"))
         {
             <div class="grid-area-pdftools">
-                <div class="insight-card widget-pdf-tools pdftools widget-secondary" onclick="window.location.href='@Url.Action("Index", "PdfTools")'">
+                <div class="insight-card widget-pdf-tools pdftools widget-secondary" onclick="openDetails('pdftools')">
                     <div class="widget-header-row">
                         <span class="widget-title-sm">PDF TOOLS</span>
                     </div>
@@ -1109,11 +1110,15 @@
     </div>
 </div>
 
+<!-- PDF Tools Details Panel -->
+<partial name="_PdfToolsPanel" />
+
 @section Scripts {
     <script src="~/js/habit-tracker.js"></script>
     <script src="~/js/emergency-widget.js"></script>
     <script src="~/js/holiday-widget.js" asp-append-version="true"></script> <!-- Updated to main widget file with reminder fixes -->
     <script src="~/js/translator-widget.js" asp-append-version="true"></script>
+    <script src="~/js/pdf-tools-widget.js" asp-append-version="true"></script>
     
     <script>
         // --- Widget Detail Management ---
