@@ -27,8 +27,8 @@ namespace TodoListApp.Data
             // Seed Features
             await SeedFeaturesAsync(serviceProvider);
 
-            // Legacy Import
-            await ImportLegacyUsers(userManager);
+            // Legacy Import - Disabled to prevent re-importing deleted users
+            // await ImportLegacyUsers(userManager);
 
             // Bootstrap SuperAdmin
             string bootstrapEmail = "savaliyaavasar@gmail.com";

@@ -40,7 +40,7 @@
                 {
                     <a asp-controller="TimeTracker" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "TimeTracker" ? "active" : "")" data-translate="true">Time Tracker</a>
                 }
-                @if (HasPage("Page_UserManagement") && (User.IsInRole("SuperAdmin") || User.IsInRole("Admin")))
+                @if (HasPage("Page_UserManagement") && (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Manager")))
                 {
                     <a asp-controller="Todo" asp-action="UserList" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "UserList" ? "active" : "")" data-translate="true">User List</a>
                 }

@@ -36,6 +36,15 @@ namespace TodoListApp.Services
                 {
                     return await _context.SystemFeatures.ToListAsync();
                 }
+
+                // Enforce strict Manager permissions (Retroactive Override)
+                // This ensures existing managers also lose access to everything else immediately
+                if (roles.Contains("Manager"))
+                {
+                    return await _context.SystemFeatures
+                        .Where(f => f.TechnicalName == "Page_UserManagement")
+                        .ToListAsync();
+                }
             }
 
             // For other users, return their granted features

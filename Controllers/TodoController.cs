@@ -34,11 +34,25 @@ namespace TodoListApp.Controllers
             _featureService = featureService;
         }
 
-        [AuthorizeFeature("Page_Dashboard")]
+        // [AuthorizeFeature("Page_Dashboard")] // Removed to allow manual check for Managers
         public async Task<IActionResult> Dashboard(string? city, string? fromCurrency, string? toCurrency, string? sourceTime, string? targetTime)
         {
             var userId = GetUserId();
             var user = await _userManager.FindByIdAsync(userId);
+
+            // Authorization Check: Dashboard feature required
+            // We do this manually here to redirect Managers to UserList instead of just 403 AccessDenied
+            var grantedFeatures = await _featureService.GetUserGrantedFeaturesAsync(userId);
+            if (!grantedFeatures.Any(f => f.TechnicalName == "Page_Dashboard"))
+            {
+                // If Manager, redirect to User List
+                if (User.IsInRole("Manager"))
+                {
+                     return RedirectToAction("UserList");
+                }
+                // Otherwise, access denied
+                return RedirectToAction("AccessDenied", "Account");
+            }
             
             // Apply User Preferences if params are missing
             if (user != null)
@@ -82,9 +96,7 @@ namespace TodoListApp.Controllers
                 TargetTimeZone = targetTime,
                 AvailableCurrencies = new List<string> { "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "HKD", "NZD", "SGD", "INR" }, 
                 AvailableTimeZones = LoadTimeZones(),
-                GrantedFeatures = user != null 
-                    ? (await _featureService.GetUserGrantedFeaturesAsync(user.Id)).Select(f => f.TechnicalName).ToList()
-                    : new List<string>()
+                GrantedFeatures = grantedFeatures.Select(f => f.TechnicalName).ToList()
             };
 
             // Don't fetch data server-side - let client handle it for faster initial render
@@ -284,7 +296,7 @@ namespace TodoListApp.Controllers
         }
 
         [AuthorizeFeature("Page_UserManagement")]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin,Manager")]
         public async Task<IActionResult> UserList()
         {
             var users = _userManager.Users.ToList();
@@ -447,6 +459,18 @@ namespace TodoListApp.Controllers
             var addResult = await _userManager.AddToRoleAsync(user, newRole);
             if (addResult.Succeeded)
             {
+                // For Manager role, enforce strict permissions (only Page_UserManagement)
+                if (newRole == "Manager")
+                {
+                    var allFeatures = await _featureService.GetAllFeaturesAsync();
+                    var managerFeature = allFeatures.FirstOrDefault(f => f.TechnicalName == "Page_UserManagement");
+                    if (managerFeature != null)
+                    {
+                        // Reset to ONLY user management
+                        await _featureService.UpdateUserFeaturesAsync(user.Id, new List<int> { managerFeature.Id }, User.Identity.Name);
+                    }
+                }
+
                 System.Diagnostics.Debug.WriteLine($"[AUDIT] User {User.Identity?.Name} changed role of {user.Email} to {newRole}");
                 return Json(new { success = true, message = $"Role successfully updated to {newRole}." });
             }

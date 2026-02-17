@@ -49,14 +49,14 @@
                 <div class="role-selection-grid">
                     @foreach (var role in new[] { 
                         new { Name = "SuperAdmin", Desc = "Full system control", Tips = "Can manage all users, view dashboard analytics, and modify system settings." },
-                        new { Name = "Admin", Desc = "User management control", Tips = "Can create, edit, and delete users and view global PDF history. Cannot delete SuperAdmins." },
-                        new { Name = "Manager", Desc = "System monitoring", Tips = "Can view user lists and reports. Cannot modify user accounts or system settings." },
-                        new { Name = "PrivateUser", Desc = "Restricted privacy mode", Tips = "Can only access their own data. Completely invisible to other non-admin users." },
-                        new { Name = "NormalUser", Desc = "Standard level access", Tips = "Default access to dashboard, todo items, and PDF tools for their own data." }
+                        new { Name = "Admin", Desc = "Full tool access", Tips = "Can use all productivity tools and widgets, but cannot manage users." },
+                        new { Name = "Manager", Desc = "User management control", Tips = "Can view user lists and reports, but cannot modify user accounts or system settings." },
+                        new { Name = "PrivateUser", Desc = "Restricted privacy mode", Tips = "Can only access their own data tasks, goals, and productivity tools. Invisible to others." },
+                        new { Name = "NormalUser", Desc = "Standard level access", Tips = "Default access to dashboard, tasks, news, and productivity widgets." }
                     })
                     {
                         <label class="role-card" onclick="updateRoleDefaults('@role.Name')">
-                            <input type="radio" asp-for="Role" value="@role.Name" checked="@(role.Name == "NormalUser" ? "checked" : null)" onchange="validateForm()" />
+                            <input type="radio" asp-for="Role" value="@role.Name" checked="@(role.Name == "NormalUser" ? "checked" : null)" onchange="updateRoleDefaults(this.value); validateForm()" />
                             <div class="role-card-content">
                                 <span class="role-info-trigger" data-tooltip="@role.Tips">ⓘ</span>
                                 <span class="role-name">@role.Name</span>
@@ -72,15 +72,8 @@
             <!-- Feature & Widget Access Section -->
             <div class="form-section feature-access-section">
                 <div class="form-section-title">Feature & Widget Access</div>
-                <p class="text-secondary small mb-3">Define granular permissions. These control which pages and widgets the user can access.</p>
+                <p class="text-secondary small mb-3">Permissions are strictly based on the selected role.</p>
                 
-                <div class="feature-actions">
-                    <button type="button" class="btn-feature-action" onclick="selectAll('Everything')">Select Everything</button>
-                    <button type="button" class="btn-feature-action" onclick="selectAll('Page')">Select All Pages</button>
-                    <button type="button" class="btn-feature-action" onclick="selectAll('Widget')">Select All Widgets</button>
-                    <button type="button" class="btn-feature-action" onclick="clearAllFeatures()">Clear All</button>
-                </div>
-
                 <div class="feature-grid">
                     @{
                         var features = ViewBag.SystemFeatures as IEnumerable<TodoListApp.Models.SystemFeature>;
@@ -92,11 +85,12 @@
                         <div class="feature-type-divider">@group.Key.ToString()s</div>
                         @foreach (var feature in group)
                         {
+                            if (feature.TechnicalName == "Page_PdfTools") continue;
                             <div class="feature-card @(feature.IsDefault ? "selected" : "")" 
                                  data-feature-id="@feature.Id" 
                                  data-type="@feature.Type"
                                  data-default="@feature.IsDefault.ToString().ToLower()"
-                                 onclick="toggleFeature(this)">
+                                 data-technical-name="@feature.TechnicalName">
                                 <div class="feature-header">
                                     <div class="feature-icon-box">@feature.Icon</div>
                                     <div class="feature-info">
@@ -109,8 +103,9 @@
                                     <div class="form-check form-switch p-0 m-0">
                                         <input class="form-check-input feature-checkbox" 
                                                type="checkbox" 
+                                               disabled
                                                @(feature.IsDefault ? "checked" : "")
-                                               onclick="event.stopPropagation(); syncCardState(this)">
+                                               onclick="return false;">
                                     </div>
                                 </div>
                                 <input type="hidden" name="SelectedFeatureIds" value="@feature.Id" @(feature.IsDefault ? "" : "disabled") class="feature-hidden-input">
@@ -130,67 +125,56 @@
     </div>
 
 <script>
-    function toggleFeature(card) {
-        const checkbox = card.querySelector('.feature-checkbox');
-        checkbox.checked = !checkbox.checked;
-        syncCardState(checkbox);
-    }
-
-    function syncCardState(checkbox) {
-        const card = checkbox.closest('.feature-card');
-        const hiddenInput = card.querySelector('.feature-hidden-input');
-        
-        if (checkbox.checked) {
-            card.classList.add('selected');
-            hiddenInput.disabled = false;
-        } else {
-            card.classList.remove('selected');
-            hiddenInput.disabled = true;
-        }
-    }
-
-    function selectAll(type) {
-        const cards = document.querySelectorAll('.feature-card');
-        cards.forEach(card => {
-            if (type === 'Everything' || card.getAttribute('data-type') === type) {
-                const checkbox = card.querySelector('.feature-checkbox');
-                checkbox.checked = true;
-                syncCardState(checkbox);
-            }
-        });
-    }
-
-    function clearAllFeatures() {
-        const cards = document.querySelectorAll('.feature-card');
-        cards.forEach(card => {
-            const checkbox = card.querySelector('.feature-checkbox');
-            checkbox.checked = false;
-            syncCardState(checkbox);
-        });
-    }
-
     function updateRoleDefaults(role) {
-        if (role === 'SuperAdmin' || role === 'Admin') {
-            selectAll('Everything');
-        } else if (role === 'NormalUser' || role === 'PrivateUser') {
-            const cards = document.querySelectorAll('.feature-card');
-            cards.forEach(card => {
-                const isDefault = card.getAttribute('data-default') === 'true';
-                const checkbox = card.querySelector('.feature-checkbox');
-                checkbox.checked = isDefault;
-                syncCardState(checkbox);
-            });
-        } else if (role === 'Manager') {
-            selectAll('Everything');
-            // Uncheck User Management (Example refinement)
-            const umCard = Array.from(document.querySelectorAll('.feature-card')).find(c => c.querySelector('.feature-title').innerText.trim() === 'User Management');
-            if (umCard) {
-                 const checkbox = umCard.querySelector('.feature-checkbox');
-                 checkbox.checked = false;
-                 syncCardState(checkbox);
+        // Define allowed features for each role
+        const rolePermissions = {
+            'SuperAdmin': 'ALL',
+            'Admin': ['Page_Dashboard', 'Page_Tasks', 'Page_TimeTracker', 'Widget_Weather', 'Widget_Currency', 'Widget_Time', 'Widget_Habit', 'Widget_PdfTools', 'Widget_GoalTracker', 'Widget_News', 'Widget_Country', 'Widget_Translator', 'Widget_Emergency', 'Widget_Holiday'], // All EXCEPT 'Page_UserManagement'
+            'Manager': ['Page_UserManagement'], // Only user list as requested
+            'PrivateUser': ['Page_Tasks', 'Page_TimeTracker', 'Page_Dashboard', 'Widget_Weather', 'Widget_Currency', 'Widget_Time', 'Widget_Habit', 'Widget_PdfTools', 'Widget_GoalTracker'],
+            'NormalUser': ['Page_Dashboard', 'Page_Tasks', 'Page_TimeTracker', 'Widget_Weather', 'Widget_Currency', 'Widget_Time', 'Widget_Habit', 'Widget_PdfTools', 'Widget_News', 'Widget_Country', 'Widget_Translator', 'Widget_Emergency', 'Widget_Holiday']
+        };
+
+        const allowed = rolePermissions[role];
+        const cards = document.querySelectorAll('.feature-card');
+        
+        cards.forEach(card => {
+            const techName = card.getAttribute('data-technical-name');
+            const checkbox = card.querySelector('.feature-checkbox');
+            const hiddenInput = card.querySelector('.feature-hidden-input');
+            
+            let shouldCheck = false;
+            
+            if (allowed === 'ALL') {
+                shouldCheck = true;
+                // Special case: Admin exclusion logic if 'ALL' meant strictly everything.
+                // But for 'Manager' it means everything including User Management.
+                // For 'SuperAdmin' it means simply everything.
+            } else if (Array.isArray(allowed)) {
+                shouldCheck = allowed.includes(techName);
             }
-        }
+
+            // Update UI
+            checkbox.checked = shouldCheck;
+            checkbox.disabled = true; // Always disabled per user request ("can't editable this")
+
+            if (shouldCheck) {
+                card.classList.add('selected');
+                hiddenInput.disabled = false; // Enable submission (Access Granted)
+            } else {
+                card.classList.remove('selected');
+                hiddenInput.disabled = true; // Disable submission (Access Denied)
+            }
+        });
     }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkedRole = document.querySelector('input[name="Role"]:checked');
+        if (checkedRole) {
+            updateRoleDefaults(checkedRole.value);
+        }
+    });
 
     document.getElementById("createUserForm").addEventListener("submit", async function(e) {
         e.preventDefault();
