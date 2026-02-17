@@ -1,0 +1,64 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Forget PIN Recovery";
+}
+
+<div class="auth-wrapper fade-in">
+    <div class="auth-card" style="max-width: 500px; margin: 4rem auto; text-align: center; background: var(--glass-bg); padding: 3rem; border-radius: 24px; border: var(--border-card); backdrop-filter: blur(20px); box-shadow: var(--shadow-card);">
+        <div class="auth-icon-circle" style="margin-bottom: 2rem; width: 80px; height: 80px; background: rgba(110, 203, 198, 0.1); color: var(--accent-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-left: auto; margin-right: auto; box-shadow: 0 0 20px var(--accent-glow);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </div>
+        
+        <h2 class="auth-hero-title" style="font-size: 2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;" data-translate="true">Recover Access</h2>
+        <p class="auth-hero-subtitle" style="color: var(--text-secondary); margin-bottom: 2.5rem;" data-translate="true">Choose how you want to verify your identity</p>
+
+        <div class="recovery-options" style="display: grid; gap: 1.5rem;">
+            <!-- Option 1: Account Password -->
+            <a asp-action="VerifyPassword" asp-route-returnUrl="@ViewBag.ReturnUrl" class="recovery-card" style="display: block; text-decoration: none; padding: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 16px; transition: all 0.3s ease;">
+                <div style="display: flex; align-items: center; gap: 1.5rem; text-align: left;">
+                    <div style="font-size: 2rem;">🔑</div>
+                    <div>
+                        <h4 style="margin: 0; color: var(--text-primary); font-size: 1.1rem;" data-translate="true">Account Password</h4>
+                        <p style="margin: 0.2rem 0 0; color: var(--text-secondary); font-size: 0.85rem;" data-translate="true">Instant verification using your login password</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Option 2: Email OTP -->
+            <form asp-action="SendRecoveryOtp" method="post" style="margin: 0;">
+                <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+                <button type="submit" class="recovery-card" style="width: 100%; display: block; text-decoration: none; padding: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 16px; transition: all 0.3s ease; cursor: pointer; border: 1px solid var(--glass-border);">
+                    <div style="display: flex; align-items: center; gap: 1.5rem; text-align: left;">
+                        <div style="font-size: 2rem;">📧</div>
+                        <div>
+                            <h4 style="margin: 0; color: var(--text-primary); font-size: 1.1rem;" data-translate="true">Email Verification</h4>
+                            <p style="margin: 0.2rem 0 0; color: var(--text-secondary); font-size: 0.85rem;" data-translate="true">Send a one-time code to your registered email</p>
+                        </div>
+                    </div>
+                </button>
+            </form>
+        </div>
+        
+        <div class="mt-4" style="margin-top: 2.5rem;">
+            <a asp-action="Verify" asp-route-returnUrl="@ViewBag.ReturnUrl" class="btn-secondary" style="font-size: 0.9rem; color: var(--text-secondary); text-decoration: none; transition: color 0.2s ease;" data-translate="true">Cancel Recovery</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .auth-wrapper {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .recovery-card:hover {
+        background: rgba(110, 203, 198, 0.08) !important;
+        border-color: var(--accent-color) !important;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(110, 203, 198, 0.15);
+    }
+    .btn-secondary:hover {
+        color: var(--text-primary) !important;
+    }
+</style>

@@ -76,5 +76,150 @@ namespace TodoListApp.Controllers
             ViewBag.ReturnUrl = returnUrl;
             return View("Verify");
         }
+
+        [HttpGet]
+        public IActionResult ForgotPin(string returnUrl)
+        {
+            ViewBag.ReturnUrl = returnUrl;
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult VerifyPassword(string returnUrl)
+        {
+            ViewBag.ReturnUrl = returnUrl;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ConfirmPassword(string password, string returnUrl)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login", "Account");
+
+            var result = await _userManager.CheckPasswordAsync(user, password);
+            if (result)
+            {
+                HttpContext.Session.SetString("PasskeyRecoveryAuthenticated", "true");
+                return RedirectToAction("ResetPin", new { returnUrl });
+            }
+
+            ModelState.AddModelError(string.Empty, "Incorrect account password.");
+            ViewBag.ReturnUrl = returnUrl;
+            return View("VerifyPassword");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SendRecoveryOtp(string returnUrl)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || string.IsNullOrEmpty(user.Email)) return RedirectToAction("Login", "Account");
+
+            var otp = Helpers.OtpHelper.Generate6DigitOtp();
+            var expiry = DateTime.UtcNow.AddMinutes(10);
+
+            HttpContext.Session.SetString("PasskeyRecoveryEmail", user.Email);
+            HttpContext.Session.SetString("PasskeyRecoveryOtp", otp);
+            HttpContext.Session.SetString("PasskeyRecoveryOtpExpiry", expiry.ToString("O"));
+
+            var emailService = HttpContext.RequestServices.GetRequiredService<Services.IEmailService>();
+            await emailService.SendEmailAsync(user.Email, "PIN Recovery OTP", Helpers.OtpHelper.GetOtpEmailBody(otp));
+
+            return RedirectToAction("VerifyRecoveryOtp", new { returnUrl });
+        }
+
+        [HttpGet]
+        public IActionResult VerifyRecoveryOtp(string returnUrl)
+        {
+            var email = HttpContext.Session.GetString("PasskeyRecoveryEmail");
+            if (string.IsNullOrEmpty(email)) return RedirectToAction("ForgotPin", new { returnUrl });
+
+            ViewBag.ReturnUrl = returnUrl;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VerifyRecoveryOtp(string otp, string returnUrl)
+        {
+            var sessionOtp = HttpContext.Session.GetString("PasskeyRecoveryOtp");
+            var sessionExpiryStr = HttpContext.Session.GetString("PasskeyRecoveryOtpExpiry");
+
+            if (string.IsNullOrEmpty(sessionOtp) || string.IsNullOrEmpty(sessionExpiryStr))
+            {
+                return RedirectToAction("ForgotPin", new { returnUrl });
+            }
+
+            DateTime sessionExpiry = DateTime.Parse(sessionExpiryStr);
+
+            if (otp == sessionOtp && DateTime.UtcNow <= sessionExpiry)
+            {
+                HttpContext.Session.SetString("PasskeyRecoveryAuthenticated", "true");
+                HttpContext.Session.Remove("PasskeyRecoveryOtp");
+                HttpContext.Session.Remove("PasskeyRecoveryOtpExpiry");
+                return RedirectToAction("ResetPin", new { returnUrl });
+            }
+
+            ModelState.AddModelError(string.Empty, "Invalid or expired OTP.");
+            ViewBag.ReturnUrl = returnUrl;
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult ResetPin(string returnUrl)
+        {
+            if (HttpContext.Session.GetString("PasskeyRecoveryAuthenticated") != "true")
+            {
+                return RedirectToAction("Verify", new { returnUrl });
+            }
+
+            ViewBag.ReturnUrl = returnUrl;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdatePin(string pin, string confirmPin, string returnUrl)
+        {
+            if (HttpContext.Session.GetString("PasskeyRecoveryAuthenticated") != "true")
+            {
+                return RedirectToAction("Verify", new { returnUrl });
+            }
+
+            if (string.IsNullOrEmpty(pin) || (pin.Length != 4 && pin.Length != 6))
+            {
+                ModelState.AddModelError(string.Empty, "PIN must be 4 or 6 digits.");
+            }
+            else if (pin != confirmPin)
+            {
+                ModelState.AddModelError(string.Empty, "PINs do not match.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.ReturnUrl = returnUrl;
+                return View("ResetPin");
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login", "Account");
+
+            user.PasskeyHash = _passwordHasher.HashPassword(user, pin);
+            user.IsPasskeyEnabled = true;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                HttpContext.Session.Remove("PasskeyRecoveryAuthenticated");
+                TempData["SuccessMessage"] = "Passkey PIN has been reset successfully.";
+                return RedirectToAction("Verify", new { returnUrl });
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            ViewBag.ReturnUrl = returnUrl;
+            return View("ResetPin");
+        }
     }
 }
