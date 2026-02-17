@@ -154,7 +154,7 @@ namespace TodoListApp.Controllers
                         await context.SaveChangesAsync();
                     }
 
-                    // Clear session and redirect to login
+                    // Clear session
                     HttpContext.Session.Remove("SignupEmail");
                     HttpContext.Session.Remove("SignupPassword");
                     HttpContext.Session.Remove("SignupFullName");
@@ -163,8 +163,17 @@ namespace TodoListApp.Controllers
                     HttpContext.Session.Remove("SignupOtp");
                     HttpContext.Session.Remove("SignupOtpExpiry");
 
-                    TempData["SuccessMessage"] = "Account created and email verified successfully! You can now login.";
-                    return RedirectToAction("Login");
+                    TempData["SuccessMessage"] = "Account created and email verified successfully!";
+
+                    // Smart Redirect: If Admin is creating user, go back to User List. If new user signup, go to Login.
+                    if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        return RedirectToAction("UserList", "Todo");
+                    }
+                    else
+                    {
+                        return RedirectToAction("Login");
+                    }
                 }
                 
                 foreach (var error in result.Errors)
