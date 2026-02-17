@@ -267,34 +267,6 @@ namespace TodoListApp.Controllers
             throw new Exception("User ID not found");
         }
 
-        [AuthorizeFeature("Page_Tasks")]
-        public IActionResult Index(string searchString, string status)
-        {
-            ViewData["CurrentFilter"] = searchString;
-            ViewData["CurrentStatus"] = status;
-            
-            var items = _todoService.GetAll(GetUserId());
-            var today = DateTime.Today;
-
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                items = items.Where(s => s.Title.Contains(searchString, StringComparison.OrdinalIgnoreCase));
-            }
-
-            if (!string.IsNullOrEmpty(status))
-            {
-                items = status switch
-                {
-                    "Completed" => items.Where(t => t.IsCompleted),
-                    "Pending" => items.Where(t => !t.IsCompleted),
-                    "Overdue" => items.Where(t => !t.IsCompleted && t.DueDate.HasValue && t.DueDate.Value.Date < today),
-                    _ => items
-                };
-            }
-
-            return View(items);
-        }
-
         [AuthorizeFeature("Page_UserManagement")]
         [Authorize(Roles = "SuperAdmin,Admin,Manager")]
         public async Task<IActionResult> UserList()
@@ -362,7 +334,7 @@ namespace TodoListApp.Controllers
 
         [HttpPost]
         [Authorize(Roles = "SuperAdmin,Admin")]
-        public async Task<IActionResult> EditUser(ApplicationUser user, string? newPassword, string? confirmPassword)
+        public async Task<IActionResult> EditUser(ApplicationUser user, string? newPassword, string? confirmPassword, bool isPasskeyEnabled, string? passkeyPin)
         {
             var existingUser = await _userManager.FindByIdAsync(user.Id);
             if (existingUser == null) return NotFound();
@@ -370,6 +342,18 @@ namespace TodoListApp.Controllers
             existingUser.Email = user.Email;
             existingUser.UserName = user.Email;
             existingUser.Name = user.Name;
+
+            // Handle Passkey Update
+            existingUser.IsPasskeyEnabled = isPasskeyEnabled;
+            if (isPasskeyEnabled && !string.IsNullOrEmpty(passkeyPin))
+            {
+                var hasher = new PasswordHasher<ApplicationUser>();
+                existingUser.PasskeyHash = hasher.HashPassword(existingUser, passkeyPin);
+            }
+            else if (!isPasskeyEnabled)
+            {
+                existingUser.PasskeyHash = null;
+            }
 
             // Handle Password Change
             if (!string.IsNullOrEmpty(newPassword))
@@ -476,68 +460,6 @@ namespace TodoListApp.Controllers
             }
 
             return Json(new { success = false, message = "Failed to assign new role." });
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(string title, DateTime? dueDate, string priority = "Medium")
-        {
-            if (!string.IsNullOrWhiteSpace(title))
-            {
-                var newItem = new TodoItem 
-                { 
-                    Title = title,
-                    UserId = GetUserId(),
-                    DueDate = dueDate,
-                    Priority = priority
-                };
-                _todoService.Create(newItem);
-            }
-            
-            var referer = Request.Headers["Referer"].ToString();
-            if (!string.IsNullOrEmpty(referer))
-            {
-                return Redirect(referer);
-            }
-            return RedirectToAction(nameof(Index));
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Toggle(Guid id)
-        {
-            _todoService.ToggleComplete(id, GetUserId());
-            return RedirectToAction(nameof(Index));
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Delete(Guid id)
-        {
-            _todoService.Delete(id, GetUserId());
-            return RedirectToAction(nameof(Index));
-        }
-
-        public IActionResult Edit(Guid id)
-        {
-            var item = _todoService.GetById(id, GetUserId());
-            if (item == null)
-            {
-                return NotFound();
-            }
-            return View(item);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Edit(TodoItem item)
-        {
-            if (ModelState.IsValid)
-            {
-                _todoService.Update(item, GetUserId());
-                return RedirectToAction(nameof(Index));
-            }
-            return View(item);
         }
 
         private List<ViewModels.TimeZoneOption> LoadTimeZones()

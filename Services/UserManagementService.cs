@@ -60,6 +60,16 @@ namespace TodoListApp.Services
                 session.SetString("SignupFeatures", string.Join(",", model.SelectedFeatureIds));
             }
 
+            // Store Passkey info in session
+            session.SetString("SignupIsPasskeyEnabled", model.IsPasskeyEnabled.ToString());
+            if (model.IsPasskeyEnabled && !string.IsNullOrEmpty(model.Pin))
+            {
+                var hasher = new PasswordHasher<ApplicationUser>();
+                var dummyUser = new ApplicationUser { Email = model.Email };
+                var hashedPin = hasher.HashPassword(dummyUser, model.Pin);
+                session.SetString("SignupPasskeyHash", hashedPin);
+            }
+
             // Send Email
             await _emailService.SendEmailAsync(model.Email, "Verify Your Email", OtpHelper.GetOtpEmailBody(otp));
 

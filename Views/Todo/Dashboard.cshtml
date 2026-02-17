@@ -1,3 +1,5 @@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> userManager
 @model TodoListApp.ViewModels.DashboardViewModel
 
 @{
@@ -1142,7 +1144,21 @@
     
     <script>
         // --- Widget Detail Management ---
-        function openDetails(type) {
+        const isPasskeyEnabled = @(User.Identity.IsAuthenticated ? (await userManager.GetUserAsync(User))?.IsPasskeyEnabled.ToString().ToLower() : "false");
+
+        function openDetails(type, bypassCheck = false) {
+            // Passkey Protection Check for Habit Tracker and PDF Tools
+            // If passkey is enabled and we haven't bypassed the check (just verified), redirect to Verify page
+            if (!bypassCheck && isPasskeyEnabled && (type === 'habit' || type === 'pdftools')) {
+                const baseUrl = window.location.pathname;
+                const searchParams = new URLSearchParams(window.location.search);
+                searchParams.set('open', type);
+                const returnUrl = baseUrl + '?' + searchParams.toString();
+                
+                window.location.href = `/Passkey/Verify?returnUrl=${encodeURIComponent(returnUrl)}`;
+                return;
+            }
+
             document.querySelectorAll('.details-panel').forEach(p => p.classList.remove('active'));
             document.getElementById(type + 'Details').classList.add('active');
             document.getElementById('detailsOverlay').classList.add('active');
@@ -1151,11 +1167,6 @@
             // Load chart if it's currency
             if (type === 'currency') {
                 loadCurrencyHistory();
-            }
-            
-            if (type === 'weather') {
-                // Check if we should auto-geolocate
-                // (optional: can be done automatically on load, but let's link it to the button too)
             }
         }
 
@@ -2696,6 +2707,15 @@
             
             console.log("TranslatorWidget Type:", typeof TranslatorWidget);
             if (typeof TranslatorWidget !== 'undefined') TranslatorWidget.init();
+
+            // Auto-open widget details if requested in URL (e.g. after passkey verification)
+            const urlParams = new URLSearchParams(window.location.search);
+            const openType = urlParams.get('open');
+            if (openType) {
+                openDetails(openType, true); // Bypass check because we just verified our PIN
+                // Clean up the URL to prevent re-opening on manual refresh if desired
+                // window.history.replaceState({}, document.title, window.location.pathname);
+            }
 
             console.log("=== INITIALIZATION COMPLETE ===");
         }

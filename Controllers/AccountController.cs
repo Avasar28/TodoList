@@ -127,6 +127,14 @@ namespace TodoListApp.Controllers
                     EmailConfirmed = true 
                 };
 
+                // Set Passkey fields BEFORE creation to ensure persistence
+                var isPasskeyEnabledStr = HttpContext.Session.GetString("SignupIsPasskeyEnabled");
+                if (bool.TryParse(isPasskeyEnabledStr, out bool isPasskeyEnabled))
+                {
+                    user.IsPasskeyEnabled = isPasskeyEnabled;
+                    user.PasskeyHash = HttpContext.Session.GetString("SignupPasskeyHash");
+                }
+
                 var result = await _userManager.CreateAsync(user, password);
                 if (result.Succeeded)
                 {
@@ -134,6 +142,7 @@ namespace TodoListApp.Controllers
                     await _userManager.AddToRoleAsync(user, role);
 
                     // Save Feature Access if any
+                    // ... (rest of feature logic) ...
                     var featuresStr = HttpContext.Session.GetString("SignupFeatures");
                     if (!string.IsNullOrEmpty(featuresStr))
                     {
@@ -162,6 +171,8 @@ namespace TodoListApp.Controllers
                     HttpContext.Session.Remove("SignupFeatures");
                     HttpContext.Session.Remove("SignupOtp");
                     HttpContext.Session.Remove("SignupOtpExpiry");
+                    HttpContext.Session.Remove("SignupIsPasskeyEnabled");
+                    HttpContext.Session.Remove("SignupPasskeyHash");
 
                     TempData["SuccessMessage"] = "Account created and email verified successfully!";
 
@@ -289,5 +300,6 @@ namespace TodoListApp.Controllers
         {
             return View();
         }
+
     }
 }

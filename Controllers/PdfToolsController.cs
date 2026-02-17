@@ -10,6 +10,7 @@ using TodoListApp.Services;
 namespace TodoListApp.Controllers
 {
     [Authorize]
+    [RequirePasskey]
     public class PdfToolsController : Controller
     {
         private readonly IPdfService _pdfService;

@@ -1,0 +1,55 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Verify Passkey";
+}
+
+<div class="auth-container fade-in">
+    <div class="auth-card" style="max-width: 400px; text-align: center;">
+        <div class="auth-header">
+            <div class="lock-icon-container mb-4" style="font-size: 4rem; color: var(--accent-primary);">
+                🔒
+            </div>
+            <h1 class="auth-hero-title">Enter Passkey</h1>
+            <p class="auth-hero-subtitle">Enter your 4 or 6 digit PIN to unlock this module.</p>
+        </div>
+
+        <form asp-action="PasskeyVerify" method="post" class="auth-form mt-4">
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+            <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+            <div class="pin-input-group mb-4">
+                <input type="password" name="pin" id="pinInput" class="form-control text-center" 
+                       placeholder="••••" maxlength="6" autofocus 
+                       style="font-size: 2rem; letter-spacing: 0.5rem; height: 60px; border-radius: 12px;" />
+            </div>
+
+            <button type="submit" class="btn-auth-primary w-100">Unlock Module</button>
+            
+            <a href="/" class="btn-link mt-3 d-block text-secondary small" style="text-decoration: none;">
+                Cancel & Go to Dashboard
+            </a>
+        </form>
+    </div>
+</div>
+
+<style>
+    .lock-icon-container {
+        animation: lockBounce 2s infinite ease-in-out;
+    }
+
+    @@keyframes lockBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    #pinInput:focus {
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 4px rgba(var(--accent-primary-rgb), 0.15);
+    }
+</style>
+
+<script>
+    document.getElementById('pinInput').addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+</script>

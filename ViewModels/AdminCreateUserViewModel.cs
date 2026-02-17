@@ -27,5 +27,13 @@ namespace TodoListApp.ViewModels
         public string Role { get; set; } = "NormalUser";
 
         public List<int> SelectedFeatureIds { get; set; } = new();
+
+        public bool IsPasskeyEnabled { get; set; }
+
+        [RegularExpression(@"^\d{4}$|^\d{6}$", ErrorMessage = "PIN must be 4 or 6 digits")]
+        public string? Pin { get; set; }
+
+        [Compare("Pin", ErrorMessage = "PINs do not match")]
+        public string? ConfirmPin { get; set; }
     }
 }

@@ -11,7 +11,7 @@
     </header>
 
     <div class="add-task-section">
-        <form asp-controller="Todo" asp-action="Create" method="post" class="add-form">
+        <form asp-controller="MyTask" asp-action="Create" method="post" class="add-form">
             <div class="add-form-group">
                 <input type="text" name="title" placeholder="What needs to be done?" required autocomplete="off" data-translate="true" data-translate-placeholder="true" />
                 <div class="add-form-meta">
@@ -64,7 +64,7 @@
             @foreach (var item in Model)
             {
                 <div class="todo-item @(item.IsCompleted ? "completed" : "")">
-                    <form asp-controller="Todo" asp-action="Toggle" asp-route-id="@item.Id" method="post" class="toggle-form">
+                    <form asp-controller="MyTask" asp-action="Toggle" asp-route-id="@item.Id" method="post" class="toggle-form">
                         <button type="submit" class="checkbox-btn" title="Toggle Completion">
                             @if(item.IsCompleted) {
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -93,7 +93,7 @@
                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                         </a>
                         
-                        <form asp-controller="Todo" asp-action="Delete" asp-route-id="@item.Id" method="post" class="delete-form" onsubmit="return confirm('Delete this task?');">
+                        <form asp-controller="MyTask" asp-action="Delete" asp-route-id="@item.Id" method="post" class="delete-form" onsubmit="return confirm('Delete this task?');">
                              @Html.AntiForgeryToken()
                             <button type="submit" class="delete-btn" title="Delete Task">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>

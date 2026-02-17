@@ -1,0 +1,16 @@
+@{
+    ViewData["Title"] = "Habit Tracker";
+}
+
+<div class="container fade-in" style="margin-top: 2rem; text-align: center;">
+    <div class="auth-card" style="max-width: 600px; margin: 0 auto; padding: 3rem;">
+        <div class="mb-4" style="font-size: 3rem;">📈</div>
+        <h2 class="auth-hero-title">Habit Tracker</h2>
+        <p class="auth-hero-subtitle">Redirecting to Dashboard to view your habits...</p>
+        <script>
+            setTimeout(() => {
+                window.location.href = '/Todo/Dashboard?open=habit';
+            }, 1000);
+        </script>
+    </div>
+</div>

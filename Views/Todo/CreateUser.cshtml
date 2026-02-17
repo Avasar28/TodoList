@@ -115,6 +115,30 @@
                 </div>
             </div>
 
+            <!-- Passkey Protection Section -->
+            <div class="form-section">
+                <div class="form-section-title">Passkey Protection</div>
+                <div class="passkey-controls">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" asp-for="IsPasskeyEnabled" id="passkeyToggle" onchange="togglePasskeyFields()">
+                        <label class="form-check-label" for="passkeyToggle">Enable Passkey Protection</label>
+                    </div>
+                    
+                    <div id="passkeyFields" style="display: none; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid var(--glass-border);">
+                        <div class="form-group">
+                            <label asp-for="Pin">PIN (4 or 6 digits)</label>
+                            <input asp-for="Pin" type="password" class="form-control text-center" placeholder="••••" maxlength="6" oninput="validateForm(); this.value = this.value.replace(/[^0-9]/g, '')" />
+                            <span asp-validation-for="Pin" class="text-danger small"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="ConfirmPin">Confirm PIN</label>
+                            <input asp-for="ConfirmPin" type="password" class="form-control text-center" placeholder="••••" maxlength="6" oninput="validateForm(); this.value = this.value.replace(/[^0-9]/g, '')" />
+                            <span asp-validation-for="ConfirmPin" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div style="margin-top: 2rem;">
                 <button type="submit" class="btn-auth-primary" id="btnSubmit" disabled style="opacity: 0.6; cursor: not-allowed;">Confirm & Create User</button>
                 <a asp-action="UserList" style="display: block; margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem; text-decoration: none; font-weight: 500;">
@@ -214,11 +238,20 @@
         }
     });
 
+    function togglePasskeyFields() {
+        var isEnabled = document.getElementById("passkeyToggle").checked;
+        document.getElementById("passkeyFields").style.display = isEnabled ? "grid" : "none";
+        validateForm();
+    }
+
     function validateForm() {
         var name = document.getElementById("Name").value;
         var email = document.getElementById("Email").value;
         var password = document.getElementById("Password").value;
         var confirm = document.getElementById("ConfirmPassword").value;
+        var passkeyEnabled = document.getElementById("passkeyToggle").checked;
+        var pin = document.getElementById("Pin").value;
+        var confirmPin = document.getElementById("ConfirmPin").value;
         var btn = document.getElementById("btnSubmit");
 
         var roleRadios = document.getElementsByName("Role");
@@ -230,11 +263,14 @@
             }
         }
 
+        var isPinValid = !passkeyEnabled || ( (pin.length === 4 || pin.length === 6) && pin === confirmPin );
+
         var isValid = name.length > 0 && 
                       email.length > 0 && 
                       password.length >= 8 && 
                       password === confirm &&
-                      roleSelected;
+                      roleSelected &&
+                      isPinValid;
 
         if (isValid) {
             btn.disabled = false;

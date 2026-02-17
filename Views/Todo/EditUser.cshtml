@@ -38,8 +38,34 @@
                 <input type="password" name="confirmPassword" class="form-control" placeholder="Confirm new password" />
             </div>
 
-            <button type="submit" class="btn-glow-primary btn-block-glow">Save Changes</button>
+            <!-- Passkey Protection Section -->
+            <div class="form-section" style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                <h5 style="margin-bottom: 1rem; color: rgba(255,255,255,0.8); font-size: 1rem;">Passkey Protection</h5>
+                <div class="passkey-controls">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="isPasskeyEnabled" id="passkeyToggle" @(Model.IsPasskeyEnabled ? "checked" : "") onchange="togglePasskeyFields()">
+                        <label class="form-check-label" for="passkeyToggle" style="color: var(--text-secondary); cursor: pointer;">Enable Passkey Protection</label>
+                    </div>
+                    
+                    <div id="passkeyFields" style="display: @(Model.IsPasskeyEnabled ? "grid" : "none"); grid-template-columns: 1fr; gap: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid var(--glass-border);">
+                        <div class="form-group mb-0">
+                            <label for="passkeyPin">Update PIN (4 or 6 digits)</label>
+                            <input name="passkeyPin" type="password" class="form-control text-center" placeholder="••••" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                            <small class="text-secondary" style="font-size: 0.75rem;">Leave blank to keep existing PIN</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-glow-primary btn-block-glow" style="margin-top: 2rem;">Save Changes</button>
             <a asp-action="UserList" class="btn-outline-unique">Back to List</a>
         </form>
     </div>
 </div>
+
+<script>
+    function togglePasskeyFields() {
+        var isEnabled = document.getElementById("passkeyToggle").checked;
+        document.getElementById("passkeyFields").style.display = isEnabled ? "grid" : "none";
+    }
+</script>

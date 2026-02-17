@@ -34,7 +34,7 @@
                 }
                 @if (HasPage("Page_Tasks"))
                 {
-                    <a asp-controller="Todo" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "Todo" ? "active" : "")" data-translate="true">My Tasks</a>
+                    <a asp-controller="MyTask" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "MyTask" ? "active" : "")" data-translate="true">My Tasks</a>
                 }
                 @if (HasPage("Page_TimeTracker"))
                 {

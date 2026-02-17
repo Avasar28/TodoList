@@ -11,6 +11,9 @@ namespace TodoListApp.Models
         // Store UserPreferences as a JSON string in the database
         public string? PreferencesJson { get; set; }
 
+        public bool IsPasskeyEnabled { get; set; }
+        public string? PasskeyHash { get; set; }
+
         [NotMapped]
         public UserPreferences Preferences
         {

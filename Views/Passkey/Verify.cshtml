@@ -1,0 +1,73 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Verify Passkey";
+}
+
+<div class="auth-wrapper fade-in">
+    <div class="auth-card" style="max-width: 440px; margin: 4rem auto; text-align: center; background: var(--glass-bg); padding: 3rem; border-radius: 24px; border: var(--border-card); backdrop-filter: blur(20px); box-shadow: var(--shadow-card);">
+        <div class="auth-icon-circle" style="margin-bottom: 2rem; width: 80px; height: 80px; background: rgba(110, 203, 198, 0.1); color: var(--accent-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-left: auto; margin-right: auto; box-shadow: 0 0 20px var(--accent-glow);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-lock"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        
+        <h2 class="auth-hero-title" style="font-size: 2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;" data-translate="true">Protected Access</h2>
+        <p class="auth-hero-subtitle" style="color: var(--text-secondary); margin-bottom: 2.5rem;" data-translate="true">Please enter your secret PIN to continue</p>
+
+        <form asp-controller="Passkey" asp-action="ValidatePin" method="post" autocomplete="off">
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+            
+            <div class="form-group mb-4">
+                <input type="password" 
+                       name="pin" 
+                       class="form-control text-center passkey-input" 
+                       placeholder="••••" 
+                       maxlength="6" 
+                       pattern="\d{4}|\d{6}" 
+                       inputmode="numeric"
+                       required 
+                       autofocus 
+                       style="font-size: 2.2rem; letter-spacing: 0.8rem; height: 4.5rem; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--accent-color); transition: all 0.3s ease; width: 100%; box-sizing: border-box;"
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+            </div>
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger mb-4" style="color: #f87171; background: rgba(248, 113, 113, 0.1); padding: 1rem; border-radius: 8px; font-size: 0.9rem; border: 1px solid rgba(248, 113, 113, 0.2);">
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <p class="mb-0">@error.ErrorMessage</p>
+                    }
+                </div>
+            }
+
+            <div class="form-actions" style="margin-top: 2rem;">
+                <button type="submit" class="btn-primary" style="width: 100%; height: 3.5rem; font-size: 1.1rem; border-radius: 12px; font-weight: 600; cursor: pointer; background: var(--btn-primary-bg); color: var(--btn-primary-text); border: none; transition: transform 0.2s ease, box-shadow 0.2s ease;">Unlock Feature</button>
+            </div>
+        </form>
+        
+        <div class="mt-4" style="margin-top: 1.5rem;">
+            <a href="/" class="btn-secondary" style="font-size: 0.9rem; color: var(--text-secondary); text-decoration: none; transition: color 0.2s ease;" data-translate="true">Cancel and Return Home</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .auth-wrapper {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .passkey-input:focus {
+        border-color: var(--accent-color) !important;
+        box-shadow: 0 0 15px var(--accent-glow) !important;
+        background: rgba(0,0,0,0.3) !important;
+        outline: none;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px var(--accent-glow);
+    }
+    .btn-secondary:hover {
+        color: var(--text-primary) !important;
+    }
+</style>
