@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using TodoListApp.Data;
 using TodoListApp.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace TodoListApp.Controllers
 {
@@ -12,23 +14,37 @@ namespace TodoListApp.Controllers
         private readonly IMemoryCache _cache;
         private readonly ILogger<PasskeyController> _logger;
 
+        private readonly ApplicationDbContext _context;
+
         public PasskeyController(
             UserManager<ApplicationUser> userManager, 
             IPasswordHasher<ApplicationUser> passwordHasher,
             IMemoryCache cache,
-            ILogger<PasskeyController> logger)
+            ILogger<PasskeyController> logger,
+            ApplicationDbContext context)
         {
             _userManager = userManager;
             _passwordHasher = passwordHasher;
             _cache = cache;
             _logger = logger;
+            _context = context;
         }
 
         [HttpGet]
         public async Task<IActionResult> Verify(string returnUrl)
         {
             ViewBag.ReturnUrl = returnUrl;
-            return await Task.FromResult(View());
+            
+            var user = await _userManager.GetUserAsync(User);
+            bool hasBiometrics = false;
+            
+            if (user != null)
+            {
+                hasBiometrics = await _context.WebAuthnCredentials.AnyAsync(c => c.UserId == user.Id);
+            }
+            
+            ViewBag.HasBiometrics = hasBiometrics;
+            return View();
         }
 
         [HttpPost]

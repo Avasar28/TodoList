@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Fido2NetLib;
+using TodoListApp.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -46,6 +48,7 @@ builder.Services.AddHttpClient<TodoListApp.Services.ITranslationService, TodoLis
 builder.Services.AddScoped<TodoListApp.Services.IUserManagementService, TodoListApp.Services.UserManagementService>();
 builder.Services.AddScoped<TodoListApp.Services.IFeatureService, TodoListApp.Services.FeatureService>();
 builder.Services.AddScoped<TodoListApp.Services.IGoalTrackerService, TodoListApp.Services.GoalTrackerService>();
+builder.Services.AddScoped<IWebAuthnService, WebAuthnService>();
 
 builder.Services.AddDbContext<TodoListApp.Data.ApplicationDbContext>(options =>
     options.UseSqlite("Data Source=todotask.db"));
@@ -61,6 +64,15 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(10);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+});
+
+// FIDO2 Configuration
+builder.Services.AddFido2(options =>
+{
+    options.ServerDomain = "localhost";
+    options.ServerName = "Todo List App";
+    options.Origins = new HashSet<string> { "https://localhost:7130" };
+    options.TimestampDriftTolerance = 300000;
 });
 
 var app = builder.Build();

@@ -1,0 +1,60 @@
+@model TodoListApp.Models.ApplicationUser
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="dashboard-container fade-in">
+    <div class="dashboard-header">
+        <div>
+            <h1 data-translate="true">Profile Overview</h1>
+            <p class="subtitle" data-translate="true">Manage your personal information and view account status</p>
+        </div>
+        <div class="header-actions">
+            <a asp-action="Security" class="btn-glow-accent" style="display: flex; align-items: center; gap: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-shield"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                Security Settings
+            </a>
+        </div>
+    </div>
+
+    <div class="todo-card" style="margin-top: 2rem; max-width: 600px;">
+        <h3 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 12px;">
+            <div class="auth-icon-circle" style="width: 48px; height: 48px; background: rgba(110, 203, 198, 0.1); color: var(--accent-color); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            Account Information
+        </h3>
+
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div class="profile-field">
+                <label style="opacity: 0.6; font-size: 0.85rem; display: block; margin-bottom: 6px;" data-translate="true">Full Name</label>
+                <div style="font-size: 1.2rem; font-weight: 500; color: var(--text-primary);">@Model.Name</div>
+            </div>
+            
+            <div class="profile-field">
+                <label style="opacity: 0.6; font-size: 0.85rem; display: block; margin-bottom: 6px;" data-translate="true">Email Address</label>
+                <div style="font-size: 1.2rem; font-weight: 500; color: var(--text-primary);">@Model.Email</div>
+            </div>
+
+            <div class="profile-field">
+                <label style="opacity: 0.6; font-size: 0.85rem; display: block; margin-bottom: 6px;" data-translate="true">Account Status</label>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="status-pill active-pill">Active</span>
+                    @if (Model.EmailConfirmed)
+                    {
+                        <span class="status-pill active-pill">Verified</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-field {
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        border: 1px solid var(--glass-border);
+    }
+</style>
