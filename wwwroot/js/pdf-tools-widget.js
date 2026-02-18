@@ -38,7 +38,9 @@ function initPdfToolsWidget() {
 // --- Load User Data (Storage, Favorites, Auto-delete) ---
 async function loadPdfUserData() {
     try {
-        const response = await fetch('/PdfTools/GetUserData');
+        const response = await fetch('/PdfTools/GetUserData', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
         if (response.ok) {
             const data = await response.json();
 
@@ -79,7 +81,7 @@ function updateStorageDisplay() {
 
 function updateFavoriteStars() {
     document.querySelectorAll('.favorite-star-widget').forEach(star => {
-        const card = star.closest('.tool-card-enhanced');
+        const card = star.closest('.tool-list-item');
         const toolId = card?.getAttribute('data-tool');
         if (toolId && pdfFavorites.includes(toolId)) {
             star.classList.add('active');
@@ -94,7 +96,10 @@ async function togglePdfFavorite(toolId, element) {
     try {
         const response = await fetch('/PdfTools/ToggleFavorite', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             body: JSON.stringify({ toolId: toolId })
         });
 
@@ -123,7 +128,10 @@ async function togglePdfAutoDelete(checkbox) {
     try {
         const response = await fetch('/PdfTools/ToggleAutoDelete', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             body: JSON.stringify({ enabled: checkbox.checked })
         });
 
@@ -150,7 +158,9 @@ async function loadPdfHistory() {
     if (emptyEl) emptyEl.style.display = 'none';
 
     try {
-        const response = await fetch('/PdfTools/GetHistory');
+        const response = await fetch('/PdfTools/GetHistory', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
         if (response.ok) {
             const data = await response.json();
 
@@ -175,32 +185,26 @@ function renderPdfHistory(items) {
 
     gridEl.innerHTML = items.map(item => `
         <div class="history-card-premium" data-id="${item.id}">
-            <div class="d-flex align-items-center gap-3">
-                <div class="history-icon-box">
+            <div class="history-card-header">
+                <div class="history-file-icon">
                     <i class="fas fa-file-pdf"></i>
                 </div>
+                <span class="history-action-badge">${item.toolType}</span>
             </div>
             
-            <div class="history-info-box">
+            <div class="history-card-content mt-2">
                 <div class="history-filename" title="${item.originalFileNames}">${item.originalFileNames}</div>
-                <div class="history-meta-row">
-                    <span class="badge-tool-premium">${item.toolType}</span>
-                    <div class="history-meta-item">
-                        <i class="far fa-calendar-alt"></i>
-                        ${new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                    <div class="history-meta-item">
-                        <i class="fas fa-database"></i>
-                        ${(item.fileSize / 1024 / 1024).toFixed(2)} MB
-                    </div>
+                <div class="history-date">
+                    <i class="far fa-clock"></i>
+                    ${new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </div>
             </div>
 
-            <div class="history-actions-premium">
-                <a href="${item.storedFilePath}" class="btn-icon-premium" download title="Download">
-                    <i class="fas fa-download"></i>
+            <div class="history-actions-row">
+                <a href="${item.storedFilePath}" class="btn-history-download" download title="Download">
+                    <i class="fas fa-download"></i> Download
                 </a>
-                <button class="btn-icon-premium delete" onclick="deletePdfHistoryItem('${item.id}')" title="Delete">
+                <button class="btn-history-delete" onclick="deletePdfHistoryItem('${item.id}')" title="Delete">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </div>
@@ -218,7 +222,8 @@ async function deletePdfHistoryItem(id) {
 
     try {
         const response = await fetch(`/PdfTools/DeleteHistory/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
 
         if (response.ok) {
@@ -238,19 +243,38 @@ function switchPdfTab(tab) {
         pdfCurrentTab = tab;
 
         // Update Card Active State
-        document.querySelectorAll('.tool-card-enhanced').forEach(card => card.classList.remove('active'));
-        const activeCard = document.querySelector(`.tool-card-enhanced[data-tool="${tab}"]`);
+        document.querySelectorAll('.tool-list-item').forEach(card => card.classList.remove('active'));
+        const activeCard = document.querySelector(`.tool-list-item[data-tool="${tab}"]`);
         if (activeCard) activeCard.classList.add('active');
 
-        // Update Titles
+        // Trigger Fade In Animation
+        const workspace = document.getElementById('pdf-workspace-widget');
+        if (workspace) {
+            workspace.classList.remove('fade-in');
+            void workspace.offsetWidth; // Trigger reflow
+            workspace.classList.add('fade-in');
+        }
+
+        // Update Titles and Descriptions
         const titles = {
             'merge': 'Merge PDF',
             'split': 'Split PDF',
             'images': 'Images to PDF',
             'compress': 'Compress PDF'
         };
+
+        const descriptions = {
+            'merge': 'Combine multiple PDFs into one unified document',
+            'split': 'Extract pages or split extensive documents',
+            'images': 'Convert JPG/PNG images into a PDF portfolio',
+            'compress': 'Reduce file size while maintaining quality'
+        };
+
         const titleEl = document.getElementById('pdf-workspace-title');
+        const descEl = document.getElementById('pdf-workspace-desc');
+
         if (titleEl) titleEl.innerText = titles[tab] || 'PDF Tool';
+        if (descEl) descEl.innerText = descriptions[tab] || '';
 
         // Show/Hide Options
         const splitOpt = document.getElementById('pdf-split-options');
@@ -483,6 +507,7 @@ async function processPdfFiles() {
         };
 
         xhr.open('POST', endpoint);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         xhr.send(formData);
 
     } catch (e) {

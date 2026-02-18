@@ -1,171 +1,183 @@
 @* PDF Tools Detail Panel - Enhanced Version *@
 <!-- PDF Tools Details Panel -->
 <div class="details-panel" id="pdftoolsDetails">
-    <div class="widget-hero">
-        <div class="widget-hero-content">
-             <h2 class="widget-hero-title">PDF Studio</h2>
-             <div class="widget-hero-subtitle">
-                 <span class="text-muted">Professional tools to Manage, Convert & Secure your documents</span>
-             </div>
+    <!-- Compact Top Bar -->
+    <!-- Compact Top Bar -->
+    <div class="pdf-top-bar-compact">
+        <div class="pdf-status-glass">
+            <div class="pdf-storage-compact">
+                <div class="storage-icon-box">
+                    <i class="fas fa-hdd"></i>
+                </div>
+                <div class="storage-info-group">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="storage-label">Storage</span>
+                        <span class="storage-value" id="pdf-storage-display">0 / 500 MB</span>
+                    </div>
+                    <div class="storage-bar-mini">
+                        <div id="pdf-storage-bar" class="storage-bar-fill"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="divider-vertical"></div>
+
+            <div class="pdf-autodelete-compact">
+                <div class="autodelete-icon-box">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <span class="autodelete-label">Auto-delete</span>
+                <div class="form-check form-switch m-0">
+                    <input class="form-check-input premium-switch" type="checkbox" id="pdf-autoDeleteToggle" onchange="togglePdfAutoDelete(this)">
+                </div>
+            </div>
         </div>
-        <button class="btn-back-dashboard" onclick="closeDetails()">
-            ← Back to Dashboard
+        
+        <button class="btn btn-outline-primary btn-sm btn-back-modern" onclick="closeDetails()">
+            <i class="fas fa-arrow-left me-2"></i>Dashboard
         </button>
     </div>
 
     <div class="widget-content-container">
-        
-        <!-- Storage Stats Panel -->
-        <div class="pdf-stats-widget-panel">
-            <div class="row g-3">
-                <div class="col-md-7">
-                    <div class="stat-card-glass">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="stat-label-widget"><i class="fas fa-hdd me-2"></i>Storage Usage</span>
-                            <span class="stat-value-widget" id="pdf-storage-display">0 / 500 MB</span>
+
+        <!-- 2-Column Layout: Tool Panel + Workspace -->
+        <div class="pdf-main-layout">
+            <!-- Left Sidebar: Tool Selection Panel (30%) -->
+            <div class="pdf-tool-sidebar">
+                <div class="tool-list-item active" onclick="switchPdfTab('merge')" data-tool="merge">
+                    <div class="favorite-star-widget" onclick="togglePdfFavorite('merge', this); event.stopPropagation();">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="tool-list-icon"><i class="fas fa-layer-group"></i></div>
+                    <div class="tool-list-content">
+                        <div class="tool-list-title">Merge PDF</div>
+                        <div class="tool-list-desc">Combine multiple PDFs into one</div>
+                    </div>
+                </div>
+                <div class="tool-list-item" onclick="switchPdfTab('split')" data-tool="split">
+                    <div class="favorite-star-widget" onclick="togglePdfFavorite('split', this); event.stopPropagation();">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="tool-list-icon"><i class="fas fa-cut"></i></div>
+                    <div class="tool-list-content">
+                        <div class="tool-list-title">Split PDF</div>
+                        <div class="tool-list-desc">Extract pages or split documents</div>
+                    </div>
+                </div>
+                <div class="tool-list-item" onclick="switchPdfTab('images')" data-tool="images">
+                    <div class="favorite-star-widget" onclick="togglePdfFavorite('images', this); event.stopPropagation();">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="tool-list-icon"><i class="fas fa-images"></i></div>
+                    <div class="tool-list-content">
+                        <div class="tool-list-title">Images to PDF</div>
+                        <div class="tool-list-desc">Convert images into PDF portfolio</div>
+                    </div>
+                </div>
+                <div class="tool-list-item" onclick="switchPdfTab('compress')" data-tool="compress">
+                    <div class="favorite-star-widget" onclick="togglePdfFavorite('compress', this); event.stopPropagation();">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="tool-list-icon"><i class="fas fa-compress-arrows-alt"></i></div>
+                    <div class="tool-list-content">
+                        <div class="tool-list-title">Compress PDF</div>
+                        <div class="tool-list-desc">Reduce file size efficiently</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Workspace (70%) -->
+            <div id="pdf-workspace-widget" class="pdf-workspace-widget">
+                <!-- Workspace Header -->
+                <div class="workspace-header">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <div class="badge bg-accent text-dark">Active</div>
+                        <h4 class="mb-0 text-white workspace-title" id="pdf-workspace-title">Merge PDF</h4>
+                    </div>
+                    <p class="workspace-description mb-0" id="pdf-workspace-desc">Combine multiple PDFs into one unified document</p>
+                </div>
+
+                <!-- Enhanced Drop Zone -->
+                <div id="pdf-drop-zone" class="pdf-drop-zone-enhanced" ondrop="handlePdfDrop(event)" ondragover="handlePdfDragOver(event)" ondragleave="handlePdfDragLeave(event)" onclick="document.getElementById('pdfFileInput').click()">
+                    <i class="fas fa-cloud-upload-alt drop-icon"></i>
+                    <h4 class="drop-title">Drag & Drop files here</h4>
+                    <p class="drop-subtitle">or click to browse from your computer</p>
+                    <input type="file" id="pdfFileInput" multiple style="display: none;" onchange="handlePdfFileSelect(event)">
+                </div>
+
+                <!-- Options: Split Range -->
+                <div id="pdf-split-options" class="tool-options" style="display: none;">
+                    <label class="form-label">Page Range (e.g., 1-5, 8)</label>
+                    <div class="d-flex gap-2">
+                        <input type="text" id="pdf-pageRange" class="form-control form-control-sm" placeholder="Leave empty to split all pages">
+                        <div class="form-check d-flex align-items-center">
+                            <input class="form-check-input" type="checkbox" id="pdf-splitAll">
+                            <label class="form-check-label ms-2" for="pdf-splitAll">Split All</label>
                         </div>
-                        <div class="progress" style="height: 8px; background-color: rgba(255,255,255,0.1); border-radius: 4px;">
-                            <div id="pdf-storage-bar" class="progress-bar bg-success" role="progressbar" style="width: 0%; border-radius: 4px;"></div>
-                        </div>
                     </div>
                 </div>
-                <div class="col-md-5">
-                    <div class="stat-card-glass">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span class="stat-label-widget" style="font-size: 0.85rem;"><i class="fas fa-clock me-2"></i>Auto-delete</span>
-                            <div class="form-check form-switch m-0">
-                                <input class="form-check-input premium-switch" type="checkbox" id="pdf-autoDeleteToggle" onchange="togglePdfAutoDelete(this)">
-                            </div>
-                        </div>
+
+                <!-- Options: Compression Level -->
+                <div id="pdf-compress-options" class="tool-options" style="display: none;">
+                    <label class="form-label">Compression Level</label>
+                    <select id="pdf-compressionLevel" class="form-select form-select-sm">
+                        <option value="standard">Standard</option>
+                        <option value="high">High (Maximum reduction)</option>
+                    </select>
+                </div>
+
+                <!-- File List -->
+                <ul id="pdf-file-list" class="file-list"></ul>
+
+                <!-- Action Buttons -->
+                <div class="pdf-controls">
+                    <button class="btn-pdf-ghost" onclick="clearPdfFiles()">Clear All</button>
+                    <button id="pdf-processBtn" class="btn-pdf-primary" onclick="processPdfFiles()">
+                        <span>Process Files</span>
+                        <div class="loading-spinner" id="pdf-spinner"></div>
+                    </button>
+                </div>
+
+                <!-- Progress Container -->
+                <div id="pdf-progress-container" class="progress-container-compact d-none">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span id="pdf-progress-label" class="progress-label">Uploading...</span>
+                        <span id="pdf-progress-percent" class="progress-percent">0%</span>
+                    </div>
+                    <div class="progress-premium-container">
+                        <div id="pdf-progress-bar" class="progress-premium-bar"></div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Tool Grid Navigation with Favorites -->
-        <div class="pdf-tool-grid-enhanced" id="pdf-tool-grid-enhanced">
-            <div class="tool-card-enhanced active" onclick="switchPdfTab('merge')" data-tool="merge">
-                <div class="favorite-star-widget" onclick="togglePdfFavorite('merge', this); event.stopPropagation();">
-                    <i class="fas fa-star"></i>
-                </div>
-                <div class="tool-icon-wrapper-enhanced"><i class="fas fa-layer-group"></i></div>
-                <div class="tool-title-enhanced">Merge PDF</div>
-                <div class="tool-desc-enhanced">Combine multiple PDFs into one unified document.</div>
-            </div>
-            <div class="tool-card-enhanced" onclick="switchPdfTab('split')" data-tool="split">
-                <div class="favorite-star-widget" onclick="togglePdfFavorite('split', this); event.stopPropagation();">
-                    <i class="fas fa-star"></i>
-                </div>
-                <div class="tool-icon-wrapper-enhanced"><i class="fas fa-cut"></i></div>
-                <div class="tool-title-enhanced">Split PDF</div>
-                <div class="tool-desc-enhanced">Extract pages or split extensive documents.</div>
-            </div>
-            <div class="tool-card-enhanced" onclick="switchPdfTab('images')" data-tool="images">
-                <div class="favorite-star-widget" onclick="togglePdfFavorite('images', this); event.stopPropagation();">
-                    <i class="fas fa-star"></i>
-                </div>
-                <div class="tool-icon-wrapper-enhanced"><i class="fas fa-images"></i></div>
-                <div class="tool-title-enhanced">Images to PDF</div>
-                <div class="tool-desc-enhanced">Convert JPG/PNG images into a PDF portfolio.</div>
-            </div>
-            <div class="tool-card-enhanced" onclick="switchPdfTab('compress')" data-tool="compress">
-                <div class="favorite-star-widget" onclick="togglePdfFavorite('compress', this); event.stopPropagation();">
-                    <i class="fas fa-star"></i>
-                </div>
-                <div class="tool-icon-wrapper-enhanced"><i class="fas fa-compress-arrows-alt"></i></div>
-                <div class="tool-title-enhanced">Compress PDF</div>
-                <div class="tool-desc-enhanced">Reduce file size while maintaining quality.</div>
-            </div>
-        </div>
-
-        <!-- Workspace -->
-        <div id="pdf-workspace-widget" class="pdf-workspace-widget">
-            <div class="d-flex align-items-center mb-4">
-                <div class="badge bg-accent text-dark me-2">Active</div>
-                <h4 class="mb-0 text-white" id="pdf-workspace-title">Merge PDF</h4>
-            </div>
-
-            <!-- Input Area -->
-            <div id="pdf-drop-zone" class="pdf-drop-zone-enhanced" ondrop="handlePdfDrop(event)" ondragover="handlePdfDragOver(event)" ondragleave="handlePdfDragLeave(event)" onclick="document.getElementById('pdfFileInput').click()">
-                <i class="fas fa-cloud-upload-alt mb-3"></i>
-                <h4 class="drop-title">Drag & Drop files here</h4>
-                <p class="drop-subtitle">or click to browse from your computer</p>
-                <input type="file" id="pdfFileInput" multiple style="display: none;" onchange="handlePdfFileSelect(event)">
-            </div>
-
-            <!-- Options: Split Range -->
-            <div id="pdf-split-options" class="mb-4" style="display: none;">
-                <label class="form-label" style="color: var(--text-primary);">Page Range (e.g., 1-5, 8)</label>
-                <div class="d-flex gap-2">
-                    <input type="text" id="pdf-pageRange" class="form-control" placeholder="Leave empty to split all pages" style="background: rgba(255,255,255,0.05); color: var(--text-primary); border: var(--glass-border);">
-                    <div class="form-check d-flex align-items-center">
-                        <input class="form-check-input" type="checkbox" id="pdf-splitAll">
-                        <label class="form-check-label ms-2" for="pdf-splitAll" style="color: var(--text-secondary);">Split All</label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Options: Compression Level -->
-            <div id="pdf-compress-options" class="mb-4" style="display: none;">
-                <label class="form-label" style="color: var(--text-primary);">Compression Level</label>
-                <select id="pdf-compressionLevel" class="form-select" style="background: rgba(255,255,255,0.05); color: var(--text-primary); border: var(--glass-border);">
-                    <option value="standard">Standard</option>
-                    <option value="high">High (Maximum reduction)</option>
-                </select>
-            </div>
-
-            <!-- File List -->
-            <ul id="pdf-file-list" class="file-list"></ul>
-
-            <!-- Action Buttons -->
-            <div class="pdf-controls">
-                <button class="btn btn-premium-secondary" onclick="clearPdfFiles()">Clear All</button>
-                <button id="pdf-processBtn" class="btn btn-premium-primary" onclick="processPdfFiles()">
-                    <span>Process Files</span>
-                    <div class="loading-spinner" id="pdf-spinner"></div>
-                </button>
-            </div>
-
-            <!-- Progress Container -->
-            <div id="pdf-progress-container" class="mt-4 d-none">
-                <div class="d-flex justify-content-between mb-2">
-                    <span id="pdf-progress-label" class="text-white small fw-bold">Uploading...</span>
-                </div>
-                <div class="progress-premium-container">
-                    <div id="pdf-progress-bar" class="progress-premium-bar">
-                        <span id="pdf-progress-percent" class="progress-percent-text">0%</span>
-                    </div>
-                </div>
-            </div>
 
             <!-- Result -->
             <div id="pdf-result-section" class="result-section d-none">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="checkmark-circle me-2">
-                        <div class="checkmark draw"></div>
-                    </div>
-                    <span id="pdf-result-message" class="result-message">Success! File ready.</span>
+                <div class="success-badge-premium">
+                    <i class="fas fa-check-circle"></i>
+                    <span>File Ready</span>
                 </div>
                 <div class="mt-3">
-                    <a id="pdf-download-link" href="#" class="btn btn-sm btn-light" download>
-                        <i class="fas fa-download me-2"></i>Download
+                    <a id="pdf-download-link" href="#" class="btn-pdf-primary" download>
+                        <i class="fas fa-download me-2"></i>Download File
                     </a>
                 </div>
             </div>
 
             <!-- Modern Toast Container -->
             <div id="pdf-toast-container" class="toast-container-premium"></div>
+            </div>
         </div>
 
         <!-- History Section -->
         <div class="pdf-history-widget">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="mb-0 d-flex align-items-center" style="color: var(--text-primary); font-family: 'Outfit', sans-serif; font-weight: 700;">
-                    <i class="fas fa-history me-2 text-accent"></i>
-                    <span>My PDF History</span>
-                </h4>
-                <button class="btn btn-sm btn-outline-light" onclick="refreshPdfHistory()">
-                    <i class="fas fa-sync-alt me-2"></i>Refresh
+            <div class="history-header">
+                <div class="history-title-group">
+                    <div class="history-icon-wrapper">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h4 class="history-title">History</h4>
+                </div>
+                <button class="btn-refresh-icon" onclick="refreshPdfHistory()" title="Refresh History">
+                    <i class="fas fa-sync-alt"></i>
                 </button>
             </div>
 
@@ -174,7 +186,6 @@
                 <div class="spinner-border text-accent" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-                <p class="text-muted mt-3">Loading history...</p>
             </div>
 
             <!-- History Grid -->
@@ -184,9 +195,11 @@
 
             <!-- Empty State -->
             <div id="pdf-history-empty" class="history-empty-state" style="display: none;">
-                <i class="fas fa-folder-open empty-icon"></i>
-                <div class="empty-text">No documents in your history yet.</div>
-                <p class="text-muted mt-2">Processed files will appear here for 30 days.</p>
+                <div class="empty-state-illustration">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <div class="empty-text">No documents yet</div>
+                <p class="empty-subtitle">Your processed files will appear here</p>
             </div>
         </div>
 

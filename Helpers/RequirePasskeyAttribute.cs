@@ -22,6 +22,15 @@ namespace TodoListApp.Helpers
                 
                 if (!httpContext.Request.Cookies.ContainsKey("PasskeyVerified"))
                 {
+                    if (IsAjaxRequest(httpContext.Request))
+                    {
+                        context.Result = new JsonResult(new { success = false, message = "Passkey verification required", requiresPasskey = true })
+                        {
+                            StatusCode = 403
+                        };
+                        return;
+                    }
+
                     var returnUrl = httpContext.Request.Path + httpContext.Request.QueryString;
                     context.Result = new RedirectToActionResult("Verify", "Passkey", new { returnUrl });
                     return;
@@ -35,6 +44,11 @@ namespace TodoListApp.Helpers
             }
 
             await next();
+        }
+
+        private bool IsAjaxRequest(HttpRequest request)
+        {
+            return request.Headers["X-Requested-With"] == "XMLHttpRequest";
         }
     }
 }
