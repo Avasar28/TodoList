@@ -17,7 +17,9 @@ const TranslatorWidget = (function () {
         sourceLang: 'auto',
         targetLang: 'en',
         typingTimer: null,
-        isTranslating: false
+        isTranslating: false,
+        hasRetried: false,
+        initialized: false // Phase 3: Prevent double-init
     };
 
     // Full Language List
@@ -136,14 +138,19 @@ const TranslatorWidget = (function () {
 
     // --- DOM Elements ---
     let sourceInput, targetInput, swapBtn, statusIndicator;
-    let detectedSpan, actionBtn, copyBtn, speakBtn;
+    let detectedSpan, actionBtn, copyBtn, speakBtn, micBtn;
 
     // Custom Dropdown Elements
     let sourceWrapper, sourceSearch, sourceOptionsList, sourceLabel, sourceHidden;
     let targetWrapper, targetSearch, targetOptionsList, targetLabel, targetHidden;
 
     function init() {
-        console.log("TranslatorWidget: Loaded with " + languages.length + " languages.");
+        if (state.initialized) {
+            console.warn("TranslatorWidget: Already initialized. Skipping duplicate call.");
+            return;
+        }
+        console.log("TranslatorWidget: Initializing...");
+
         sourceInput = document.getElementById('transSourceText');
         targetInput = document.getElementById('transTargetText');
         swapBtn = document.getElementById('transSwapBtn');
@@ -152,17 +159,21 @@ const TranslatorWidget = (function () {
         actionBtn = document.getElementById('transActionBtn');
         copyBtn = document.getElementById('transCopyBtn');
         speakBtn = document.getElementById('transSpeakBtn');
+        micBtn = document.getElementById('transMicBtn');
 
         // Dropdown Logic
         initDropdown('source', languages);
         initDropdown('target', languages.filter(l => l.code !== 'auto'));
 
-        // --- FALLBACK INITIALIZATION ---
-        initFallbackSelect('source', languages);
-        initFallbackSelect('target', languages.filter(l => l.code !== 'auto'));
-
         setupEventListeners();
+        setupSpeechRecognition();
+
+        state.initialized = true;
+        console.log("TranslatorWidget: Initialization complete.");
+        checkPermissions();
     }
+
+    // --- DROPBOWN LOGIC ---
 
     function initFallbackSelect(type, langList) {
         const select = document.getElementById(`${type}LangFallback`);
@@ -566,28 +577,61 @@ const TranslatorWidget = (function () {
     let isRecording = false;
 
     function setupSpeechRecognition() {
-        console.log("Setting up Speech Recognition...");
+        console.log("Speech Lifecycle: Binding Main Microphone Listener...");
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const micBtn = document.getElementById('transMicBtn');
 
         if (!micBtn) {
-            console.error("Microphone button 'transMicBtn' NOT FOUND in DOM");
+            console.warn("Speech Lifecycle: Main Mic button 'transMicBtn' NOT FOUND in DOM");
             return;
         }
 
         if (!SpeechRecognition) {
-            console.warn("Speech Recognition API not supported in this browser.");
+            console.warn("Speech Lifecycle: Web Speech API not supported. Hiding Mic Button.");
             micBtn.style.display = 'none';
             return;
         }
 
-        console.log("Speech Recognition API supported. Button found.");
+        // Use a flag to avoid multiple listeners if somehow init is called incorrectly
+        if (micBtn._hasListener) return;
 
-        recognition = new SpeechRecognition();
-        recognition.continuous = false; // Stop after silence
-        recognition.interimResults = true; // Show text while speaking
+        micBtn.addEventListener('click', () => {
+            console.log("Speech Lifecycle: Main Mic Clicked.");
+            toggleSpeech();
+        });
+        micBtn._hasListener = true;
+        console.log("Speech Lifecycle: Main Mic Listener bound successfully.");
+    }
 
-        recognition.onstart = () => {
+    function initSpeechEngine() {
+        // Lifecycle Logging
+        console.log("Speech Lifecycle: Initializing Engine...");
+
+        // Cleanup old instance if it exists
+        if (recognition) {
+            console.log("Speech Lifecycle: Cleaning up previous engine instance.");
+            try {
+                recognition.onstart = null;
+                recognition.onend = null;
+                recognition.onresult = null;
+                recognition.onerror = null;
+                recognition.abort();
+            } catch (e) { console.warn("Speech cleanup error:", e); }
+            recognition = null;
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            console.error("Speech Lifecycle: Web Speech API not supported in this browser.");
+            return null;
+        }
+
+        const rec = new SpeechRecognition();
+        rec.continuous = false;
+        rec.interimResults = false;
+        rec.maxAlternatives = 1;
+
+        rec.onstart = () => {
+            console.log("Speech Lifecycle: ONSTART - Recording started.");
             isRecording = true;
             state.isRecording = true;
 
@@ -607,7 +651,8 @@ const TranslatorWidget = (function () {
             }
         };
 
-        recognition.onend = () => {
+        rec.onend = () => {
+            console.log("Speech Lifecycle: ONEND - Recording stopped.");
             isRecording = false;
             state.isRecording = false;
 
@@ -617,7 +662,6 @@ const TranslatorWidget = (function () {
                     btn.classList.remove('listening');
                     btn.querySelector('.mic-status').textContent = 'Tap to Speak';
                 }
-                // Process conversation result if text exists
                 processConversationInput();
             } else {
                 if (micBtn) micBtn.classList.remove('recording');
@@ -628,46 +672,66 @@ const TranslatorWidget = (function () {
                 }
                 triggerTranslation();
             }
+
+            // Cleanup engine after use to free resources
+            setTimeout(() => {
+                if (!isRecording && recognition === rec) {
+                    recognition = null;
+                }
+            }, 100);
         };
 
-        recognition.onresult = (event) => {
+        rec.onresult = (event) => {
             const transcript = Array.from(event.results)
                 .map(result => result[0])
                 .map(result => result.transcript)
                 .join('');
 
+            console.log("Speech Lifecycle: ONRESULT - Transcript received (Length:", transcript.length, ")");
+
             if (state.mode === 'conversation') {
                 state.tempTranscript = transcript;
-
-                // Live Preview Logic
-                const chatArea = document.getElementById(`convChat${state.activeSpeaker}`);
-                let previewBubble = chatArea.querySelector('.chat-bubble.preview');
-
-                if (!previewBubble) {
-                    previewBubble = document.createElement('div');
-                    previewBubble.className = 'chat-bubble local preview';
-                    previewBubble.style.opacity = '0.7';
-                    chatArea.appendChild(previewBubble);
-
-                    // Hide placeholder
-                    const placeholder = chatArea.querySelector('.conv-placeholder');
-                    if (placeholder) placeholder.style.display = 'none';
-                }
-
-                previewBubble.textContent = transcript + '...';
-                chatArea.scrollTop = chatArea.scrollHeight;
-
+                addChatBubble(state.activeSpeaker, transcript + '...', 'local preview-only');
             } else {
                 const sourceText = document.getElementById('transSourceText');
                 if (sourceText) sourceText.value = transcript;
             }
         };
 
-        recognition.onerror = (event) => {
+        rec.onerror = (event) => {
+
+            let errorMessage = "Speech error.";
+            let isSilent = false;
+
             if (event.error === 'no-speech') {
                 console.info("Speech Recognition: No speech detected (Silence).");
+                errorMessage = "No speech detected.";
+                isSilent = true;
+            } else if (event.error === 'network') {
+                const isOffline = !navigator.onLine;
+                console.error(`Speech Recognition Network Error: ${isOffline ? 'OFFLINE' : 'Browser connection to speech service failed'}`);
+                errorMessage = isOffline ? "You are offline. Please check connection." : "Network Error: Speech service unreachable.";
+
+                // STRICT FIX: Auto-Retry once on network error if online
+                if (!isOffline && !state.hasRetried) {
+                    console.info("Speech Recognition: Attempting automatic reconnection...");
+                    state.hasRetried = true;
+                    setTimeout(() => {
+                        if (state.mode === 'conversation') startConversationMic(state.activeSpeaker);
+                        else toggleSpeech();
+                    }, 500);
+                    return;
+                }
+                state.hasRetried = false; // Reset for manual clicks
+            } else if (event.error === 'audio-capture') {
+                console.error("Speech Recognition Error: No microphone found or access denied.");
+                errorMessage = "Mic Error: No microphone found.";
+            } else if (event.error === 'not-allowed') {
+                console.error("Speech Recognition Error: Permission denied.");
+                errorMessage = "Permission Denied.";
             } else {
-                console.error("Speech Recognition Error", event.error);
+                console.error("Speech Recognition Error:", event.error);
+                errorMessage = `Error: ${event.error}`;
             }
 
             isRecording = false;
@@ -682,21 +746,25 @@ const TranslatorWidget = (function () {
                 const btn = document.getElementById(`convMicBtn${state.activeSpeaker}`);
                 if (btn) {
                     btn.classList.remove('listening');
-                    btn.querySelector('.mic-status').textContent = 'Tap to Speak';
+                    btn.querySelector('.mic-status').textContent = isSilent ? 'Tap to Speak' : errorMessage;
 
                     // Only show error state if NOT no-speech
-                    if (event.error !== 'no-speech') {
+                    if (!isSilent) {
                         btn.classList.add('error');
-                        setTimeout(() => btn.classList.remove('error'), 1000);
+                        setTimeout(() => {
+                            btn.classList.remove('error');
+                            btn.querySelector('.mic-status').textContent = 'Tap to Speak';
+                        }, 2000);
                     }
                 }
             } else {
                 if (micBtn) {
                     micBtn.classList.remove('recording');
-                    if (event.error !== 'no-speech') {
+                    if (!isSilent) {
                         micBtn.classList.add('error');
-                        micBtn.setAttribute('aria-label', 'Error. Try again.');
-                        setTimeout(() => micBtn.classList.remove('error'), 1000);
+                        micBtn.setAttribute('title', errorMessage);
+                        micBtn.setAttribute('aria-label', errorMessage);
+                        setTimeout(() => micBtn.classList.remove('error'), 3000);
                     } else {
                         micBtn.setAttribute('aria-label', 'Start listening');
                     }
@@ -704,36 +772,143 @@ const TranslatorWidget = (function () {
                 const sourceText = document.getElementById('transSourceText');
                 if (sourceText) {
                     sourceText.classList.remove('listening');
-                    sourceText.placeholder = event.error === 'no-speech' ? "No speech detected." : "Enter text...";
+                    sourceText.placeholder = isSilent ? "No speech detected. Try again?" : errorMessage;
+
+                    // Temporary visual feedback in the input itself for critical errors
+                    if (!isSilent && (event.error === 'network' || event.error === 'not-allowed')) {
+                        const originalPlaceholder = "Enter text...";
+                        setTimeout(() => {
+                            if (sourceText.placeholder === errorMessage) {
+                                sourceText.placeholder = originalPlaceholder;
+                            }
+                        }, 4000);
+                    }
                 }
             }
-
-            // Allow retry
         };
 
-        if (micBtn) {
-            micBtn.addEventListener('click', toggleSpeech);
+        return rec;
+    }
+
+
+    async function checkPermissions() {
+        if (navigator.permissions && navigator.permissions.query) {
+            try {
+                const result = await navigator.permissions.query({ name: 'microphone' });
+                console.log("Speech Diagnostics: Microphone Permission State:", result.state);
+                result.onchange = () => {
+                    console.log("Speech Diagnostics: Microphone Permission Changed to:", result.state);
+                };
+            } catch (e) { console.warn("Speech Diagnostics: Permission query failed:", e); }
         }
+    }
+
+    function getEnhancedLangCode(code) {
+        if (!code || code === 'auto') return navigator.language || 'en-US';
+
+        const map = {
+            'en': 'en-US',
+            'es': 'es-ES',
+            'fr': 'fr-FR',
+            'de': 'de-DE',
+            'gu': 'gu-IN',
+            'hi': 'hi-IN',
+            'ur': 'ur-PK',
+            'bn': 'bn-IN',
+            'ta': 'ta-IN',
+            'te': 'te-IN',
+            'mr': 'mr-IN',
+            'kn': 'kn-IN',
+            'ml': 'ml-IN',
+            'pa': 'pa-IN',
+            'ru': 'ru-RU',
+            'ja': 'ja-JP',
+            'ko': 'ko-KR',
+            'zh': 'zh-CN',
+            'pt': 'pt-BR',
+            'it': 'it-IT',
+            'tr': 'tr-TR',
+            'nl': 'nl-NL'
+        };
+        return map[code] || code;
     }
 
     function toggleSpeech() {
         console.log("Mic button clicked. isRecording:", isRecording);
+
+        if (isRecording && recognition) {
+            recognition.stop();
+            return;
+        }
+
+        // Connectivity Check
+        if (!navigator.onLine) {
+            console.warn("Speech Recognition: Browser is offline.");
+            handleSpeechError('network');
+            return;
+        }
+
+        // Set language with enhanced mapping
+        const langCode = getEnhancedLangCode(state.sourceLang);
+        console.log("Starting Fresh Speech Recognition for lang:", langCode);
+
+        // Reset retry flag on manual start
+        if (!state.hasRetried) state.hasRetried = false;
+
+        recognition = initSpeechEngine();
         if (!recognition) return;
 
-        if (isRecording) {
-            recognition.stop();
-        } else {
-            // Set language based on source selection
-            const langCode = state.sourceLang === 'auto' ? navigator.language : state.sourceLang;
-            recognition.lang = langCode;
+        recognition.lang = langCode;
 
-            try {
-                recognition.start();
-            } catch (e) {
-                console.error("Failed to start speech recognition", e);
-            }
+        try {
+            recognition.start();
+        } catch (e) {
+            console.error("Failed to start speech recognition", e);
+            handleSpeechError('aborted');
         }
     }
+
+    function handleSpeechError(errorType) {
+        console.error(`Speech Lifecycle: ERROR detected - Type: ${errorType} | Mode: ${state.mode}`);
+
+        // 1. Reset Internal State
+        isRecording = false;
+        state.isRecording = false;
+
+        // 2. Mode-Aware UI Fixes
+        if (state.mode === 'conversation' && state.activeSpeaker) {
+            const btn = document.getElementById(`convMicBtn${state.activeSpeaker}`);
+            if (btn) {
+                btn.classList.remove('listening');
+                btn.classList.add('error');
+                btn.querySelector('.mic-status').textContent = 'Error - Try Again';
+                setTimeout(() => {
+                    btn.classList.remove('error');
+                    btn.querySelector('.mic-status').textContent = 'Tap to Speak';
+                }, 2000);
+            }
+        } else {
+            const btn = document.getElementById('transMicBtn');
+            if (btn) {
+                btn.classList.remove('recording');
+                btn.classList.add('error');
+                setTimeout(() => btn.classList.remove('error'), 2000);
+            }
+            const sourceText = document.getElementById('transSourceText');
+            if (sourceText) {
+                sourceText.classList.remove('listening');
+                sourceText.placeholder = 'Enter text...';
+            }
+        }
+
+        // 3. Clear Stale Engine
+        if (recognition) {
+            try { recognition.abort(); } catch (e) { }
+            recognition = null;
+        }
+    }
+
+
 
 
     // --- Conversation Mode Logic ---
@@ -875,44 +1050,57 @@ const TranslatorWidget = (function () {
     }
 
     function toggleConversationMic(person) {
-        if (!recognition) return;
+        console.log(`Speech Lifecycle: Conversation Mic (${person}) Clicked.`);
 
         // If already recording same person -> Stop
-        if (state.isRecording && state.activeSpeaker === person) {
+        if (isRecording && state.activeSpeaker === person && recognition) {
+            console.log("Speech Lifecycle: Stopping current speaker recording.");
             recognition.stop();
             return;
         }
 
         // If recording other person -> Stop then Start
-        if (state.isRecording) {
+        if (isRecording && recognition) {
+            console.log("Speech Lifecycle: Switching speakers. Stopping current.");
             recognition.stop();
-            // Wait for stop event or just force restart logic in onend?
-            // Simple approach: stop, wait small delay, start new.
-            setTimeout(() => startConversationMic(person), 300);
+            setTimeout(() => startConversationMic(person), 400);
             return;
         }
 
         startConversationMic(person);
     }
 
+
     function startConversationMic(person) {
         const langInputId = person === 'A' ? 'convLangA' : 'convLangB';
-        let langCode = document.getElementById(langInputId).value;
+        const rawLang = document.getElementById(langInputId).value;
+        const langCode = getEnhancedLangCode(rawLang);
 
-        // Auto-Detect Handling: Fallback to browser lang if 'auto'
-        if (langCode === 'auto') {
-            langCode = navigator.language;
-            // Optional: visual indicator that we're using "en-US" (or whatever)?
-            // For now, just using it silently is the standard behavior.
-        }
+        console.log(`Starting Fresh Translation Mic (${person}) for lang:`, langCode);
 
         state.activeSpeaker = person;
+
+        // Reset retry flag on manual start
+        if (!state.hasRetried) state.hasRetried = false;
+
+        // Connectivity Check
+        if (!navigator.onLine) {
+            handleSpeechError('network');
+            return;
+        }
+
+        recognition = initSpeechEngine();
+        if (!recognition) return;
 
         recognition.lang = langCode;
         try {
             recognition.start();
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+            handleSpeechError('aborted');
+        }
     }
+
 
     async function processConversationInput() {
         const text = state.tempTranscript;
@@ -1045,7 +1233,7 @@ const TranslatorWidget = (function () {
             }
         }
     };
-
+     
     recognition.onend = () => {
         isRecording = false;
         state.isRecording = false;
@@ -1068,7 +1256,6 @@ const TranslatorWidget = (function () {
     return {
         init: () => {
             init();
-            setupSpeechRecognition();
             if (window.speechSynthesis) {
                 window.speechSynthesis.onvoiceschanged = () => { };
             }
