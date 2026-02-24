@@ -14,17 +14,20 @@ namespace TodoListApp.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _config;
+        private readonly Data.ApplicationDbContext _context;
 
         public AccountController(
             UserManager<ApplicationUser> userManager, 
             SignInManager<ApplicationUser> signInManager, 
             IEmailService emailService, 
-            IConfiguration config)
+            IConfiguration config,
+            Data.ApplicationDbContext context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailService = emailService;
             _config = config;
+            _context = context;
         }
 
         [HttpGet]
@@ -44,6 +47,19 @@ namespace TodoListApp.Controllers
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, isPersistent: false, lockoutOnFailure: false);
             if (result.Succeeded)
             {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null)
+                {
+                    _context.ActivityLogs.Add(new ActivityLog
+                    {
+                        Action = "Login",
+                        UserId = user.Id,
+                        PerformedBy = user.UserName ?? user.Email,
+                        Timestamp = DateTime.UtcNow,
+                        Details = "User signed in successfully"
+                    });
+                    await _context.SaveChangesAsync();
+                }
                 return RedirectToAction("Dashboard", "Todo");
             }
 

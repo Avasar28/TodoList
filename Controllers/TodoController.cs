@@ -17,6 +17,7 @@ namespace TodoListApp.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IUserManagementService _userManagementService;
         private readonly IFeatureService _featureService;
+        private readonly Data.ApplicationDbContext _context;
 
         public TodoController(
             ITodoService todoService, 
@@ -24,7 +25,8 @@ namespace TodoListApp.Controllers
             UserManager<ApplicationUser> userManager, 
             IWebHostEnvironment webHostEnvironment,
             IUserManagementService userManagementService,
-            IFeatureService featureService)
+            IFeatureService featureService,
+            Data.ApplicationDbContext context)
         {
             _todoService = todoService;
             _externalApiService = externalApiService;
@@ -32,6 +34,7 @@ namespace TodoListApp.Controllers
             _webHostEnvironment = webHostEnvironment;
             _userManagementService = userManagementService;
             _featureService = featureService;
+            _context = context;
         }
 
         // [AuthorizeFeature("Page_Dashboard")] // Removed to allow manual check for Managers
@@ -255,6 +258,22 @@ namespace TodoListApp.Controllers
         {
             var result = await _featureService.UpdateUserFeaturesAsync(userId, featureIds, User.Identity?.Name, applyToRole);
             return Json(new { success = result.Success, message = result.Message });
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "SuperAdmin,Admin,Manager")]
+        public async Task<IActionResult> GetSigninHistory(string userId)
+        {
+            var logs = _context.ActivityLogs
+                .Where(l => l.UserId == userId && l.Action == "Login")
+                .OrderByDescending(l => l.Timestamp)
+                .Select(l => new {
+                    l.Timestamp,
+                    l.Details
+                })
+                .ToList();
+
+            return Json(logs);
         }
 
         private string GetUserId()
