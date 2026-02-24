@@ -27,35 +27,49 @@ namespace TodoListApp.Services
 
         public async Task<IEnumerable<SystemFeature>> GetUserGrantedFeaturesAsync(string userId)
         {
-            // SuperAdmin and Admin get ALL features automatically
             var user = await _userManager.FindByIdAsync(userId);
-            if (user != null)
-            {
-                var roles = await _userManager.GetRolesAsync(user);
-                if (roles.Contains("SuperAdmin") || roles.Contains("Admin"))
-                {
-                    return await _context.SystemFeatures.ToListAsync();
-                }
+            if (user == null) return Enumerable.Empty<SystemFeature>();
 
-                // Enforce strict Manager permissions (Retroactive Override)
-                // This ensures existing managers also lose access to everything else immediately
-                if (roles.Contains("Manager"))
-                {
-                    return await _context.SystemFeatures
-                        .Where(f => f.TechnicalName == "Page_UserManagement")
-                        .ToListAsync();
-                }
+            var roles = await _userManager.GetRolesAsync(user);
+
+            // SuperAdmin always gets everything
+            if (roles.Contains("SuperAdmin"))
+            {
+                return await _context.SystemFeatures.ToListAsync();
             }
 
-            // For other users, return their granted features
-            return await _context.UserFeatures
+            // Get specific grants from database
+            var granted = await _context.UserFeatures
                 .Where(uf => uf.UserId == userId)
                 .Include(uf => uf.Feature)
                 .Select(uf => uf.Feature)
                 .ToListAsync();
+
+            // If custom grants exist, return them (this is the new system)
+            if (granted.Any())
+            {
+                return granted;
+            }
+
+            // Fallback for users who haven't been customized yet (Legacy behavior)
+            if (roles.Contains("Admin"))
+            {
+                // Admin gets everything EXCEPT User Management by default
+                return await _context.SystemFeatures
+                    .Where(f => f.TechnicalName != "Page_UserManagement")
+                    .ToListAsync();
+            }
+            if (roles.Contains("Manager"))
+            {
+                return await _context.SystemFeatures
+                    .Where(f => f.TechnicalName == "Page_UserManagement")
+                    .ToListAsync();
+            }
+
+            return granted;
         }
 
-        public async Task<(bool Success, string Message)> UpdateUserFeaturesAsync(string userId, List<int> featureIds, string updatedBy)
+        public async Task<(bool Success, string Message)> UpdateUserFeaturesAsync(string userId, List<int> featureIds, string updatedBy, bool applyToRole = false)
         {
             try
             {
@@ -88,24 +102,38 @@ namespace TodoListApp.Services
                 }
 
                 // 3. Perform Update
-                var existing = _context.UserFeatures.Where(uf => uf.UserId == userId);
+                var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+                var userIdsToUpdate = new List<string> { userId };
+
+                if (applyToRole && !string.IsNullOrEmpty(userRole))
+                {
+                    var usersInRole = await _userManager.GetUsersInRoleAsync(userRole);
+                    userIdsToUpdate = usersInRole.Select(u => u.Id).Distinct().ToList();
+                }
+
+                // Remove existing features for all targeted users
+                var existing = _context.UserFeatures.Where(uf => userIdsToUpdate.Contains(uf.UserId));
                 _context.UserFeatures.RemoveRange(existing);
 
-                foreach (var fId in featureIds)
+                foreach (var targetUserId in userIdsToUpdate)
                 {
-                    _context.UserFeatures.Add(new UserFeatureAccess
+                    foreach (var fId in featureIds)
                     {
-                        UserId = userId,
-                        FeatureId = fId,
-                        GrantedBy = updatedBy,
-                        GrantedAt = DateTime.UtcNow
-                    });
+                        _context.UserFeatures.Add(new UserFeatureAccess
+                        {
+                            UserId = targetUserId,
+                            FeatureId = fId,
+                            GrantedBy = updatedBy,
+                            GrantedAt = DateTime.UtcNow
+                        });
+                    }
                 }
 
                 await _context.SaveChangesAsync();
 
                 // 4. Log Activity
-                await LogActivityAsync("Update Features", userId, updatedBy, $"Granted {featureIds.Count} features.");
+                var logMsg = applyToRole ? $"Updated features for all users in role '{userRole}'." : $"Granted {featureIds.Count} features.";
+                await LogActivityAsync("Update Features", userId, updatedBy, logMsg);
 
                 return (true, "Feature access updated successfully.");
             }
@@ -113,6 +141,34 @@ namespace TodoListApp.Services
             {
                 return (false, $"Error updating features: {ex.Message}");
             }
+        }
+
+        public async Task<List<int>> GetDefaultFeatureIdsForRoleAsync(string roleName)
+        {
+            var allFeatures = await _context.SystemFeatures.ToListAsync();
+            
+            return roleName switch
+            {
+                "SuperAdmin" => allFeatures.Select(f => f.Id).ToList(),
+                
+                "Admin" => allFeatures
+                    .Where(f => f.TechnicalName != "Page_UserManagement")
+                    .Select(f => f.Id).ToList(),
+                
+                "Manager" => allFeatures
+                    .Where(f => f.TechnicalName == "Page_UserManagement")
+                    .Select(f => f.Id).ToList(),
+                
+                "PrivateUser" => allFeatures
+                    .Where(f => new[] { "Page_Tasks", "Page_TimeTracker", "Page_Dashboard", "Widget_Weather", "Widget_Currency", "Widget_Time", "Widget_Habit", "Widget_PdfTools", "Widget_GoalTracker" }.Contains(f.TechnicalName))
+                    .Select(f => f.Id).ToList(),
+                
+                "NormalUser" => allFeatures
+                    .Where(f => new[] { "Page_Dashboard", "Page_Tasks", "Page_TimeTracker", "Widget_Weather", "Widget_Currency", "Widget_Time", "Widget_Habit", "Widget_PdfTools", "Widget_News", "Widget_Country", "Widget_Translator", "Widget_Emergency", "Widget_Holiday" }.Contains(f.TechnicalName))
+                    .Select(f => f.Id).ToList(),
+                
+                _ => allFeatures.Where(f => f.IsDefault).Select(f => f.Id).ToList()
+            };
         }
 
         public async Task LogActivityAsync(string action, string userId, string executedBy, string details)

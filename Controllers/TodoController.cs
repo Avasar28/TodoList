@@ -251,9 +251,9 @@ namespace TodoListApp.Controllers
 
         [HttpPost]
         [Authorize(Roles = "SuperAdmin,Admin")]
-        public async Task<IActionResult> UpdateUserFeatures(string userId, [FromBody] List<int> featureIds)
+        public async Task<IActionResult> UpdateUserFeatures(string userId, [FromBody] List<int> featureIds, [FromQuery] bool applyToRole = false)
         {
-            var result = await _featureService.UpdateUserFeaturesAsync(userId, featureIds, User.Identity?.Name);
+            var result = await _featureService.UpdateUserFeaturesAsync(userId, featureIds, User.Identity?.Name, applyToRole);
             return Json(new { success = result.Success, message = result.Message });
         }
 
@@ -443,20 +443,12 @@ namespace TodoListApp.Controllers
             var addResult = await _userManager.AddToRoleAsync(user, newRole);
             if (addResult.Succeeded)
             {
-                // For Manager role, enforce strict permissions (only Page_UserManagement)
-                if (newRole == "Manager")
-                {
-                    var allFeatures = await _featureService.GetAllFeaturesAsync();
-                    var managerFeature = allFeatures.FirstOrDefault(f => f.TechnicalName == "Page_UserManagement");
-                    if (managerFeature != null)
-                    {
-                        // Reset to ONLY user management
-                        await _featureService.UpdateUserFeaturesAsync(user.Id, new List<int> { managerFeature.Id }, User.Identity.Name);
-                    }
-                }
+                // Synchronize Access Permissions with the New Role
+                var defaultFeatureIds = await _featureService.GetDefaultFeatureIdsForRoleAsync(newRole);
+                await _featureService.UpdateUserFeaturesAsync(user.Id, defaultFeatureIds, User.Identity?.Name ?? "System");
 
-                System.Diagnostics.Debug.WriteLine($"[AUDIT] User {User.Identity?.Name} changed role of {user.Email} to {newRole}");
-                return Json(new { success = true, message = $"Role successfully updated to {newRole}." });
+                System.Diagnostics.Debug.WriteLine($"[AUDIT] User {User.Identity?.Name} changed role of {user.Email} to {newRole} and synced permissions.");
+                return Json(new { success = true, message = $"Role updated to {newRole} and access permissions synchronized." });
             }
 
             return Json(new { success = false, message = "Failed to assign new role." });
