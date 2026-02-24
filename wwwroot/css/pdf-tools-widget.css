@@ -2,10 +2,12 @@
 
 /* Global Improvements */
 :root {
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Faster, smoother */
     --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.15);
     --shadow-medium: 0 8px 24px rgba(0, 0, 0, 0.2);
     --shadow-strong: 0 12px 32px rgba(0, 0, 0, 0.25);
+    --glow-primary: 0 0 15px rgba(16, 185, 129, 0.3);
 }
 
 /* Compact Top Bar - Tighter & Cleaner */
@@ -130,16 +132,18 @@
 }
 
 .btn-back-modern {
-    border-color: var(--glass-border);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: var(--text-secondary);
     font-weight: 600;
-    transition: all 0.3s ease;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-back-modern:hover {
     background: rgba(255, 255, 255, 0.05);
     border-color: var(--text-primary);
     color: var(--text-primary);
+    transform: translateX(-2px);
 }
 
 
@@ -275,24 +279,27 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 0.85rem 1rem;
+    padding: 1rem;
     border-radius: 12px;
     cursor: pointer;
-    transition: all 0.2s ease-out;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid transparent;
     overflow: hidden;
+    background: transparent;
 }
 
 .tool-list-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.04);
     transform: translateX(4px);
-    /* Soft hover animation */
+    /* Hover slide */
 }
 
 .tool-list-item.active {
-    background: linear-gradient(90deg, rgba(20, 184, 166, 0.1), transparent);
-    border-color: rgba(20, 184, 166, 0.2);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    background: linear-gradient(90deg, rgba(20, 184, 166, 0.08), rgba(20, 184, 166, 0.02));
+    border-left: 1px solid rgba(20, 184, 166, 0.4);
+    /* Left border accent hint */
+    box-shadow: inset 0 0 15px rgba(20, 184, 166, 0.05);
+    /* Soft inner shadow */
 }
 
 /* Vertical Accent Line with Animation */
@@ -313,7 +320,8 @@
 
 @keyframes expandHeight {
     to {
-        height: 60%;
+        height: 70%;
+        /* Increased height */
     }
 }
 
@@ -347,31 +355,36 @@
 }
 
 .tool-list-icon {
-    width: 40px;
-    /* Slightly compact */
-    height: 40px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
+    width: 42px;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.03);
+    /* Subtle background */
+    border-radius: 8px;
+    /* Soft rounded */
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     color: var(--text-secondary);
-    /* Muted by default */
     flex-shrink: 0;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .tool-list-item:hover .tool-list-icon {
     color: var(--accent-color);
-    background: rgba(20, 184, 166, 0.1);
-    transform: none;
+    background: rgba(255, 255, 255, 0.08);
+    /* Brighter on hover */
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
 }
 
 .tool-list-item.active .tool-list-icon {
-    background: var(--accent-color);
-    color: white;
-    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+    background: rgba(20, 184, 166, 0.15);
+    /* Brighter active background */
+    color: var(--accent-color);
+    border-color: rgba(20, 184, 166, 0.3);
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.2);
 }
 
 .tool-list-content {
@@ -382,19 +395,24 @@
 }
 
 .tool-list-title {
-    font-weight: 700;
-    /* Bolder */
-    font-size: 0.95rem;
+    font-weight: 600;
+    /* Medium bold */
+    font-size: 1rem;
+    /* Slightly larger */
     color: var(--text-primary);
-    margin-bottom: 2px;
+    margin-bottom: 4px;
+    /* Clear spacing below title */
+    letter-spacing: -0.01em;
 }
 
 .tool-list-desc {
     font-size: 0.8rem;
+    /* Smaller */
     color: var(--text-secondary);
     opacity: 0.6;
-    /* Lighter description */
+    /* Lower opacity */
     font-weight: 400;
+    line-height: 1.4;
 }
 
 /* File List Styles for PDF Widget */
@@ -596,21 +614,22 @@
 .btn-refresh-icon {
     width: 36px;
     height: 36px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--glass-border);
-    border-radius: 10px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
     color: var(--text-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-refresh-icon:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--accent-color);
-    transform: rotate(180deg);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+    transform: rotate(180deg) scale(1.1);
 }
 
 .history-title {
@@ -627,21 +646,22 @@
 }
 
 .btn-refresh {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--glass-border);
-    color: var(--text-primary);
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-secondary);
     padding: 0.5rem 1rem;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-refresh:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: var(--accent-color);
-    color: var(--accent-color);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+    transform: scale(1.03);
 }
 
 /* History Grid */
@@ -723,10 +743,10 @@
 
 .btn-history-download {
     flex: 1;
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-primary);
-    border: 1px solid var(--glass-border);
-    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
     padding: 0.4rem;
     font-size: 0.85rem;
     font-weight: 600;
@@ -735,13 +755,14 @@
     justify-content: center;
     gap: 0.5rem;
     text-decoration: none;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-history-download:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border-color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+    transform: translateY(-2px);
 }
 
 .btn-history-delete {
@@ -1094,22 +1115,26 @@
     opacity: 0.8;
 }
 
-/* Custom PDF Buttons */
+/* Custom PDF Buttons - Premium System */
 .btn-pdf-ghost {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: var(--text-secondary);
     padding: 0.6rem 1.25rem;
-    border-radius: 10px;
+    border-radius: 12px;
     font-weight: 600;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-pdf-ghost:hover {
+    background: rgba(255, 255, 255, 0.05);
     border-color: var(--text-primary);
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.05);
-    transform: translateY(-2px);
+    transform: scale(1.03);
+}
+
+.btn-pdf-ghost:active {
+    transform: scale(0.98);
 }
 
 .btn-pdf-ghost:disabled {
@@ -1123,19 +1148,40 @@
     border: none;
     color: white;
     padding: 0.6rem 1.5rem;
-    border-radius: 10px;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-    transition: all 0.3s ease;
+    border-radius: 12px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    /* Glow + Highlight */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    animation: glowPulse 3s infinite ease-in-out;
+}
+
+@keyframes glowPulse {
+    0% {
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    100% {
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
 }
 
 .btn-pdf-primary:hover {
-    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
     filter: brightness(1.1);
+}
+
+.btn-pdf-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 .btn-pdf-primary:disabled {
@@ -1144,6 +1190,7 @@
     box-shadow: none;
     cursor: not-allowed;
     transform: none;
+    pointer-events: none;
 }
 
 /* PDF Controls */

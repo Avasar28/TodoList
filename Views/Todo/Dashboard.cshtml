@@ -1389,7 +1389,8 @@
             if (data.localArea && data.localArea !== data.city) {
                 title = `${data.localArea}, ${data.city}`;
             }
-            document.getElementById('weatherLocation').textContent = title;
+            const locEl = document.getElementById('weatherLocation');
+            if (locEl) locEl.textContent = title;
 
             const subLocParts = [];
             if (data.district && data.district !== data.city && data.district !== data.localArea) subLocParts.push(data.district);
@@ -1398,7 +1399,9 @@
             
             const subLoc = document.getElementById('weatherSubLocation');
             if (subLoc) subLoc.textContent = subLocParts.join(', ');
-            document.getElementById('weatherCoords').textContent = `Lat: ${data.latitude.toFixed(4)} | Lon: ${data.longitude.toFixed(4)}`;
+
+            const coordsEl = document.getElementById('weatherCoords');
+            if (coordsEl) coordsEl.textContent = `Lat: ${data.latitude.toFixed(4)} | Lon: ${data.longitude.toFixed(4)}`;
 
             // 2. Update Summary Widget
             // 2. Update Summary Widget (Live Refined)
@@ -1426,32 +1429,68 @@
             }
 
             // 3. Update Detail Panel Hero
-            document.getElementById('panelWeatherIcon').textContent = data.icon;
-            document.getElementById('panelTemperature').textContent = data.temperature + '°C';
-            document.getElementById('panelDescription').textContent = `${data.description} in ${data.city}`;
+            const panelIcon = document.getElementById('panelWeatherIcon');
+            if (panelIcon) panelIcon.textContent = data.icon;
+            
+            const panelTemp = document.getElementById('panelTemperature');
+            if (panelTemp) panelTemp.textContent = data.temperature + '°C';
+            
+            const panelDesc = document.getElementById('panelDescription');
+            if (panelDesc) panelDesc.textContent = `${data.description} in ${data.city}`;
 
             // 4. Update Detailed Metrics
-            document.getElementById('weatherFeelsLike').textContent = data.feelsLike + '°C';
-            document.getElementById('weatherHumidity').textContent = data.humidity + '%';
-            document.getElementById('weatherWind').textContent = data.windSpeed + ' km/h';
-            document.getElementById('weatherWindDir').textContent = `Dir: ${data.windDirection}°`;
-            document.getElementById('weatherVisibility').textContent = data.visibility.toFixed(1) + ' km';
-            document.getElementById('weatherPressure').textContent = data.pressure + ' hPa';
-            document.getElementById('weatherDewPoint').textContent = data.dewPoint + '°C';
+            const feelsLike = document.getElementById('weatherFeelsLike');
+            if (feelsLike) feelsLike.textContent = data.feelsLike + '°C';
+            
+            const humidity = document.getElementById('weatherHumidity');
+            if (humidity) humidity.textContent = data.humidity + '%';
+            
+            const wind = document.getElementById('weatherWind');
+            if (wind) wind.textContent = data.windSpeed + ' km/h';
+            
+            const windDir = document.getElementById('weatherWindDir');
+            if (windDir) windDir.textContent = `Dir: ${data.windDirection}°`;
+            
+            const vis = document.getElementById('weatherVisibility');
+            if (vis) vis.textContent = data.visibility.toFixed(1) + ' km';
+            
+            const pressure = document.getElementById('weatherPressure');
+            if (pressure) pressure.textContent = data.pressure + ' hPa';
+            
+            const dewPoint = document.getElementById('weatherDewPoint');
+            if (dewPoint) dewPoint.textContent = data.dewPoint + '°C';
 
             // 5. Update AQI & UV
-            document.getElementById('weatherAQI').textContent = data.aqi;
-            document.getElementById('weatherAQILevel').textContent = data.aqiLevel;
-            document.getElementById('weatherUV').textContent = data.uvIndex;
-            document.getElementById('weatherUVRisk').textContent = data.uvRisk;
+            const aqi = document.getElementById('weatherAQI');
+            if (aqi) aqi.textContent = data.aqi;
+            
+            const aqiLevel = document.getElementById('weatherAQILevel');
+            if (aqiLevel) aqiLevel.textContent = data.aqiLevel;
+            
+            const uv = document.getElementById('weatherUV');
+            if (uv) uv.textContent = data.uvIndex;
+            
+            const uvRisk = document.getElementById('weatherUVRisk');
+            if (uvRisk) uvRisk.textContent = data.uvRisk;
 
             // 6. Update Sun & Moon
-            document.getElementById('weatherSunrise').textContent = data.sunrise;
-            document.getElementById('weatherSunset').textContent = data.sunset;
-            document.getElementById('weatherMoonrise').textContent = data.moonrise;
-            document.getElementById('weatherMoonset').textContent = data.moonset;
-            document.getElementById('weatherMoonPhase').textContent = data.moonPhase;
-            document.getElementById('weatherMoonIcon').textContent = data.moonIcon;
+            const sunrise = document.getElementById('weatherSunrise');
+            if (sunrise) sunrise.textContent = data.sunrise;
+            
+            const sunset = document.getElementById('weatherSunset');
+            if (sunset) sunset.textContent = data.sunset;
+            
+            const moonrise = document.getElementById('weatherMoonrise');
+            if (moonrise) moonrise.textContent = data.moonrise;
+            
+            const moonset = document.getElementById('weatherMoonset');
+            if (moonset) moonset.textContent = data.moonset;
+            
+            const moonPhase = document.getElementById('weatherMoonPhase');
+            if (moonPhase) moonPhase.textContent = data.moonPhase;
+            
+            const moonIcon = document.getElementById('weatherMoonIcon');
+            if (moonIcon) moonIcon.textContent = data.moonIcon;
 
             // 7. Update Forecast
             const forecastList = document.getElementById('panelForecastList');
@@ -1542,12 +1581,18 @@
             }
             
             // Update Panel Result
-            document.getElementById('baseRateInfo').textContent = `1 ${data.from} = ${data.rate} ${data.to}`;
-            document.getElementById('currencyTimestamp').textContent = `Last Synced: ${data.lastUpdated}`;
+            const baseRateEl = document.getElementById('baseRateInfo');
+            if (baseRateEl) baseRateEl.textContent = `1 ${data.from} = ${data.rate} ${data.to}`;
+            
+            const timestampEl = document.getElementById('currencyTimestamp');
+            if (timestampEl) timestampEl.textContent = `Last Synced: ${data.lastUpdated}`;
             
             // Update New Result UI Elements
-            document.getElementById('displayFromCode').textContent = data.from;
-            document.getElementById('displayToCode').textContent = data.to;
+            const fromCodeEl = document.getElementById('displayFromCode');
+            if (fromCodeEl) fromCodeEl.textContent = data.from;
+            
+            const toCodeEl = document.getElementById('displayToCode');
+            if (toCodeEl) toCodeEl.textContent = data.to;
 
             
             const movementBadge = document.getElementById('rateMovement');
@@ -1853,8 +1898,12 @@
             // Handle Empty State
             if (!source || !target) {
                 console.log("Source or Target empty, clearing result.");
-                document.getElementById('timeResultVal').textContent = "--:--";
-                document.getElementById('timeAbbr').textContent = "";
+                const resultVal = document.getElementById('timeResultVal');
+                if (resultVal) resultVal.textContent = "--:--";
+                
+                const abbrBadge = document.getElementById('timeAbbr');
+                if (abbrBadge) abbrBadge.textContent = "";
+
                 document.querySelector('.insight-card.time')?.classList.remove('loading');
                 return;
             }
