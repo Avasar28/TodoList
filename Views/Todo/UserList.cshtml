@@ -153,6 +153,12 @@
                     <span id="signinCountBadge" class="history-stats-badge" style="display: none;">0 Sessions</span>
                 </div>
             </div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-right: 20px;">
+                <input type="date" id="historyDateFilter" class="date-input-lite" onchange="fetchSigninHistoryForUser()">
+                <button onclick="clearHistoryDateFilter()" class="btn-clear-lite" title="Clear Filter">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
             <button onclick="closeSigninHistoryModal()" class="btn-close-modal">&times;</button>
         </div>
         
@@ -325,14 +331,29 @@
         }
     }
 
+    let currentHistoryUserId = null;
+    let currentHistoryUserName = null;
+
     async function openSigninHistoryModal(userId, userName) {
+        currentHistoryUserId = userId;
+        currentHistoryUserName = userName;
+        document.getElementById('historyDateFilter').value = ''; // Reset date picker
         document.getElementById('historyModalUserName').innerText = `Sign-in History: ${userName || 'User'}`;
         document.getElementById('signinHistoryModal').style.display = 'flex';
+        await fetchSigninHistoryForUser();
+    }
+
+    async function fetchSigninHistoryForUser() {
+        if (!currentHistoryUserId) return;
+
         document.getElementById('historyLoading').style.display = 'block';
         document.getElementById('historyContent').style.display = 'none';
         
+        const date = document.getElementById('historyDateFilter').value;
+        const url = `/Todo/GetSigninHistory?userId=${currentHistoryUserId}${date ? `&date=${date}` : ''}`;
+        
         try {
-            const response = await fetch(`/Todo/GetSigninHistory?userId=${userId}`);
+            const response = await fetch(url);
             const data = await response.json();
             
             renderSigninHistory(data);
@@ -345,8 +366,15 @@
         }
     }
 
+    function clearHistoryDateFilter() {
+        document.getElementById('historyDateFilter').value = '';
+        fetchSigninHistoryForUser();
+    }
+
     function closeSigninHistoryModal() {
         document.getElementById('signinHistoryModal').style.display = 'none';
+        currentHistoryUserId = null;
+        currentHistoryUserName = null;
     }
 
     function renderSigninHistory(logs) {
@@ -366,7 +394,13 @@
         badge.style.display = 'inline-block';
 
         logs.forEach((log, index) => {
-            const date = new Date(log.timestamp);
+            // Ensure timestamp is treated as UTC even if serialized without 'Z'
+            let timestamp = log.timestamp;
+            if (timestamp && !timestamp.endsWith('Z') && !timestamp.includes('+')) {
+                timestamp += 'Z';
+            }
+            
+            const date = new Date(timestamp);
             const formattedDate = date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             const formattedTime = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             

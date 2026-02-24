@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using TodoListApp.Helpers;
 using TodoListApp.Models;
@@ -262,16 +263,25 @@ namespace TodoListApp.Controllers
 
         [HttpGet]
         [Authorize(Roles = "SuperAdmin,Admin,Manager")]
-        public async Task<IActionResult> GetSigninHistory(string userId)
+        public async Task<IActionResult> GetSigninHistory(string userId, DateTime? date = null)
         {
-            var logs = _context.ActivityLogs
-                .Where(l => l.UserId == userId && l.Action == "Login")
+            var query = _context.ActivityLogs
+                .Where(l => l.UserId == userId && l.Action == "Login");
+
+            if (date.HasValue)
+            {
+                var startDate = date.Value.Date;
+                var endDate = startDate.AddDays(1);
+                query = query.Where(l => l.Timestamp >= startDate && l.Timestamp < endDate);
+            }
+
+            var logs = await query
                 .OrderByDescending(l => l.Timestamp)
                 .Select(l => new {
-                    l.Timestamp,
+                    Timestamp = l.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                     l.Details
                 })
-                .ToList();
+                .ToListAsync();
 
             return Json(logs);
         }
